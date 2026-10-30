@@ -86,7 +86,7 @@
 
   <script type="module">
     import { login, register, loginGoogle, finishGoogleRedirect, resetPassword } from "./js/firebase.js";
-    import { initLayout, toast } from "./js/ui.js";
+    import { initLayout, toast, modal, esc } from "./js/ui.js";
 
     const next = new URLSearchParams(location.search).get("next") || "index.html";
     let mode = "login";
@@ -150,11 +150,40 @@
     // Retour d'une connexion Google par redirection
     finishGoogleRedirect().then((u) => { if (u) location.href = next; }).catch((err) => { console.error(err); fail(err); });
 
-    $("forgot").onclick = async (e) => {
+    // Mot de passe oublié : petite fenêtre avec l'e-mail, puis explications claires
+    $("forgot").onclick = (e) => {
       e.preventDefault();
-      const email = $("email").value.trim();
-      if (!email) return toast("Saisis d'abord ton e-mail.", "err");
-      try { await resetPassword(email); toast("E-mail de réinitialisation envoyé."); } catch (err) { fail(err); }
+      const m = modal(`<h3>Mot de passe oublié</h3>
+        <p class="muted" style="margin:6px 0 14px">Saisis l'e-mail de ton compte : tu vas recevoir un lien pour choisir un nouveau mot de passe.</p>
+        <form id="reset-form">
+          <div class="field"><label for="reset-email">E-mail</label><input id="reset-email" type="email" required autocomplete="email" value="${esc($("email").value.trim())}" /></div>
+          <button class="btn btn-block" id="reset-ok">Envoyer le lien</button>
+        </form>
+        <button class="btn btn-ghost-ink btn-block" data-close style="margin-top:10px">Fermer</button>`);
+      const champ = m.querySelector("#reset-email");
+      setTimeout(() => champ.focus(), 30);
+      m.querySelector("#reset-form").onsubmit = async (ev) => {
+        ev.preventDefault();
+        const btn = m.querySelector("#reset-ok");
+        btn.disabled = true; btn.textContent = "Envoi…";
+        try {
+          await resetPassword(champ.value.trim());
+          m.querySelector(".modal-box").innerHTML = `<h3>Lien envoyé</h3>
+            <p style="margin:8px 0">Si un compte existe avec <b>${esc(champ.value.trim())}</b>, un e-mail vient d'être envoyé.</p>
+            <ul class="muted" style="margin:8px 0 14px;padding-left:18px;line-height:1.6">
+              <li>Regarde aussi dans les <b>spams</b> ou « Promotions » : l'expéditeur est <b>noreply@unidev-2026.firebaseapp.com</b>.</li>
+              <li>Tu t'étais inscrit avec <b>Google</b> ? Tu n'as pas de mot de passe : utilise « Continuer avec Google ».</li>
+              <li>Le lien est valable environ 1 heure.</li>
+            </ul>
+            <button class="btn btn-block" data-close>J'ai compris</button>`;
+        } catch (err) {
+          btn.disabled = false; btn.textContent = "Envoyer le lien";
+          const msg = { "auth/invalid-email": "Cette adresse e-mail n'est pas valide.", "auth/missing-email": "Saisis ton e-mail.",
+            "auth/too-many-requests": "Trop de demandes. Réessaie dans quelques minutes.", "auth/network-request-failed": "Pas de connexion internet.",
+            "auth/user-not-found": "Aucun compte avec cet e-mail." }[err.code];
+          toast(msg || err.message, "err");
+        }
+      };
     };
   </script>
 </body>

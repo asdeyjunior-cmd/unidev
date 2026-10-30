@@ -24,6 +24,7 @@ function prevenirAdmin(title, message, page) {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+auth.languageCode = "fr"; // e-mails de Firebase (mot de passe oublié, vérification) en français
 export const db = getFirestore(app);
 
 /* ---------- Utilisateurs ---------- */
@@ -223,7 +224,14 @@ export async function finishGoogleRedirect() {
   return res?.user || null;
 }
 export const logout = () => signOut(auth);
-export const resetPassword = (email) => sendPasswordResetEmail(auth, email);
+/** Mot de passe oublié : e-mail en français, avec un bouton qui ramène sur la page de connexion */
+export async function resetPassword(email) {
+  try { await sendPasswordResetEmail(auth, email, { url: `${location.origin}/connexion.html` }); }
+  catch (e) {
+    if (e.code === "auth/unauthorized-continue-uri" || e.code === "auth/invalid-continue-uri") await sendPasswordResetEmail(auth, email);
+    else throw e;
+  }
+}
 
 /* ---------- Documents ---------- */
 // Le lien du fichier est rangé à part (documents/{id}/prive/fichier) :
