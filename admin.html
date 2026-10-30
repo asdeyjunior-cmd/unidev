@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Modération — unidev</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="unidev" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+  <link rel="stylesheet" href="css/style.css?v=44" />
+  <script type="speculationrules">
+    { "prefetch": [{ "source": "document", "where": { "href_matches": "/*.html" }, "eagerness": "moderate" }] }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-in">
+      <a href="index.html" class="logo"><span class="logo-mark">u</span>unidev</a>
+      <div id="header-tools" class="header-tools"></div>
+    </div>
+  </header>
+  <main class="page">
+    <div class="wrap">
+      <div id="login-zone" class="narrow hidden">
+        <h1 class="page-title">Espace admin</h1>
+        <p class="muted" style="margin-bottom:20px">Réservé à l'administrateur du site.</p>
+        <form class="panel" id="admin-login">
+          <div class="field">
+            <label for="a-email">E-mail</label>
+            <input id="a-email" type="email" required autocomplete="username" />
+          </div>
+          <div class="field">
+            <label for="a-pwd">Identifiant (mot de passe)</label>
+            <input id="a-pwd" type="password" required autocomplete="current-password" />
+          </div>
+          <button class="btn btn-block" id="a-submit">Se connecter</button>
+        </form>
+      </div>
+
+      <div id="diag" class="narrow hidden"></div>
+
+      <div id="zone" class="hidden">
+        <h1 class="page-title">Modération</h1>
+        <div class="tabs tabs-wrap" style="margin-top:16px">
+          <button class="active" data-s="doc:en_attente">Documents à valider <span id="n-doc"></span></button>
+          <button data-s="pay:en_attente">Paiements à confirmer <span id="n-pay"></span></button>
+          <button data-s="doc:publie">Publiés</button>
+          <button data-s="doc:rejete">Refusés</button>
+          <button data-s="pay:confirme">Paiements confirmés</button>
+        </div>
+        <p style="margin:-6px 0 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center"><button class="btn btn-sm btn-ghost-ink" id="notif-btn">Activer les notifications</button><button class="btn btn-sm btn-ghost-ink" id="rebuild">Mettre à jour l'index de recherche</button><button class="btn btn-sm btn-ghost-ink" id="harmo">Corriger les filières</button><button class="btn btn-sm btn-ghost-ink" id="doublons">Supprimer les doublons</button>
+          <span class="muted" id="rebuild-etat"></span></p>
+        <div class="cards" id="list"><div class="loader"></div></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer"><div class="wrap footer-copy">©UNIDEV ASSOCIATION 2026 · <a href="apropos.html">À propos</a></div></footer>
+  <nav class="bottomnav">
+    <a href="index.html" data-k="docs"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><span>Documents</span></a>
+    <a href="publier.html" data-k="publier"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg><span>Publier</span></a>
+    <a href="emploi.html" data-k="emploi"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h2M14 14h2M8 17.5h2"/></svg><span>Planning</span></a>
+    <a href="credits.html" data-k="credits"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2 0 0 1 2.5-2h.5a2 2 0 0 1 0 4h-1a2 2 0 0 0 0 4h.5a2.5 2 0 0 0 2.5-2"/></svg><span>Crédits</span><span class="pill" id="nav-credits"></span></a>
+    <a href="admin.html" data-k="admin" class="hidden active" id="nav-admin"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Modération</span></a>
+    <span id="nav-user"><a href="connexion.html"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Connexion</span></a></span>
+  </nav>
+  <script src="js/nav.js"></script>
+
+  <script type="module">
+    import {
+      listByStatus, setStatus, removeDocument, publishDocument, getFileInfo,
+      listPaiements, confirmPaiement, rejectPaiement, login, logout, checkAdmin, rebuildIndex, watchEnAttente, harmoniserFilieres, trouverDoublons, supprimerDocuments,
+    } from "./js/firebase.js";
+    import { initLayout, docCard, toast, esc, modal, formatDate, fileModal } from "./js/ui.js";
+
+    const $ = (id) => document.getElementById(id);
+    let current = "doc:en_attente";
+    let items = [];
+
+    // Seul le compte admin (UID dans parametres/admin) voit la modération.
+    // Tout autre compte est déconnecté de cette page et voit le formulaire de connexion admin.
+    const RAISONS = {
+      absent: "Le document <b>parametres/admin</b> n'existe pas dans Firestore. Crée la collection <b>parametres</b>, le document <b>admin</b> et le champ <b>uid</b>.",
+      vide: "Le document <b>parametres/admin</b> existe mais son champ <b>uid</b> est vide ou mal nommé (il doit s'appeler exactement <b>uid</b>, en minuscules).",
+      espaces: "Le champ <b>uid</b> contient un espace au début ou à la fin. Supprime-le dans Firestore.",
+      autre: "Ce compte n'est pas celui enregistré comme admin : l'UID ne correspond pas.",
+      lecture: "Impossible de lire <b>parametres/admin</b>. Les règles de sécurité ne sont peut-être pas à jour : relance <b>firebase deploy</b>.",
+    };
+
+    function showDiagnostic(user, res) {
+      $("zone").classList.add("hidden");
+      $("login-zone").classList.add("hidden");
+      $("diag").classList.remove("hidden");
+      $("diag").innerHTML = `
+        <h1 class="page-title">Accès admin refusé</h1>
+        <div class="panel">
+          <p style="margin-bottom:12px">${RAISONS[res.raison] || "Accès refusé."}</p>
+          <p class="muted">Compte connecté : <b>${esc(user.email || "")}</b></p>
+          <p class="muted" style="margin-top:6px">Son UID (à copier dans le champ <b>uid</b>) :</p>
+          <input id="my-uid" readonly value="${esc(user.uid)}" style="margin:6px 0 4px;font-family:monospace" />
+          ${res.uidEnregistre ? `<p class="muted">UID actuellement enregistré : <code>${esc(res.uidEnregistre)}</code></p>` : ""}
+          ${res.erreur ? `<p class="muted">Erreur : <code>${esc(res.erreur)}</code></p>` : ""}
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+            <button class="btn btn-sm" id="copy-uid">Copier mon UID</button>
+            <button class="btn btn-sm btn-ghost-ink" id="retry-admin">Réessayer</button>
+            <button class="btn btn-sm btn-ghost-ink" id="logout-admin">Changer de compte</button>
+          </div>
+        </div>`;
+      $("copy-uid").onclick = async () => {
+        try { await navigator.clipboard.writeText(user.uid); toast("UID copié."); }
+        catch { $("my-uid").select(); toast("Sélectionné : copie-le avec Ctrl+C."); }
+      };
+      $("retry-admin").onclick = () => location.reload();
+      $("logout-admin").onclick = async () => { await logout(); location.reload(); };
+    }
+
+    // Seul le compte admin (UID dans parametres/admin) voit la modération.
+    initLayout("admin", async ({ user }) => {
+      $("diag").classList.add("hidden");
+      if (!user) {
+        $("zone").classList.add("hidden");
+        $("login-zone").classList.remove("hidden");
+        return;
+      }
+      const res = await checkAdmin(user);
+      if (!res.ok) return showDiagnostic(user, res);
+      $("login-zone").classList.add("hidden");
+      $("zone").classList.remove("hidden");
+      load(); suivre();
+    });
+
+    /* ---------- Notifications : suivi en direct de ce qui attend ---------- */
+    let vus = null; // identifiants déjà connus (null = premier chargement)
+    let arret = null;
+    const titreBase = document.title;
+    function bip() {
+      try {
+        const c = new AudioContext(), o = c.createOscillator(), g = c.createGain();
+        o.frequency.value = 880; g.gain.setValueAtTime(.15, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + .4);
+        o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + .4);
+      } catch {}
+    }
+    function notifier(titre, texte) {
+      bip();
+      toast(`${titre} : ${texte}`);
+      if ("Notification" in window && Notification.permission === "granted") {
+        try { const n = new Notification(titre, { body: texte, icon: "icons/icon-192.png", tag: "unidev-admin" }); n.onclick = () => { focus(); n.close(); }; } catch {}
+      }
+    }
+    function majBoutonNotif() {
+      const b = $("notif-btn");
+      if (!("Notification" in window)) { b.classList.add("hidden"); return; }
+      const p = Notification.permission;
+      b.textContent = p === "granted" ? "Notifications activées" : p === "denied" ? "Notifications bloquées (réglages du navigateur)" : "Activer les notifications";
+      b.disabled = p !== "default";
+    }
+    $("notif-btn").onclick = async () => { await Notification.requestPermission(); majBoutonNotif(); };
+    majBoutonNotif();
+
+    function suivre() {
+      if (arret) arret();
+      arret = watchEnAttente(({ pay, doc }) => {
+        $("n-doc").textContent = doc.length ? `(${doc.length})` : "";
+        $("n-pay").textContent = pay.length ? `(${pay.length})` : "";
+        const total = pay.length + doc.length;
+        document.title = total ? `(${total}) ${titreBase}` : titreBase;
+        const ids = new Set([...pay, ...doc].map((x) => x.id));
+        if (vus) {
+          const np = pay.filter((x) => !vus.has(x.id)), nd = doc.filter((x) => !vus.has(x.id));
+          if (np.length) notifier("Paiement à confirmer", np.length === 1 ? `${np[0].montant} FCFA · ${np[0].nom || ""} · réf. ${np[0].reference}` : `${np.length} nouveaux paiements`);
+          if (nd.length) notifier("Document à valider", nd.length === 1 ? nd[0].titre : `${nd.length} nouveaux documents`);
+          if ((np.length && current.startsWith("pay:en_attente")) || (nd.length && current.startsWith("doc:en_attente"))) load();
+        } else if (pay.length) {
+          notifier("En attente", `${pay.length} paiement(s) à confirmer`);
+        }
+        vus = ids;
+      });
+    }
+
+    $("admin-login").onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = $("a-submit");
+      btn.disabled = true;
+      try {
+        await login($("a-email").value.trim(), $("a-pwd").value);
+        // la suite (vérification admin) est faite par initLayout quand la session change
+      } catch (err) {
+        const msg = {
+          "auth/invalid-credential": "E-mail ou identifiant incorrect.",
+          "auth/user-not-found": "Aucun compte avec cet e-mail.",
+          "auth/wrong-password": "Identifiant incorrect.",
+          "auth/too-many-requests": "Trop de tentatives. Réessaie plus tard.",
+          "auth/operation-not-allowed": "La connexion par e-mail n'est pas activée dans Firebase (Authentication > Sign-in method).",
+        }[err.code];
+        toast(msg || err.message, "err");
+        btn.disabled = false;
+      }
+    };
+
+    const btn = (act, id, label, cls) => `<button class="btn btn-sm ${cls}" data-act="${act}" data-id="${id}">${label}</button>`;
+
+    function docActions(d, statut) {
+      const voir = btn("voir", d.id, "Voir", "btn-ghost");
+      const ok = btn("publier", d.id, "Publier", "btn-ok");
+      const no = btn("refuser", d.id, "Refuser", "btn-danger");
+      const del = btn("supprimer", d.id, "Supprimer", "btn-danger");
+      return `<div class="card-actions">${{ en_attente: [voir, ok, no], publie: [voir, no, del], rejete: [voir, ok, del] }[statut].join("")}</div>`;
+    }
+
+    // Références déjà vues (tous statuts) : une même référence déclarée deux fois est suspecte
+    let refsConnues = new Map();
+    async function chargerRefs() {
+      const lots = await Promise.all(["en_attente", "confirme", "rejete"].map((st) => listPaiements(st).catch(() => [])));
+      const tous = lots.flat();
+      refsConnues = new Map();
+      tous.forEach((x) => { const r = (x.reference || "").trim().toLowerCase(); if (r) refsConnues.set(r, (refsConnues.get(r) || 0) + 1); });
+    }
+
+    function payCard(p, statut) {
+      const doublon = (refsConnues.get((p.reference || "").trim().toLowerCase()) || 0) > 1;
+      const actions = statut === "en_attente"
+        ? `<div class="card-actions">${btn("confirmer", p.id, `Confirmer (+${p.credits})`, "btn-ok")}${btn("rejeter", p.id, "Refuser", "btn-danger")}</div>`
+        : `<span class="status status-${p.statut}">${p.statut === "confirme" ? "Confirmé" : "Refusé"}</span>`;
+      return `
+        <article class="card">
+          <div class="card-top"><span class="badge">${esc(p.operateur)}</span><span class="ext">${formatDate(p.createdAt)}</span></div>
+          <h3>${p.montant} FCFA</h3>
+          <p class="subject">${p.credits} crédits · ${p.packs} pack(s)</p>
+          <p class="meta">${esc(p.nom)} — ${esc(p.email)}</p>
+          <p class="meta">Numéro : <strong>${esc(p.numero)}</strong></p>
+          <p class="meta">Référence : <strong>${esc(p.reference)}</strong></p>
+          ${doublon ? `<p class="meta" style="color:var(--danger);font-weight:700">Attention : cette référence a déjà été déclarée.</p>` : ""}
+          <div class="card-foot">${actions}</div>
+        </article>`;
+    }
+
+    async function counts() {
+      const [d, p] = await Promise.all([listByStatus("en_attente"), listPaiements("en_attente")]).catch(() => [[], []]);
+      $("n-doc").textContent = d.length ? `(${d.length})` : "";
+      $("n-pay").textContent = p.length ? `(${p.length})` : "";
+    }
+
+    async function load() {
+      const [kind, statut] = current.split(":");
+      $("list").innerHTML = `<div class="loader"></div>`;
+      try {
+        if (kind === "pay") await chargerRefs().catch(() => {});
+        items = kind === "doc" ? await listByStatus(statut) : await listPaiements(statut);
+        $("list").innerHTML = !items.length
+          ? `<div class="empty">Rien ici pour le moment.</div>`
+          : kind === "doc"
+            ? items.map((d) => docCard(d, docActions(d, statut)).replace("</h3>", `</h3><p class="muted">Par ${esc(d.auteurNom || "?")}</p>`)).join("")
+            : items.map((p) => payCard(p, statut)).join("");
+      } catch (e) { toast(e.message, "err"); }
+    }
+
+    document.querySelectorAll(".tabs button").forEach((b) => b.onclick = () => {
+      current = b.dataset.s;
+      document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("active", x === b));
+      load();
+    });
+
+    const confirmMsg = {
+      supprimer: "Supprimer définitivement ce document de la base ?",
+      confirmer: "As-tu bien reçu ce paiement sur ton compte ? Les crédits seront ajoutés.",
+      rejeter: "Refuser ce paiement ?",
+    };
+    const doneMsg = {
+      publier: "Document publié, auteur crédité.", refuser: "Document refusé.", supprimer: "Document supprimé.",
+      confirmer: "Paiement confirmé, crédits ajoutés.", rejeter: "Paiement refusé.",
+    };
+
+    $("rebuild").onclick = async (e) => {
+      e.target.disabled = true;
+      $("rebuild-etat").textContent = "Mise à jour…";
+      try { const n = await rebuildIndex(); $("rebuild-etat").textContent = `${n} document(s) indexé(s).`; }
+      catch (err) { toast(err.message, "err"); $("rebuild-etat").textContent = ""; }
+      e.target.disabled = false;
+    };
+
+    $("harmo").onclick = async (e) => {
+      if (!confirm("Corriger l'orthographe des filières de tous les documents (majuscules, accents, fautes) ?")) return;
+      e.target.disabled = true;
+      $("rebuild-etat").textContent = "Correction des filières…";
+      try { const n = await harmoniserFilieres(); $("rebuild-etat").textContent = `${n} document(s) corrigé(s), index mis à jour.`; load(); }
+      catch (err) { toast(err.message, "err"); $("rebuild-etat").textContent = ""; }
+      e.target.disabled = false;
+    };
+
+    $("doublons").onclick = async (e) => {
+      e.target.disabled = true;
+      $("rebuild-etat").textContent = "Recherche des doublons…";
+      try {
+        const { surs, douteux } = await trouverDoublons();
+        $("rebuild-etat").textContent = "";
+        const aSuppr = surs.flatMap((g) => g.slice(1).map((d) => d.id));
+        const ligne = (g, sur) => `<li><b>${esc(g[0].titre)}</b> <span class="muted">· ${g.length} exemplaires${sur ? "" : " (tailles différentes)"}</span>
+          ${sur ? "" : `<br><span class="muted">${g.map((d) => `${esc(d.filiere || "")} · ${d.taille ? Math.round(d.taille / 1024) + " Ko" : "?"} · ${d.statut === "publie" ? "publié" : "en attente"}`).join(" / ")}</span>`}</li>`;
+        const m = modal(`<h3>Doublons</h3>
+          ${surs.length ? `<p style="margin:8px 0">${aSuppr.length} copie(s) exacte(s) (même titre, même taille). Pour chaque document, on garde le plus téléchargé ou le plus ancien.</p>
+            <ul class="liste-doublons">${surs.map((g) => ligne(g, true)).join("")}</ul>
+            <button class="btn btn-danger btn-block" id="doublons-ok" style="margin-top:12px">Supprimer ${aSuppr.length} copie(s)</button>` : `<p style="margin:8px 0">Aucune copie exacte.</p>`}
+          ${douteux.length ? `<p style="margin:16px 0 6px"><b>À vérifier toi-même</b> : même titre mais tailles différentes (peut-être deux versions différentes). Supprime le mauvais avec « Supprimer » dans l'onglet Publiés.</p>
+            <ul class="liste-doublons">${douteux.map((g) => ligne(g, false)).join("")}</ul>` : ""}
+          <button class="btn btn-ghost-ink btn-block" data-close style="margin-top:12px">Fermer</button>`);
+        m.querySelector("#doublons-ok")?.addEventListener("click", async (ev) => {
+          if (!confirm(`Supprimer définitivement ${aSuppr.length} copie(s) ?`)) return;
+          ev.target.disabled = true; ev.target.textContent = "Suppression…";
+          try { await supprimerDocuments(aSuppr); toast(`${aSuppr.length} doublon(s) supprimé(s).`); m.remove(); load(); counts(); }
+          catch (err) { toast(err.message, "err"); ev.target.disabled = false; }
+        });
+      } catch (err) { toast(err.message, "err"); $("rebuild-etat").textContent = ""; }
+      e.target.disabled = false;
+    };
+
+    $("list").addEventListener("click", async (e) => {
+      const { act, id } = e.target.dataset;
+      if (!act) return;
+      if (confirmMsg[act] && !confirm(confirmMsg[act])) return;
+      const item = items.find((x) => x.id === id);
+      e.target.disabled = true;
+      try {
+        if (act === "voir") {
+          const info = await getFileInfo(id);
+          const n = info.parts?.length || 1;
+          fileModal(item, info, { texte: esc(item.nomFichier || "") + (n > 1 ? ` — envoyé en ${n} morceaux` : ""), bouton: "Ouvrir le fichier" });
+          e.target.disabled = false;
+          return;
+        }
+        if (act === "publier") await publishDocument(item);
+        if (act === "refuser") await setStatus(id, "rejete");
+        if (act === "supprimer") await removeDocument(id);
+        if (act === "confirmer") await confirmPaiement(item);
+        if (act === "rejeter") await rejectPaiement(id);
+        toast(doneMsg[act]);
+        load(); counts();
+      } catch (err) { toast(err.message, "err"); e.target.disabled = false; }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,398 @@
+#!/usr/bin/env node
+/**
+ * Importation en masse de documents dans unidev.
+ *
+ *   node importer.js dossier <chemin> [--csv infos.csv] [--essai]
+ *   node importer.js hal [--recherche "mots"] [--max 500] [--types LECTURE,MEM] [--essai]
+ *   node importer.js wiki [--projet wikiversite|wikilivres] [--recherche "mots"] [--max 50] [--essai]
+ *   node importer.js zenodo [--recherche "mots"] [--max 50] [--types lesson,presentation] [--essai]
+ *   node importer.js tout --recherche "mots" [--max 20] [--essai]   (toutes les sources, --max par source)
+ *
+ * --essai : affiche ce qui serait importé, sans rien envoyer.
+ * Les documents importés sont publiés directement (statut « publie »), au nom de l'admin.
+ * Un journal (import-journal.json) évite d'importer deux fois le même fichier.
+ */
+import fs from "node:fs";
+import path from "node:path";
+import crypto from "node:crypto";
+import "dotenv/config";
+import {
+  TYPES, NIVEAUX, EXTENSIONS, TAILLE_MORCEAU, MAX_IMAGE_PDF, MAX_FICHIER,
+  infosDepuisChemin, lireCsv, normaliserNiveau, normaliserType, licenceAutorisee,
+  filiereDepuisDomaines, couper, decouper, couvertureSvg, avecRelance, telecharger,
+} from "./outils.js";
+import { canonFiliere, ajouterFilieres, filiereConnue } from "../../js/filieres.js";
+
+/* ---------- Arguments ---------- */
+const args = process.argv.slice(2);
+const mode = args[0];
+const opt = (nom, def = null) => { const i = args.indexOf(`--${nom}`); return i >= 0 ? args[i + 1] : def; };
+const ESSAI = args.includes("--essai");
+const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+
+if (!["dossier", "hal", "wiki", "zenodo", "tout", "romans", "site"].includes(mode)) {
+  console.log(`Utilisation :
+  node importer.js dossier <chemin> [--csv infos.csv] [--essai]
+  node importer.js hal [--recherche "mots"] [--max 500] [--types LECTURE,MEM] [--essai]
+  node importer.js wiki [--projet wikiversite|wikilivres] [--recherche "mots"] [--max 50] [--essai]
+  node importer.js zenodo [--recherche "mots"] [--max 50] [--types lesson,presentation] [--essai]
+  node importer.js tout --recherche "mots" [--max 20] [--essai]   (HAL + Wikiversité + Wikilivres + Zenodo)
+  node importer.js romans [--recherche "titre ou auteur"] [--max 20] [--essai]   (Wikisource, domaine public)
+  node importer.js site --url "https://..." [--profondeur 2] [--max 50] [--essai]   (site qui t'a donné son accord)`);
+  process.exit(1);
+}
+
+/* ---------- Journal (reprise après coupure) ---------- */
+const JOURNAL = path.resolve("import-journal.json");
+const journal = fs.existsSync(JOURNAL) ? JSON.parse(fs.readFileSync(JOURNAL, "utf8")) : {};
+const noter = (cle, valeur) => { journal[cle] = valeur; fs.writeFileSync(JOURNAL, JSON.stringify(journal, null, 2)); };
+
+/* ---------- Connexions (seulement hors mode essai) ---------- */
+let cloudinary, db, FieldValue, ADMIN_UID;
+async function connecter() {
+  const manque = ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET", "FIREBASE_CLE"].filter((k) => !process.env[k]);
+  if (manque.length) throw new Error(`Variables manquantes dans .env : ${manque.join(", ")}`);
+  const cle = path.resolve(process.env.FIREBASE_CLE);
+  if (!fs.existsSync(cle)) throw new Error(`Clé Firebase introuvable : ${cle}`);
+
+  ({ v2: cloudinary } = await import("cloudinary"));
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true,
+  });
+
+  const admin = (await import("firebase-admin")).default;
+  admin.initializeApp({ credential: admin.credential.cert(JSON.parse(fs.readFileSync(cle, "utf8"))) });
+  db = admin.firestore();
+  FieldValue = admin.firestore.FieldValue;
+  ADMIN_UID = (await db.doc("parametres/admin").get()).data()?.uid;
+  if (!ADMIN_UID) throw new Error("Document parametres/admin introuvable dans Firestore (voir README).");
+  ajouterFilieres((await db.doc("index/filieres").get()).data()?.liste || []);
+  // Documents déjà sur unidev : pour ne jamais publier deux fois le même
+  const snap = await db.collection("documents").select("titre", "taille", "universite", "statut").get();
+  snap.docs.forEach((s) => { const d = s.data(); if (d.statut !== "rejete") retenir(d); });
+  console.log(`${existants.size} titre(s) déjà sur unidev (les doublons seront sautés).\n`);
+}
+
+// Envoi vers Cloudinary : délai généreux (10 min) et nouvel essai si la connexion coupe
+const envoyer = (buffer, options) => avecRelance(() => new Promise((ok, ko) => {
+  cloudinary.uploader.upload_stream({ use_filename: false, unique_filename: true, overwrite: false, timeout: 600000, ...options },
+    (err, res) => (err ? ko(err) : ok(res))).end(buffer);
+}), { nom: "envoi Cloudinary" });
+
+async function couvertureGenerique(infos) {
+  const sharp = (await import("sharp")).default;
+  const png = await sharp(Buffer.from(couvertureSvg(infos))).png().toBuffer();
+  const res = await envoyer(png, { resource_type: "image", folder: "unidev/couvertures" });
+  return res.secure_url;
+}
+
+/* ---------- Anti-doublons ---------- */
+const existants = new Map(); // titre simplifié -> [{ taille, universite }]
+const cleTitre = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+function retenir(d) { const k = cleTitre(d.titre); if (!k) return; if (!existants.has(k)) existants.set(k, []); existants.get(k).push({ taille: d.taille || 0, universite: cleTitre(d.universite) }); }
+/** Vrai si un document de même titre existe déjà avec la même taille ou la même source/école */
+function estDoublon(infos, taille = null) {
+  const l = existants.get(cleTitre(infos.titre)); if (!l) return false;
+  const u = cleTitre(infos.universite);
+  return l.some((x) => (taille && x.taille === taille) || (u && x.universite === u));
+}
+const erreurDoublon = () => Object.assign(new Error("déjà sur unidev : ignoré (doublon)"), { doublon: true });
+
+/** Envoie ta propre image de couverture (redimensionnée, 1200 px max, JPEG). */
+async function envoyerImage(chemin) {
+  const sharp = (await import("sharp")).default;
+  const jpg = await sharp(fs.readFileSync(chemin)).rotate().resize({ width: 1200, height: 1200, fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 82 }).toBuffer();
+  const res = await envoyer(jpg, { resource_type: "image", folder: "unidev/couvertures" });
+  return res.secure_url;
+}
+
+/** Envoie un document et crée sa fiche publiée. Renvoie l'ID Firestore. */
+async function publier(buffer, nomFichier, infos, imageChemin = null) {
+  if (estDoublon(infos, buffer.length)) throw erreurDoublon();
+  infos = { ...infos, filiere: canonFiliere(infos.filiere) || "Autre" };
+  const ext = path.extname(nomFichier).slice(1).toLowerCase();
+  let fichier = null;
+  let imageUrl = null;
+
+  // Ta propre image si tu en as mis une à côté du fichier
+  if (imageChemin) {
+    try { imageUrl = await envoyerImage(imageChemin); }
+    catch (e) { console.warn(`   (image illisible, couverture automatique : ${e.message})`); }
+  }
+
+  // PDF de 10 Mo max sans image : un seul envoi sert à la fois de fichier et d'image (1re page)
+  if (!imageUrl && ext === "pdf" && buffer.length <= MAX_IMAGE_PDF) {
+    try {
+      const res = await envoyer(buffer, { resource_type: "image", folder: "unidev/documents" });
+      fichier = { fileUrl: res.secure_url, publicId: res.public_id };
+      imageUrl = cloudinary.url(res.public_id, {
+        resource_type: "image", secure: true, format: "jpg",
+        transformation: [{ page: 1, width: 800, crop: "limit", quality: "auto" }],
+      }).split("?")[0];
+    } catch (e) {
+      console.warn(`   (aperçu impossible, envoi simple : ${e.message})`);
+    }
+  }
+  if (!fichier) {
+    if (buffer.length <= TAILLE_MORCEAU) {
+      const res = await envoyer(buffer, { resource_type: "raw", folder: "unidev/documents" });
+      fichier = { fileUrl: res.secure_url, publicId: res.public_id };
+    } else {
+      const parts = [];
+      for (const morceau of decouper(buffer)) {
+        const res = await envoyer(morceau, { resource_type: "raw", folder: "unidev/documents" });
+        parts.push({ url: res.secure_url, publicId: res.public_id });
+      }
+      fichier = { fileUrl: parts[0].url, publicId: parts[0].publicId, parts };
+    }
+  }
+  if (!imageUrl) imageUrl = await couvertureGenerique({ ...infos, format: ext });
+
+  const ref = db.collection("documents").doc();
+  const batch = db.batch();
+  batch.set(ref, {
+    titre: couper(infos.titre, 140),
+    matiere: couper(infos.matiere || infos.filiere || "Divers", 80),
+    filiere: couper(infos.filiere || "Autre", 80),
+    type: TYPES.includes(infos.type) ? infos.type : "Autre",
+    niveau: NIVEAUX.includes(infos.niveau) ? infos.niveau : "Autre",
+    annee: couper(infos.annee || "", 20),
+    universite: couper(infos.universite || "", 100),
+    description: couper(infos.description || "", 600),
+    format: ext,
+    taille: buffer.length,
+    nomFichier: couper(nomFichier, 200),
+    imageUrl,
+    auteurId: ADMIN_UID,
+    auteurNom: process.env.AUTEUR_NOM || "unidev",
+    statut: "publie",
+    telechargements: 0,
+    creditAccorde: true,
+    createdAt: FieldValue.serverTimestamp(),
+  });
+  if (infos.filiere && infos.filiere !== "Autre" && !filiereConnue(infos.filiere)) {
+    batch.set(db.doc("index/filieres"), { liste: FieldValue.arrayUnion(infos.filiere) }, { merge: true });
+    ajouterFilieres([infos.filiere]);
+  }
+  batch.set(ref.collection("prive").doc("fichier"), { ...fichier, auteurId: ADMIN_UID });
+  batch.set(db.doc("index/catalogue"), { docs: { [ref.id]: [
+    couper(infos.titre, 140), couper(infos.matiere || infos.filiere || "Divers", 80), couper(infos.filiere || "Autre", 80),
+    TYPES.includes(infos.type) ? infos.type : "Autre", NIVEAUX.includes(infos.niveau) ? infos.niveau : "Autre",
+    imageUrl, ext, couper(infos.universite || "", 100),
+  ] } }, { merge: true });
+  await batch.commit();
+  retenir({ titre: infos.titre, taille: buffer.length, universite: infos.universite });
+  return ref.id;
+}
+
+/* ---------- Mode 1 : dossier local ---------- */
+function* parcourir(dossier, racine = dossier) {
+  for (const e of fs.readdirSync(dossier, { withFileTypes: true })) {
+    const p = path.join(dossier, e.name);
+    if (e.isDirectory()) yield* parcourir(p, racine);
+    else if (EXTENSIONS.includes(path.extname(e.name).slice(1).toLowerCase())) yield { complet: p, relatif: path.relative(racine, p) };
+  }
+}
+
+const IMAGES = ["jpg", "jpeg", "png", "webp"];
+/** Image associée : même nom que le fichier (cours.pdf -> cours.jpg), ou colonne "image" du CSV. */
+function trouverImage(complet, ligne, racine) {
+  if (ligne?.image) {
+    for (const base of [path.dirname(complet), racine, ...(csvDossier ? [csvDossier] : [])]) {
+      const p = path.resolve(base, ligne.image);
+      if (fs.existsSync(p)) return p;
+    }
+    console.warn(`   (image du CSV introuvable : ${ligne.image})`);
+  }
+  const base = complet.slice(0, -path.extname(complet).length);
+  for (const e of IMAGES) for (const x of [e, e.toUpperCase()]) if (fs.existsSync(`${base}.${x}`)) return `${base}.${x}`;
+  return null;
+}
+let csvDossier = null;
+
+async function importerDossier() {
+  const racine = path.resolve(args[1] || "");
+  if (!args[1] || !fs.existsSync(racine)) throw new Error("Indique le dossier : node importer.js dossier <chemin>");
+  // infos.csv créé par ranger.js dans le dossier rangé : utilisé automatiquement
+  const csvChemin = opt("csv") || (fs.existsSync(path.join(racine, "infos.csv")) ? path.join(racine, "infos.csv") : null);
+  const csv = new Map();
+  if (csvChemin) {
+    csvDossier = path.dirname(path.resolve(csvChemin));
+    for (const l of lireCsv(fs.readFileSync(csvChemin, "utf8"))) if (l.fichier) csv.set(path.basename(l.fichier).toLowerCase(), l);
+  }
+  const fichiers = [...parcourir(racine)];
+  console.log(`${fichiers.length} fichier(s) trouvé(s) dans ${racine}\n`);
+  let ok = 0, sautes = 0, erreurs = 0, avecImage = 0;
+
+  for (const [i, f] of fichiers.entries()) {
+    const buffer = fs.readFileSync(f.complet);
+    const empreinte = crypto.createHash("sha1").update(buffer).digest("hex");
+    const cle = `fichier:${empreinte}`;
+    const nom = path.basename(f.complet);
+    const prefixe = `[${i + 1}/${fichiers.length}]`;
+    if (journal[cle]) { sautes++; console.log(`${prefixe} déjà importé : ${f.relatif}`); continue; }
+    if (buffer.length > MAX_FICHIER) { erreurs++; console.log(`${prefixe} trop lourd (> 100 Mo) : ${f.relatif}`); continue; }
+
+    const infos = infosDepuisChemin(f.relatif);
+    const ligne = csv.get(nom.toLowerCase());
+    if (ligne) {
+      for (const k of ["titre", "matiere", "filiere", "annee", "universite", "description"]) if (ligne[k]) infos[k] = ligne[k];
+      if (ligne.type) infos.type = normaliserType(ligne.type) || ligne.type;
+      if (ligne.niveau) infos.niveau = normaliserNiveau(ligne.niveau) || ligne.niveau;
+    }
+    infos.filiere = canonFiliere(infos.filiere);
+    const image = trouverImage(f.complet, ligne, racine);
+    if (image) avecImage++;
+    console.log(`${prefixe} ${infos.titre}  ·  ${infos.filiere || "?"} · ${infos.niveau || "?"} · ${infos.type || "?"} · ${infos.matiere || "?"}  ·  image : ${image ? path.basename(image) : "automatique"}`);
+    if (ESSAI) continue;
+    try {
+      const id = await publier(buffer, nom, infos, image);
+      noter(cle, { id, source: f.relatif, date: new Date().toISOString() });
+      ok++;
+    } catch (e) {
+      if (e.doublon) { noter(cle, { doublon: true }); sautes++; console.log("   doublon : déjà sur unidev, ignoré"); continue; }
+      erreurs++;
+      console.log(`   ERREUR : ${e.message}`);
+    }
+  }
+  console.log(`\nTerminé : ${ok} importé(s), ${sautes} déjà présent(s), ${erreurs} erreur(s). ${avecImage} fichier(s) avec ta propre image.${ESSAI ? " (mode essai : rien n'a été envoyé)" : ""}`);
+}
+
+/* ---------- Mode 2 : archive ouverte HAL (documents sous licence libre) ---------- */
+async function importerHal() {
+  const recherche = opt("recherche", "*");
+  const max = Number(opt("max", "200"));
+  const types = opt("types", "LECTURE").split(",").map((t) => t.trim().toUpperCase()).filter(Boolean);
+  const typeSite = { LECTURE: "Cours", MEM: "Mémoire", THESE: "Mémoire", COURSE: "Cours" };
+  const champs = "halId_s,title_s,licence_s,fileMain_s,authFullName_s,producedDateY_i,keyword_s,domain_s,abstract_s,docType_s,structName_s";
+  let start = 0, ok = 0, refusees = 0, sautes = 0, erreurs = 0;
+
+  console.log(`Recherche HAL : « ${recherche} » · types ${types.join(", ")} · ${max} documents au maximum\n`);
+  while (ok < max) {
+    const url = "https://api.archives-ouvertes.fr/search/?" + new URLSearchParams({
+      q: recherche, wt: "json", rows: "100", start: String(start), fl: champs, sort: "producedDateY_i desc",
+    }) + `&fq=language_s:fr&fq=submitType_s:file&fq=docType_s:(${types.join(" OR ")})`;
+    const rep = await fetch(url);
+    if (!rep.ok) throw new Error(`HAL a répondu ${rep.status}`);
+    const json = await rep.json();
+    const docs = json.response?.docs || [];
+    if (!docs.length) break;
+    if (start === 0) console.log(`${json.response.numFound} résultat(s) dans HAL, filtrage des licences…\n`);
+
+    for (const d of docs) {
+      if (ok >= max) break;
+      const licence = licenceAutorisee(d.licence_s);
+      if (!licence || !d.fileMain_s) { refusees++; continue; }
+      const cle = `hal:${d.halId_s}`;
+      if (journal[cle]) { sautes++; continue; }
+
+      const auteurs = (d.authFullName_s || []).slice(0, 3).join(", ") + ((d.authFullName_s || []).length > 3 ? " et al." : "");
+      const titre = (d.title_s || ["Sans titre"])[0];
+      const resume = couper((d.abstract_s || [""])[0], 330);
+      const infos = {
+        titre,
+        matiere: couper((d.keyword_s || [])[0] || filiereDepuisDomaines(d.domain_s), 80),
+        filiere: filiereDepuisDomaines(d.domain_s),
+        type: typeSite[d.docType_s] || "Cours",
+        niveau: d.docType_s === "THESE" ? "Doctorat" : "Autre",
+        annee: d.producedDateY_i ? String(d.producedDateY_i) : "",
+        universite: couper((d.structName_s || [])[0] || "Archive ouverte HAL", 100),
+        description: `${resume}${resume ? "\n" : ""}Auteur(s) : ${auteurs || "inconnu"} · Licence : ${licence} · Source : https://hal.science/${d.halId_s}`,
+      };
+      console.log(`[${ok + erreurs + 1}] ${titre}  ·  ${infos.filiere} · ${licence}`);
+      if (ESSAI) { ok++; continue; }
+
+      try {
+        if (estDoublon(infos)) throw erreurDoublon(); // vérifié avant de télécharger
+        const buffer = await telecharger(d.fileMain_s, {}, { pdf: true });
+        if (buffer.length > MAX_FICHIER) throw new Error("fichier de plus de 100 Mo");
+        const nom = `${d.halId_s}.pdf`;
+        const id = await publier(buffer, nom, infos);
+        noter(cle, { id, source: d.fileMain_s, licence, date: new Date().toISOString() });
+        ok++;
+      } catch (e) {
+        if (e.doublon) { noter(cle, { doublon: true }); sautes++; console.log("   doublon : déjà sur unidev, ignoré"); continue; }
+        erreurs++;
+        console.log(`   ERREUR : ${e.message}`);
+      }
+      await pause(800); // reste poli avec le serveur HAL
+    }
+    start += docs.length;
+  }
+  console.log(`\nTerminé : ${ok} importé(s), ${sautes} déjà présent(s), ${refusees} écarté(s) (licence non libre ou sans fichier), ${erreurs} erreur(s).${ESSAI ? " (mode essai : rien n'a été envoyé)" : ""}`);
+}
+
+/* ---------- Modes 3 et 4 : Wikiversité / Wikilivres et Zenodo ---------- */
+async function importerSource(nom, generateur, max) {
+  let ok = 0, erreurs = 0, doublons = 0;
+  const ecartes = {};
+  console.log(`${nom} : ${mode === "site" ? `page de départ ${opt("url")}` : `recherche « ${opt("recherche", "cours")} »`} · ${max} documents au maximum\n`);
+  const it = generateur({ deja: (cle) => !!journal[cle], onEcarte: (raison) => (ecartes[raison] = (ecartes[raison] || 0) + 1) });
+  for await (const d of it) {
+    const infos = { ...d.infos, filiere: canonFiliere(d.infos.filiere) || "Autre" };
+    console.log(`[${ok + erreurs + 1}] ${d.titre}  ·  ${infos.filiere} · ${d.licence} · ${(d.buffer.length / 1048576).toFixed(1)} Mo`);
+    if (ESSAI) { ok++; continue; }
+    try {
+      if (d.buffer.length > MAX_FICHIER) throw new Error("fichier de plus de 100 Mo");
+      const id = await publier(d.buffer, d.nomFichier, infos);
+      noter(d.cle, { id, source: d.source, licence: d.licence, date: new Date().toISOString() });
+      ok++;
+    } catch (e) {
+      if (e.doublon) { noter(d.cle, { doublon: true }); doublons++; console.log("   doublon : déjà sur unidev, ignoré"); continue; }
+      erreurs++;
+      console.log(`   ERREUR : ${e.message}`);
+    }
+  }
+  const ec = Object.entries(ecartes).map(([k, v]) => `${v} ${k}`).join(", ");
+  console.log(`\nTerminé : ${ok} ${ESSAI ? "trouvé(s)" : "importé(s)"}, ${doublons} doublon(s) sauté(s), ${erreurs} erreur(s).${ec ? ` Écartés : ${ec}.` : ""}${ESSAI ? " (mode essai : rien n'a été envoyé)" : ""}`);
+}
+
+/* ---------- Lancement ---------- */
+try {
+  if (!ESSAI) await connecter();
+  if (mode === "dossier") await importerDossier();
+  else if (mode === "hal") await importerHal();
+  else if (mode === "tout") {
+    // Recherche partout : chaque source à son tour ; une source en panne n'arrête pas les autres
+    const { coursWiki, coursZenodo } = await import("./sources.js");
+    const max = Number(opt("max", "20"));
+    const recherche = opt("recherche", "cours");
+    const etapes = [
+      ["HAL", () => importerHal()],
+      ["Wikiversité", () => importerSource("Wikiversité", (o) => coursWiki({ projet: "wikiversite", recherche, max, ...o }), max)],
+      ["Wikilivres", () => importerSource("Wikilivres", (o) => coursWiki({ projet: "wikilivres", recherche, max, ...o }), max)],
+      ["Zenodo", () => importerSource("Zenodo", (o) => coursZenodo({ recherche, max, types: ["lesson", "presentation"], essai: ESSAI, ...o }), max)],
+    ];
+    for (const [nom, lancer] of etapes) {
+      console.log(`\n========== ${nom} ==========`);
+      try { await lancer(); } catch (e) { console.log(`${nom} indisponible : ${e.message}`); }
+    }
+  }
+  else {
+    const { coursWiki, coursZenodo, romansWikisource, documentsDuSite } = await import("./sources.js");
+    const max = Number(opt("max", "50"));
+    const recherche = opt("recherche", mode === "romans" ? "" : "cours");
+    if (mode === "site") {
+      const url = opt("url");
+      if (!url || !/^https?:\/\//.test(url)) throw new Error('Indique la page de départ : --url "https://..."');
+      const profondeur = Math.max(1, Math.min(4, Number(opt("profondeur", "2"))));
+      await importerSource(`Site ${new URL(url).hostname}`, (o) => documentsDuSite({ url, profondeur, max, essai: ESSAI, ...o }), max);
+    } else if (mode === "romans") {
+      await importerSource("Romans (Wikisource)", (o) => romansWikisource({ recherche, max, essai: ESSAI, ...o }), max);
+    } else if (mode === "wiki") {
+      const projet = (opt("projet", "wikiversite") || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      await importerSource(projet === "wikilivres" ? "Wikilivres" : "Wikiversité", (o) => coursWiki({ projet, recherche, max, ...o }), max);
+    } else {
+      const types = opt("types", "lesson,presentation").split(",").map((t) => t.trim()).filter(Boolean);
+      await importerSource("Zenodo", (o) => coursZenodo({ recherche, max, types, essai: ESSAI, ...o }), max);
+    }
+  }
+  process.exit(0);
+} catch (e) {
+  console.error(`\nErreur : ${e.message}`);
+  process.exit(1);
+}

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /acheter.html
+Disallow: /credits.html
+Disallow: /offline.html
+
+Sitemap: https://unidev-2026.web.app/sitemap.xml

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Acheter des crédits — unidev</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="unidev" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+  <link rel="stylesheet" href="css/style.css?v=44" />
+  <script type="speculationrules">
+    { "prefetch": [{ "source": "document", "where": { "href_matches": "/*.html" }, "eagerness": "moderate" }] }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-in">
+      <a href="index.html" class="logo"><span class="logo-mark">u</span>unidev</a>
+      <div id="header-tools" class="header-tools"></div>
+    </div>
+  </header>
+  <main class="page">
+    <div class="wrap medium">
+      <a href="credits.html" class="back">&larr; Mes crédits</a>
+      <h1 class="page-title">Acheter des crédits</h1>
+      <p class="muted" style="margin-bottom:20px" id="pack-desc"></p>
+
+      <div class="panel" id="gate"><div class="loader"></div></div>
+
+      <div class="panel hidden" id="zone">
+        <ol class="steps">
+          <li>Choisis le nombre de packs.</li>
+          <li>Paie le montant indiqué avec le bouton ci-dessous.</li>
+          <li>Reviens ici et déclare ton paiement avec la référence de la transaction.</li>
+          <li>Les crédits sont ajoutés dès que l'administrateur a vérifié le paiement.</li>
+        </ol>
+
+        <div class="grid-2">
+          <div class="field"><label for="packs">Nombre de packs</label><select id="packs"></select></div>
+          <div class="field"><label>Montant à payer</label><div class="amount" id="montant"></div></div>
+        </div>
+        <a class="btn btn-block" id="pay" target="_blank" rel="noopener">Payer maintenant</a>
+
+        <form id="form" style="margin-top:24px">
+          <h2 class="section-title">Déclarer mon paiement</h2>
+          <div class="grid-2">
+            <div class="field"><label for="operateur">Moyen de paiement *</label><select id="operateur" required></select></div>
+            <div class="field"><label for="numero">Numéro utilisé *</label><input id="numero" required inputmode="tel" maxlength="20" placeholder="Ex : 07 00 00 00 00" /></div>
+          </div>
+          <div class="field">
+            <label for="reference">Référence / ID de la transaction *</label>
+            <input id="reference" required maxlength="60" placeholder="Visible dans le SMS ou l'historique de paiement" />
+          </div>
+          <button class="btn btn-ink btn-block" id="submit">Envoyer pour vérification</button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer"><div class="wrap footer-copy">©UNIDEV ASSOCIATION 2026 · <a href="apropos.html">À propos</a></div></footer>
+  <nav class="bottomnav">
+    <a href="index.html" data-k="docs"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><span>Documents</span></a>
+    <a href="publier.html" data-k="publier"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg><span>Publier</span></a>
+    <a href="emploi.html" data-k="emploi"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h2M14 14h2M8 17.5h2"/></svg><span>Planning</span></a>
+    <a href="credits.html" data-k="credits" class="active"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2 0 0 1 2.5-2h.5a2 2 0 0 1 0 4h-1a2 2 0 0 0 0 4h.5a2.5 2 0 0 0 2.5-2"/></svg><span>Crédits</span><span class="pill" id="nav-credits"></span></a>
+    <a href="admin.html" data-k="admin" class="hidden" id="nav-admin"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Modération</span></a>
+    <span id="nav-user"><a href="connexion.html"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Connexion</span></a></span>
+  </nav>
+  <script src="js/nav.js"></script>
+
+  <script type="module" src="js/acheter.js"></script>
+</body>
+</html>

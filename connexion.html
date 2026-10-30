@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Connexion — unidev</title>
+  <meta name="description" content="Connecte-toi ou crée ton compte unidev pour télécharger et publier des documents d'université. 2 crédits offerts." />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="unidev" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap" />
+  <link rel="stylesheet" href="css/style.css?v=44" />
+  <script type="speculationrules">
+    { "prefetch": [{ "source": "document", "where": { "href_matches": "/*.html" }, "eagerness": "moderate" }] }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-in">
+      <a href="index.html" class="logo"><span class="logo-mark">u</span>unidev</a>
+      <div id="header-tools" class="header-tools"></div>
+    </div>
+  </header>
+  <main class="auth-page">
+    <div class="wrap">
+      <section class="auth-card">
+        <div class="auth-head">
+          <div class="auth-avatar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M3.8 20.2c0-4 3.7-6.7 8.2-6.7s8.2 2.7 8.2 6.7c0 .5-.4.8-.8.8H4.6c-.4 0-.8-.3-.8-.8z"/></svg></div>
+          <div>
+            <h1>Bienvenue</h1>
+            <p>Un compte est nécessaire pour télécharger et publier des documents. 2 crédits offerts à l'inscription.</p>
+          </div>
+        </div>
+
+        <div class="auth-tabs" role="tablist">
+          <button class="active" data-tab="login" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><span>Connexion</span></button>
+          <button data-tab="register" role="tab"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="9" cy="8" r="4"/><path d="M1.5 20.5c0-3.9 3.4-6.5 7.5-6.5s7.5 2.6 7.5 6.5c0 .3-.2.5-.5.5h-14c-.3 0-.5-.2-.5-.5z"/><path d="M19 8v6M16 11h6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Inscription</span></button>
+        </div>
+
+        <form id="form" class="auth-form">
+          <div class="auth-field hidden" id="row-nom">
+            <label for="nom"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="12" cy="8" r="4.2"/><path d="M3.8 20.2c0-4 3.7-6.7 8.2-6.7s8.2 2.7 8.2 6.7c0 .5-.4.8-.8.8H4.6c-.4 0-.8-.3-.8-.8z"/></svg>Nom complet</label>
+            <div class="auth-input"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><input id="nom" autocomplete="name" placeholder="Ton nom et prénom" /></div>
+          </div>
+          <div class="auth-field">
+            <label for="email"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M3 5h18a1 1 0 0 1 1 1v.4l-10 6.3L2 6.4V6a1 1 0 0 1 1-1zm-1 3.7 9.5 6a1 1 0 0 0 1 0L22 8.7V18a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/></svg>E-mail</label>
+            <div class="auth-input"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6.5 8.5 6 8.5-6"/></svg><input id="email" type="email" required autocomplete="email" placeholder="ton.email@exemple.com" /></div>
+          </div>
+          <div class="auth-field">
+            <label for="pwd"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M7 10V7.5a5 5 0 0 1 10 0V10h.5A1.5 1.5 0 0 1 19 11.5v8A1.5 1.5 0 0 1 17.5 21h-11A1.5 1.5 0 0 1 5 19.5v-8A1.5 1.5 0 0 1 6.5 10zm2 0h6V7.5a3 3 0 0 0-6 0zm3 3.5a1.5 1.5 0 0 0-.8 2.8V18h1.6v-1.7a1.5 1.5 0 0 0-.8-2.8z"/></svg>Mot de passe</label>
+            <div class="auth-input"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1"/></svg><input id="pwd" type="password" required minlength="6" autocomplete="current-password" placeholder="6 caractères minimum" />
+              <button type="button" class="auth-eye" id="eye" aria-label="Afficher le mot de passe"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-3 3.9M6.6 6.6A16.5 16.5 0 0 0 2.5 12s3.5 7 9.5 7a9.7 9.7 0 0 0 5.3-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></button>
+            </div>
+          </div>
+          <p class="auth-forgot" id="forgot-row"><a href="#" id="forgot">Mot de passe oublié ?</a></p>
+          <div class="auth-actions">
+            <button class="auth-btn auth-btn-outline" id="submit" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg><span id="submit-label">Se connecter</span></button>
+            <button class="auth-btn auth-btn-google" id="google" type="button"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2A11.9 11.9 0 0 1 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg><span>Continuer avec Google</span></button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer"><div class="wrap footer-copy">©UNIDEV ASSOCIATION 2026 · <a href="apropos.html">À propos</a></div></footer>
+  <nav class="bottomnav">
+    <a href="index.html" data-k="docs"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><span>Documents</span></a>
+    <a href="publier.html" data-k="publier"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg><span>Publier</span></a>
+    <a href="emploi.html" data-k="emploi"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h2M14 14h2M8 17.5h2"/></svg><span>Planning</span></a>
+    <a href="credits.html" data-k="credits"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2 0 0 1 2.5-2h.5a2 2 0 0 1 0 4h-1a2 2 0 0 0 0 4h.5a2.5 2 0 0 0 2.5-2"/></svg><span>Crédits</span><span class="pill" id="nav-credits"></span></a>
+    <a href="admin.html" data-k="admin" class="hidden" id="nav-admin"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Modération</span></a>
+    <span id="nav-user"><a href="connexion.html" class="active"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Connexion</span></a></span>
+  </nav>
+  <script src="js/nav.js"></script>
+
+  <script type="module">
+    import { login, register, loginGoogle, finishGoogleRedirect, resetPassword } from "./js/firebase.js";
+    import { initLayout, toast } from "./js/ui.js";
+
+    const next = new URLSearchParams(location.search).get("next") || "index.html";
+    let mode = "login";
+    let busy = false;
+
+    initLayout("", ({ user }) => { if (user && !busy) location.href = next; });
+
+    const $ = (id) => document.getElementById(id);
+    const errors = {
+      "auth/invalid-credential": "E-mail ou mot de passe incorrect.",
+      "auth/email-already-in-use": "Cet e-mail est déjà utilisé.",
+      "auth/weak-password": "Mot de passe trop court (6 caractères minimum).",
+      "auth/invalid-email": "Adresse e-mail invalide.",
+      "auth/too-many-requests": "Trop de tentatives. Réessaie plus tard.",
+      "auth/popup-closed-by-user": "Connexion Google annulée.",
+      "auth/cancelled-popup-request": "Connexion Google annulée.",
+      "auth/unauthorized-domain": "Ce site n'est pas autorisé dans Firebase : ajoute son adresse dans Authentication > Paramètres > Domaines autorisés.",
+      "auth/operation-not-allowed": "Cette méthode de connexion n'est pas activée dans Firebase (Authentication > Sign-in method).",
+      "auth/network-request-failed": "Pas de connexion internet.",
+      "auth/account-exists-with-different-credential": "Un compte existe déjà avec cet e-mail : connecte-toi avec ton mot de passe.",
+    };
+    const fail = (e) => toast(errors[e.code] || e.message, "err");
+
+    document.querySelectorAll(".auth-tabs button").forEach((b) => b.onclick = () => {
+      mode = b.dataset.tab;
+      document.querySelectorAll(".auth-tabs button").forEach((x) => x.classList.toggle("active", x === b));
+      $("row-nom").classList.toggle("hidden", mode !== "register");
+      $("forgot-row").classList.toggle("hidden", mode === "register");
+      $("nom").required = mode === "register";
+      $("pwd").autocomplete = mode === "register" ? "new-password" : "current-password";
+      $("submit-label").textContent = mode === "register" ? "Créer mon compte" : "Se connecter";
+    });
+
+    // Afficher / masquer le mot de passe
+    const EYE = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5 12 5s9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7z"/><circle cx="12" cy="12" r="3"/></svg>`, EYE_OFF = `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6 0 9.5 7 9.5 7a17 17 0 0 1-3 3.9M6.6 6.6A16.5 16.5 0 0 0 2.5 12s3.5 7 9.5 7a9.7 9.7 0 0 0 5.3-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>`;
+    $("eye").onclick = () => {
+      const show = $("pwd").type === "password";
+      $("pwd").type = show ? "text" : "password";
+      $("eye").innerHTML = show ? EYE : EYE_OFF;
+      $("eye").setAttribute("aria-label", show ? "Masquer le mot de passe" : "Afficher le mot de passe");
+    };
+
+    $("form").onsubmit = async (e) => {
+      e.preventDefault();
+      busy = true; $("submit").disabled = true;
+      try {
+        if (mode === "register") await register($("nom").value.trim(), $("email").value.trim(), $("pwd").value);
+        else await login($("email").value.trim(), $("pwd").value);
+        location.href = next;
+      } catch (err) { fail(err); busy = false; $("submit").disabled = false; }
+    };
+
+    $("google").onclick = async () => {
+      busy = true;
+      $("google").disabled = true;
+      try {
+        const user = await loginGoogle();
+        if (user) location.href = next; // sinon : redirection Google en cours
+      } catch (err) { console.error(err); fail(err); busy = false; $("google").disabled = false; }
+    };
+    // Retour d'une connexion Google par redirection
+    finishGoogleRedirect().then((u) => { if (u) location.href = next; }).catch((err) => { console.error(err); fail(err); });
+
+    $("forgot").onclick = async (e) => {
+      e.preventDefault();
+      const email = $("email").value.trim();
+      if (!email) return toast("Saisis d'abord ton e-mail.", "err");
+      try { await resetPassword(email); toast("E-mail de réinitialisation envoyé."); } catch (err) { fail(err); }
+    };
+  </script>
+</body>
+</html>

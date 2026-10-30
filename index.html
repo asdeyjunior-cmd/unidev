@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>unidev — Cours, TD, examens et corrigés d'université à télécharger</title>
+  <meta name="description" content="unidev : la bibliothèque des étudiants. Cours, TD, TP, sujets d'examen, corrigés et mémoires de BTS, Licence et Master à télécharger, partagés par les étudiants de Côte d'Ivoire." />
+  <link rel="canonical" href="https://unidev-2026.web.app/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="unidev" />
+  <meta property="og:title" content="unidev — Cours, TD, examens et corrigés d'université" />
+  <meta property="og:description" content="Cours, TD, sujets d'examen et corrigés de BTS, Licence et Master à télécharger, partagés par les étudiants." />
+  <meta property="og:url" content="https://unidev-2026.web.app/" />
+  <meta property="og:image" content="https://unidev-2026.web.app/icons/icon-512.png" />
+  <meta property="og:locale" content="fr_CI" />
+  <meta name="twitter:card" content="summary" />
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebSite","name":"unidev","url":"https://unidev-2026.web.app/","inLanguage":"fr",
+    "description":"Cours, TD, examens et corrigés d'université à télécharger, partagés par les étudiants.",
+    "potentialAction":{"@type":"SearchAction","target":"https://unidev-2026.web.app/index.html?q={search_term_string}","query-input":"required name=search_term_string"}}
+  </script>
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="unidev" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+  <link rel="stylesheet" href="css/style.css?v=44" />
+  <script type="speculationrules">
+    { "prefetch": [{ "source": "document", "where": { "href_matches": "/*.html" }, "eagerness": "moderate" }] }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-in">
+      <a href="index.html" class="logo"><span class="logo-mark">u</span>unidev</a>
+      <div id="header-tools" class="header-tools">
+        <div class="filters">
+          <div class="search-wrap">
+            <form class="searchbar" id="search-form" role="search" autocomplete="off">
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+              <input id="f-q" type="text" inputmode="search" enterkeyhint="search" placeholder="Rechercher sur unidev" aria-label="Rechercher"
+                     role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggest" />
+              <button type="button" class="search-clear" id="q-clear" aria-label="Effacer la recherche" hidden>&times;</button>
+            </form>
+            <div class="suggest" id="suggest" role="listbox" hidden></div>
+          </div>
+          <div class="chips">
+            <select id="f-type" aria-label="Type"><option value="">Type</option></select>
+            <select id="f-niveau" aria-label="Niveau"><option value="">Niveau</option></select>
+            <select id="f-filiere" aria-label="Filière"><option value="">Filière</option></select>
+            <select id="f-sort" aria-label="Trier">
+              <option value="recent">Récents</option>
+              <option value="populaire">Populaires</option>
+              <option value="titre">A → Z</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+  <main>
+    <div class="wrap">
+
+      <div class="cards cards-home" id="list">
+        <div class="first-load"><div class="loader"></div><p class="muted">Chargement des documents…</p></div>
+      </div>
+      <div id="more" class="more" aria-live="polite"></div>
+    </div>
+  </main>
+
+  <footer class="footer"><div class="wrap footer-copy">©UNIDEV ASSOCIATION 2026 · <a href="apropos.html">À propos</a> · <a href="d/index.html">Tous les documents</a></div></footer>
+  <nav class="bottomnav">
+    <a href="index.html" data-k="docs" class="active"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><span>Documents</span></a>
+    <a href="publier.html" data-k="publier"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg><span>Publier</span></a>
+    <a href="emploi.html" data-k="emploi"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h2M14 14h2M8 17.5h2"/></svg><span>Planning</span></a>
+    <a href="credits.html" data-k="credits"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2 0 0 1 2.5-2h.5a2 2 0 0 1 0 4h-1a2 2 0 0 0 0 4h.5a2.5 2 0 0 0 2.5-2"/></svg><span>Crédits</span><span class="pill" id="nav-credits"></span></a>
+    <a href="admin.html" data-k="admin" class="hidden" id="nav-admin"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Modération</span></a>
+    <span id="nav-user"><a href="connexion.html"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Connexion</span></a></span>
+  </nav>
+  <script src="js/nav.js"></script>
+
+  <script type="module" src="js/catalogue.js"></script>
+</body>
+</html>

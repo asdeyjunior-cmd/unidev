@@ -1,0 +1,11 @@
+{
+  "indexes": [
+    { "collectionGroup": "documents", "queryScope": "COLLECTION",
+      "fields": [ { "fieldPath": "statut", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" } ] },
+    { "collectionGroup": "documents", "queryScope": "COLLECTION",
+      "fields": [ { "fieldPath": "statut", "order": "ASCENDING" }, { "fieldPath": "telechargements", "order": "DESCENDING" } ] },
+    { "collectionGroup": "documents", "queryScope": "COLLECTION",
+      "fields": [ { "fieldPath": "statut", "order": "ASCENDING" }, { "fieldPath": "titre", "order": "ASCENDING" } ] }
+  ],
+  "fieldOverrides": []
+}

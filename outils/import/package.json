@@ -1,0 +1,21 @@
+{
+  "name": "unidev-import",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Importation en masse de documents dans unidev (dossier local, HAL, Wikiversité, Wikilivres, Zenodo)",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dossier": "node importer.js dossier",
+    "hal": "node importer.js hal"
+  },
+  "dependencies": {
+    "cloudinary": "^2.5.1",
+    "dotenv": "^16.6.1",
+    "firebase-admin": "^12.7.0",
+    "pdfkit": "^0.15.2",
+    "sharp": "^0.33.5"
+  }
+}

@@ -1,0 +1,36 @@
+# Chaque nuit (et à la demande) : pages Google des nouveaux documents, mise en ligne, signalement à Bing.
+name: Mettre le site en ligne
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore: ["outils/import/import-journal.json"]
+  schedule:
+    - cron: "17 2 * * *"   # tous les jours vers 2 h du matin (heure d'Abidjan)
+
+concurrency: { group: unidev-deploy, cancel-in-progress: true }
+
+jobs:
+  deployer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Pages Google des documents
+        working-directory: outils/import
+        env: { CLE: "${{ secrets.FIREBASE_CLE_JSON }}" }
+        run: |
+          npm install --no-audit --no-fund
+          printf '%s' "$CLE" > cle-firebase.json
+          node pages.js
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_UNIDEV_2026 }}
+          projectId: unidev-2026
+          channelId: live
+      - name: Prévenir Bing
+        run: node outils/import/indexnow.js

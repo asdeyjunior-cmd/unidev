@@ -1,0 +1,85 @@
+# Importer des documents sur unidev depuis GitHub (PC éteint possible).
+# GitHub > onglet Actions > « Importer des documents » > Run workflow.
+name: Importer des documents
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Où chercher"
+        type: choice
+        default: tout
+        options: [tout, hal, wikiversite, wikilivres, zenodo, romans, site]
+      recherche:
+        description: "Thème, titre ou auteur (ex : comptabilité, Zola). Vide = au hasard pour les romans"
+        required: false
+        default: ""
+      max:
+        description: "Nombre maximum de documents (par site pour « tout »)"
+        default: "20"
+      url:
+        description: "Seulement pour « site » : adresse de la page de départ (ex : une page de Fomesoutra)"
+        required: false
+        default: ""
+      profondeur:
+        description: "Seulement pour « site » : 1 = cette page, 2 = + les pages qu'elle liste"
+        default: "2"
+
+concurrency: { group: unidev-import, cancel-in-progress: false }
+permissions: { contents: write }
+
+jobs:
+  importer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    defaults: { run: { working-directory: outils/import } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Installation
+        run: npm install --no-audit --no-fund
+      - name: Clés (depuis les secrets GitHub)
+        env:
+          CLE: ${{ secrets.FIREBASE_CLE_JSON }}
+          CK: ${{ secrets.CLOUDINARY_API_KEY }}
+          CS: ${{ secrets.CLOUDINARY_API_SECRET }}
+        run: |
+          printf '%s' "$CLE" > cle-firebase.json
+          printf 'CLOUDINARY_CLOUD_NAME=iugeyztf\nCLOUDINARY_API_KEY=%s\nCLOUDINARY_API_SECRET=%s\nFIREBASE_CLE=./cle-firebase.json\nAUTEUR_NOM=unidev\n' "$CK" "$CS" > .env
+      - name: Import
+        env:
+          SOURCE: ${{ inputs.source }}
+          RECHERCHE: ${{ inputs.recherche }}
+          MAX: ${{ inputs.max }}
+          URL: ${{ inputs.url }}
+          PROF: ${{ inputs.profondeur }}
+        run: |
+          case "$SOURCE" in
+            wikiversite) node importer.js wiki --projet wikiversite --recherche "$RECHERCHE" --max "$MAX" ;;
+            wikilivres)  node importer.js wiki --projet wikilivres --recherche "$RECHERCHE" --max "$MAX" ;;
+            site)        node importer.js site --url "$URL" --profondeur "$PROF" --max "$MAX" ;;
+            romans)      node importer.js romans --recherche "$RECHERCHE" --max "$MAX" ;;
+            *)           node importer.js "$SOURCE" --recherche "$RECHERCHE" --max "$MAX" ;;
+          esac
+      - name: Garder le journal (pour ne rien importer deux fois)
+        if: always()
+        run: |
+          git config user.name "unidev-robot"; git config user.email "robot@unidev.invalid"
+          git add import-journal.json 2>/dev/null || true
+          git commit -m "Journal d'import" || echo "Rien de nouveau"
+          git pull --rebase && git push || echo "Journal non enregistré (sans gravité)"
+      - name: Pages Google des documents
+        if: always()
+        run: node pages.js
+      - name: Mise en ligne
+        if: always()
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_UNIDEV_2026 }}
+          projectId: unidev-2026
+          channelId: live
+      - name: Prévenir Bing
+        if: always()
+        run: node indexnow.js

@@ -1,0 +1,8 @@
+# Ne jamais mettre ces fichiers sur GitHub
+.env
+**/.env
+cle-firebase.json
+**/cle-firebase.json
+node_modules/
+firebase-debug.log
+*.log

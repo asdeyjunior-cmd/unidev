@@ -1,0 +1,1250 @@
+{
+  "fichier:3a995089d40246bc8818cc658643bfb9c2a21bc4": {
+    "id": "RHZATZ8VTN2QzciWLxOs",
+    "source": "0187-formation-merise.pdf",
+    "date": "2026-10-22T08:45:06.560Z"
+  },
+  "fichier:3f3f883195ef4ed1ab0a659108bc68b1d77044b0": {
+    "id": "O6nlQQnMOK04KBCL58Kx",
+    "source": "Autre\\Jachète moins, je vis mieux, cest parti !.pdf",
+    "date": "2026-10-22T19:32:46.382Z"
+  },
+  "fichier:147d5a6efbff6f9def3119b5755c7bf6c60a09b0": {
+    "id": "J3NT9SMsUXMsfyQIuPny",
+    "source": "Informatique\\Réseaux\\Teleinformatique_et_Reseau_ESETEC.pdf",
+    "date": "2026-10-22T19:32:54.275Z"
+  },
+  "fichier:2548dca82a1ee5c87754444f5b67af3446a0a8fe": {
+    "id": "K1RdCTvFOdVI7VnVoNrC",
+    "source": "Autre\\L’ art subtil de s’ en foutre.pdf",
+    "date": "2026-10-22T23:25:04.908Z"
+  },
+  "fichier:62fbf97b410103cbce11d5eb2fcadf9340ccea63": {
+    "id": "VrNDBFzSWPC3vmMd4JVZ",
+    "source": "Autre\\Power BI- Moving Beyond the Basics of Power BI and Learning.pdf",
+    "date": "2026-10-22T23:25:12.725Z"
+  },
+  "fichier:ffef83f0c9e123a013862299b4eb64735b6dd6a5": {
+    "id": "aNoR8tmUfVmO7rmKTFgk",
+    "source": "Autre\\Vous pouvez presque tout demander à ChatGP.pdf",
+    "date": "2026-10-22T23:25:22.656Z"
+  },
+  "hal:hal-05694870": {
+    "id": "mXyrKky8LOa7r6OwEXcC",
+    "source": "https://hal.science/hal-05694870/document",
+    "licence": "CC BY",
+    "date": "2026-10-27T09:46:21.968Z"
+  },
+  "hal:hal-04492932": {
+    "id": "fZDflSj4k0lX9ldrxPDC",
+    "source": "https://inria.hal.science/hal-04492932/document",
+    "licence": "CC BY",
+    "date": "2026-10-27T09:55:41.456Z"
+  },
+  "hal:hal-05598750": {
+    "id": "zsPv0mPGVPAfbaz0sQ0o",
+    "source": "https://hal.science/hal-05598750/document",
+    "licence": "CC BY",
+    "date": "2026-10-27T11:18:42.778Z"
+  },
+  "hal:hal-05662806": {
+    "id": "xATwcPbLDGQXSmqvSPOW",
+    "source": "https://hal.science/hal-05662806/document",
+    "licence": "CC BY-SA",
+    "date": "2026-10-27T11:20:13.276Z"
+  },
+  "hal:hal-05315840": {
+    "id": "xB3alBFi5V7CubNsYnMG",
+    "source": "https://hal.inrae.fr/hal-05315840/document",
+    "licence": "CC BY-ND",
+    "date": "2026-10-27T11:27:22.654Z"
+  },
+  "hal:hal-05315863": {
+    "id": "j0Ydvf515lqWKTPCRn8A",
+    "source": "https://hal.inrae.fr/hal-05315863/document",
+    "licence": "CC BY-ND",
+    "date": "2026-10-27T11:28:17.013Z"
+  },
+  "hal:hal-05315925": {
+    "id": "rMvEXpYTXdMkkGbc536K",
+    "source": "https://hal.inrae.fr/hal-05315925/document",
+    "licence": "CC BY-ND",
+    "date": "2026-10-27T11:34:37.091Z"
+  },
+  "hal:hal-05315902": {
+    "id": "3pnwyqBnrhUIQGRnVRj7",
+    "source": "https://hal.inrae.fr/hal-05315902/document",
+    "licence": "CC BY-ND",
+    "date": "2026-10-27T11:35:39.389Z"
+  },
+  "hal:hal-05683211": {
+    "id": "yepQ66gfvvXib8iFdKos",
+    "source": "https://hal.inrae.fr/hal-05683211/document",
+    "licence": "CC BY",
+    "date": "2026-10-27T12:01:00.549Z"
+  },
+  "hal:hal-04324555": {
+    "id": "6JQKhRGD9q5Oz2UZh2Jb",
+    "source": "https://hal.inrae.fr/hal-04324555/document",
+    "licence": "CC BY",
+    "date": "2026-10-27T12:01:07.866Z"
+  },
+  "hal:hal-05777099": {
+    "id": "IbOqYB0o7isgjgr3ciEV",
+    "source": "https://hal.inrae.fr/hal-05777099/document",
+    "licence": "CC BY",
+    "date": "2026-10-27T12:01:22.251Z"
+  },
+  "hal:hal-05662812": {
+    "id": "NMJMI08WZiFPOIuffhFt",
+    "source": "https://hal.science/hal-05662812/document",
+    "licence": "CC BY-SA",
+    "date": "2026-10-27T12:05:25.146Z"
+  },
+  "hal:hal-05375898": {
+    "id": "CuoUK5gzZBuF1dAmfDDf",
+    "source": "https://hal.inrae.fr/hal-05375898/document",
+    "licence": "CC BY-SA",
+    "date": "2026-10-27T12:06:40.003Z"
+  },
+  "hal:hal-05446919": {
+    "id": "Kv4RdALEGqvgXnN5L1SO",
+    "source": "https://hal.inrae.fr/hal-05446919/document",
+    "licence": "CC BY",
+    "date": "2026-10-27T15:20:32.374Z"
+  },
+  "hal:hal-05315887": {
+    "id": "Ke2T1gX4mPrV2gnJM1EJ",
+    "source": "https://hal.inrae.fr/hal-05315887/document",
+    "licence": "CC BY-ND",
+    "date": "2026-10-27T15:26:38.666Z"
+  },
+  "hal:hal-05468730": {
+    "id": "AyDCvyeLEa2KNEGk7GlN",
+    "source": "https://hal.science/hal-05468730/document",
+    "licence": "CC BY-SA",
+    "date": "2026-10-27T15:37:24.412Z"
+  },
+  "hal:hal-05315873": {
+    "id": "7JcK4E7hxP08PYq5P7Mu",
+    "source": "https://hal.inrae.fr/hal-05315873/document",
+    "licence": "CC BY-ND",
+    "date": "2026-10-27T15:45:08.805Z"
+  },
+  "hal:hal-05073515": {
+    "id": "okTm3JR42zYd4e7F5KZJ",
+    "source": "https://hal.science/hal-05073515/document",
+    "licence": "CC BY-SA",
+    "date": "2026-10-27T15:46:32.242Z"
+  },
+  "hal:hal-05704741": {
+    "id": "H9SsTl56fpTIigwW140h",
+    "source": "https://hal.science/hal-05704741/document",
+    "licence": "CC BY",
+    "date": "2026-10-27T16:22:04.560Z"
+  },
+  "hal:hal-05766103": {
+    "id": "xsMNftToBh77znJAoevu",
+    "source": "https://hal.science/hal-05766103/document",
+    "licence": "Licence Ouverte",
+    "date": "2026-10-27T16:23:32.320Z"
+  },
+  "hal:hal-04753586": {
+    "id": "fUNVbUakBTM8NzoCng4N",
+    "source": "https://hal.science/hal-04753586/document",
+    "licence": "Domaine public",
+    "date": "2026-10-28T15:53:30.206Z"
+  },
+  "hal:hal-02527209": {
+    "id": "azqIlOB2y7GYxb7C48iU",
+    "source": "https://hal.science/hal-02527209/document",
+    "licence": "CC BY-SA",
+    "date": "2026-10-28T15:53:37.350Z"
+  },
+  "wiki:fr.wikiversity.org:Algorithmique": {
+    "id": "omcJY8x4v1MwsPwqaj1r",
+    "source": "https://fr.wikiversity.org/wiki/Algorithmique",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T15:53:50.760Z"
+  },
+  "wiki:fr.wikiversity.org:Récursivité dans l'algorithmique et la programmation": {
+    "id": "29stk1s8lYVl4SmA4Qx4",
+    "source": "https://fr.wikiversity.org/wiki/R%C3%A9cursivit%C3%A9_dans_l'algorithmique_et_la_programmation",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T15:53:58.427Z"
+  },
+  "wiki:fr.wikiversity.org:Complexité algorithmique": {
+    "id": "gsfwfSOLL0ZN7FXeBfq3",
+    "source": "https://fr.wikiversity.org/wiki/Complexit%C3%A9_algorithmique",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T15:54:02.732Z"
+  },
+  "wiki:fr.wikiversity.org:Initiation à la programmation": {
+    "id": "1Sp9ZVRFbgkOlIyXwF4f",
+    "source": "https://fr.wikiversity.org/wiki/Initiation_%C3%A0_la_programmation",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T15:54:13.723Z"
+  },
+  "wiki:fr.wikiversity.org:Informatique et sciences du numérique": {
+    "id": "sinLim74CQMYHLhl5BTP",
+    "source": "https://fr.wikiversity.org/wiki/Informatique_et_sciences_du_num%C3%A9rique",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T15:54:32.485Z"
+  },
+  "wiki:fr.wikibooks.org:Algorithmique": {
+    "id": "YV0NkqAzgku8JD3B77W3",
+    "source": "https://fr.wikibooks.org/wiki/Algorithmique",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T15:54:41.260Z"
+  },
+  "wiki:fr.wikibooks.org:Algorithmique impérative": {
+    "id": "OL8OvBBSIPOo5VufV3L3",
+    "source": "https://fr.wikibooks.org/wiki/Algorithmique_imp%C3%A9rative",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T15:55:06.592Z"
+  },
+  "wiki:fr.wikibooks.org:Programmation algorithmique": {
+    "id": "bA262V6jz4MimsruQoHQ",
+    "source": "https://fr.wikibooks.org/wiki/Programmation_algorithmique",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T15:55:17.530Z"
+  },
+  "wiki:fr.wikibooks.org:Implémentation d'algorithmes classiques": {
+    "id": "Aarr9DGQwOgj3CC9UzLz",
+    "source": "https://fr.wikibooks.org/wiki/Impl%C3%A9mentation_d'algorithmes_classiques",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T15:55:28.534Z"
+  },
+  "wiki:fr.wikibooks.org:Programmation C-C++": {
+    "id": "bHi7HlyxtZwXidxdjL1Q",
+    "source": "https://fr.wikibooks.org/wiki/Programmation_C-C%2B%2B",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T15:56:08.662Z"
+  },
+  "zenodo:1164973": {
+    "id": "7lQ35H7yuTG1GIgefBNz",
+    "source": "https://doi.org/10.5281/zenodo.1164973",
+    "licence": "CC BY-SA",
+    "date": "2026-10-28T15:56:12.883Z"
+  },
+  "zenodo:1038639": {
+    "id": "AHp0EWMiQNwppJcsCZ0Q",
+    "source": "https://doi.org/10.5281/zenodo.1038639",
+    "licence": "CC BY-SA",
+    "date": "2026-10-28T15:56:15.061Z"
+  },
+  "zenodo:1166133": {
+    "id": "dRsQ7K6UElE6vqTpSzHO",
+    "source": "https://doi.org/10.5281/zenodo.1166133",
+    "licence": "CC BY",
+    "date": "2026-10-28T15:56:21.193Z"
+  },
+  "wiki:fr.wikiversity.org:Le roman et la nouvelle au XIXe siècle : le réalisme et le naturalisme": {
+    "id": "OluFag5pOSK3tjwAVzma",
+    "source": "https://fr.wikiversity.org/wiki/Le_roman_et_la_nouvelle_au_XIXe_si%C3%A8cle_%3A_le_r%C3%A9alisme_et_le_naturalisme",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:00:14.106Z"
+  },
+  "wiki:fr.wikiversity.org:Le roman et ses personnages : visions de l’homme et du monde": {
+    "id": "dGpu40ElOoRCofyKDQV3",
+    "source": "https://fr.wikiversity.org/wiki/Le_roman_et_ses_personnages_%3A_visions_de_l%E2%80%99homme_et_du_monde",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:00:19.385Z"
+  },
+  "wiki:fr.wikiversity.org:Simple english c01": {
+    "id": "ZxqsYdoEu196PTIdaQBk",
+    "source": "https://fr.wikiversity.org/wiki/Simple_english_c01",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:00:35.640Z"
+  },
+  "wiki:fr.wikiversity.org:La poésie du XIXe au XXe siècle : du romantisme au surréalisme": {
+    "id": "4gowNkgGHlxBLYtcUdP5",
+    "source": "https://fr.wikiversity.org/wiki/La_po%C3%A9sie_du_XIXe_au_XXe_si%C3%A8cle_%3A_du_romantisme_au_surr%C3%A9alisme",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:00:46.533Z"
+  },
+  "wiki:fr.wikiversity.org:Littérature de jeunesse en anglais": {
+    "id": "xR1sdOP772eWp8bCZOnw",
+    "source": "https://fr.wikiversity.org/wiki/Litt%C3%A9rature_de_jeunesse_en_anglais",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:00:48.594Z"
+  },
+  "wiki:fr.wikibooks.org:Le langage CSS": {
+    "id": "7EhlzDjn249OmBhEoM78",
+    "source": "https://fr.wikibooks.org/wiki/Le_langage_CSS",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:01:11.149Z"
+  },
+  "wiki:fr.wikibooks.org:Le langage HTML": {
+    "id": "Qwd7fXOS5r5Ha2glVXBp",
+    "source": "https://fr.wikibooks.org/wiki/Le_langage_HTML",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:01:36.197Z"
+  },
+  "wiki:fr.wikibooks.org:Droit administratif": {
+    "id": "6oL6lZ6c8qUF7yIgKSVn",
+    "source": "https://fr.wikibooks.org/wiki/Droit_administratif",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:01:44.344Z"
+  },
+  "wiki:fr.wikibooks.org:Programmation GTK2 en Pascal": {
+    "id": "UXY98YznB17V2A4X2uny",
+    "source": "https://fr.wikibooks.org/wiki/Programmation_GTK2_en_Pascal",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:02:24.663Z"
+  },
+  "wiki:fr.wikibooks.org:Programmation C sharp": {
+    "id": "xMWEnUaqDWlSSWkZFKEU",
+    "source": "https://fr.wikibooks.org/wiki/Programmation_C_sharp",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:02:58.720Z"
+  },
+  "zenodo:23556940": {
+    "id": "Pr7yzTLQfEVgIhrEP7l5",
+    "source": "https://doi.org/10.5281/zenodo.23556940",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:03:17.913Z"
+  },
+  "zenodo:839521": {
+    "id": "b8BiKH5oO8UmLt5yefPt",
+    "source": "https://doi.org/10.5281/zenodo.839521",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:03:32.315Z"
+  },
+  "zenodo:12529635": {
+    "id": "gWIPjT9LAw6c7HFMFd8N",
+    "source": "https://doi.org/10.5281/zenodo.12529635",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:03:34.602Z"
+  },
+  "zenodo:8124964": {
+    "id": "SdjMTaULkA8vbOcusK84",
+    "source": "https://doi.org/10.5281/zenodo.8124964",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:03:51.489Z"
+  },
+  "zenodo:8124986": {
+    "id": "qxxFdIC8DtYWyQlIfIbU",
+    "source": "https://doi.org/10.5281/zenodo.8124986",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:04:34.225Z"
+  },
+  "wiki:fr.wikiversity.org:Mercatique opérationnelle": {
+    "id": "xYN5geEN5xRFCYdouKyU",
+    "source": "https://fr.wikiversity.org/wiki/Mercatique_op%C3%A9rationnelle",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:16:54.831Z"
+  },
+  "wiki:fr.wikiversity.org:Gestion de projet stratégique": {
+    "id": "L3xFQqRsLpLuGmnsNCi0",
+    "source": "https://fr.wikiversity.org/wiki/Gestion_de_projet_strat%C3%A9gique",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:17:16.467Z"
+  },
+  "wiki:fr.wikiversity.org:Introduction au Management des opérations": {
+    "id": "iYeS0wAXkZbj4Ksxtmj2",
+    "source": "https://fr.wikiversity.org/wiki/Introduction_au_Management_des_op%C3%A9rations",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:17:31.293Z"
+  },
+  "wiki:fr.wikiversity.org:U3 CQP Chargé de clientèle Assurance": {
+    "id": "BJkYUAZZhlY8ALXQzzlr",
+    "source": "https://fr.wikiversity.org/wiki/U3_CQP_Charg%C3%A9_de_client%C3%A8le_Assurance",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:17:52.599Z"
+  },
+  "wiki:fr.wikiversity.org:Progiciel de gestion intégré": {
+    "id": "VrrY9QDhi0PbdFQLEL1M",
+    "source": "https://fr.wikiversity.org/wiki/Progiciel_de_gestion_int%C3%A9gr%C3%A9",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:18:11.069Z"
+  },
+  "wiki:fr.wikiversity.org:Gestion intégrée de l'entreprise (ERP)": {
+    "id": "MgihPtrkwPwp9zRIcX6O",
+    "source": "https://fr.wikiversity.org/wiki/Gestion_int%C3%A9gr%C3%A9e_de_l'entreprise_(ERP)",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:18:24.285Z"
+  },
+  "wiki:fr.wikiversity.org:Certification Linux LPI": {
+    "id": "eIXaGFQKLS6FP7TvrY3v",
+    "source": "https://fr.wikiversity.org/wiki/Certification_Linux_LPI",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:19:19.872Z"
+  },
+  "wiki:fr.wikiversity.org:Système de management de la qualité": {
+    "id": "WUt3laPNaClmvA01sd2H",
+    "source": "https://fr.wikiversity.org/wiki/Syst%C3%A8me_de_management_de_la_qualit%C3%A9",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:19:35.273Z"
+  },
+  "wiki:fr.wikiversity.org:Le piratage informatique": {
+    "id": "IumFGWPIjTJV30J2XTWk",
+    "source": "https://fr.wikiversity.org/wiki/Le_piratage_informatique",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:19:45.308Z"
+  },
+  "wiki:fr.wikiversity.org:Comprendre l accessibilite numerique-Notions de base": {
+    "id": "iChQFLIT7RBrWFznSXLQ",
+    "source": "https://fr.wikiversity.org/wiki/Comprendre_l_accessibilite_numerique-Notions_de_base",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:19:47.895Z"
+  },
+  "wiki:fr.wikibooks.org:Sécurité des systèmes informatiques": {
+    "id": "veOujia21E9yEsv9GH89",
+    "source": "https://fr.wikibooks.org/wiki/S%C3%A9curit%C3%A9_des_syst%C3%A8mes_informatiques",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:20:20.618Z"
+  },
+  "wiki:fr.wikibooks.org:Mathématiques du traitement du signal": {
+    "id": "augLsc0SKyqYGQ3I66vS",
+    "source": "https://fr.wikibooks.org/wiki/Math%C3%A9matiques_du_traitement_du_signal",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:20:29.755Z"
+  },
+  "wiki:fr.wikibooks.org:Mesures physiques et Informatique": {
+    "id": "4ifI4cRbUuA94eKgO4YG",
+    "source": "https://fr.wikibooks.org/wiki/Mesures_physiques_et_Informatique",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:20:36.287Z"
+  },
+  "wiki:fr.wikibooks.org:Programmation PHP": {
+    "id": "HDm7KmOUF8mQZO1J1SEk",
+    "source": "https://fr.wikibooks.org/wiki/Programmation_PHP",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:21:21.820Z"
+  },
+  "wiki:fr.wikibooks.org:Les transports": {
+    "id": "NERci748DPOzmX4OiKMK",
+    "source": "https://fr.wikibooks.org/wiki/Les_transports",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:21:39.815Z"
+  },
+  "wiki:fr.wikibooks.org:Pouvoir Accéder et Utiliser Internet": {
+    "id": "uKl10fR9qU8w5M9yZODR",
+    "source": "https://fr.wikibooks.org/wiki/Pouvoir_Acc%C3%A9der_et_Utiliser_Internet",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:21:52.568Z"
+  },
+  "wiki:fr.wikibooks.org:BiblioTIC : l'informatique et l'Internet au service des bibliothèques": {
+    "id": "gMZcCbgnHEyYakcAnQE7",
+    "source": "https://fr.wikibooks.org/wiki/BiblioTIC_%3A_l'informatique_et_l'Internet_au_service_des_biblioth%C3%A8ques",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:22:10.966Z"
+  },
+  "wiki:fr.wikibooks.org:Fonctionnement d'un ordinateur": {
+    "id": "4h2St4n5C1bxFaPs3iTV",
+    "source": "https://fr.wikibooks.org/wiki/Fonctionnement_d'un_ordinateur",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:22:20.683Z"
+  },
+  "wiki:fr.wikibooks.org:Vocabulaire anglais-français à l'intention des apprenants avancés": {
+    "id": "oOKsD3tKIwS5ZMXThSDw",
+    "source": "https://fr.wikibooks.org/wiki/Vocabulaire_anglais-fran%C3%A7ais_%C3%A0_l'intention_des_apprenants_avanc%C3%A9s",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:22:26.991Z"
+  },
+  "wiki:fr.wikibooks.org:Exercices en langage C": {
+    "id": "P86iMEJKEwJMx20XI5b6",
+    "source": "https://fr.wikibooks.org/wiki/Exercices_en_langage_C",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-10-28T16:22:37.767Z"
+  },
+  "zenodo:5006555": {
+    "id": "Tc54miH07PI9gaueRXDe",
+    "source": "https://doi.org/10.5281/zenodo.5006555",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:22:52.249Z"
+  },
+  "zenodo:7595274": {
+    "id": "SeXwS6HaW93dmmA0RRB9",
+    "source": "https://doi.org/10.5281/zenodo.7595274",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:22:55.420Z"
+  },
+  "zenodo:17409746": {
+    "id": "Z2cUhjkxu0GXZjtFVll8",
+    "source": "https://doi.org/10.5281/zenodo.17409746",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:23:23.349Z"
+  },
+  "zenodo:19201532": {
+    "id": "SwGm8bQntouclcZz6XDN",
+    "source": "https://doi.org/10.5281/zenodo.19201532",
+    "licence": "CC BY-SA",
+    "date": "2026-10-28T16:23:30.521Z"
+  },
+  "zenodo:18834925": {
+    "id": "mz5vPwp6M7X6WTtqHIdM",
+    "source": "https://doi.org/10.5281/zenodo.18834925",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:23:37.222Z"
+  },
+  "zenodo:20713192": {
+    "id": "hPYCV9hzXaHGNzF51juR",
+    "source": "https://doi.org/10.5281/zenodo.20713192",
+    "licence": "CC BY-SA",
+    "date": "2026-10-28T16:23:44.394Z"
+  },
+  "zenodo:6854365": {
+    "id": "8Sjf1LewzlCKM7g9Nl2X",
+    "source": "https://doi.org/10.5281/zenodo.6854365",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:23:47.754Z"
+  },
+  "zenodo:18861010": {
+    "id": "elKgeSGK63Den376ad7u",
+    "source": "https://doi.org/10.5281/zenodo.18861010",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:24:13.882Z"
+  },
+  "zenodo:4291896": {
+    "id": "5AUm0XdhGy8dvq8PRS8X",
+    "source": "https://doi.org/10.5281/zenodo.4291896",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:24:17.937Z"
+  },
+  "zenodo:15001152": {
+    "id": "hMhhuHY9BoskcIfinMb0",
+    "source": "https://doi.org/10.5281/zenodo.15001152",
+    "licence": "CC BY",
+    "date": "2026-10-28T16:24:45.588Z"
+  },
+  "fichier:8c95439484cbc8f874fbcaedfb783a195d535355": {
+    "id": "N9FKTM4abXGh4aAKgiAc",
+    "source": "Oeuvre Il est venu libérer les captifs de Rebecca Brown by TEHUA.pdf",
+    "date": "2026-10-28T16:35:17.636Z"
+  },
+  "fichier:63845b0b048c5eae0b8b9858c5e2481468194c1c": {
+    "id": "wN1IT4RDMCIy0PT7bCrS",
+    "source": "roman Amadou Koumba_ Les Contes.pdf",
+    "date": "2026-10-28T16:35:19.405Z"
+  },
+  "fichier:50a8fff89c789644f5061e7cc558d84e6268a3ea": {
+    "id": "bvq21VJRnvi98Ow7S1oT",
+    "source": "roman Bernard Dadié - Le pagne noir.pdf",
+    "date": "2026-10-28T16:35:21.321Z"
+  },
+  "fichier:16c40d9fd1c46af0eefde5aa1057f1af71a2d111": {
+    "id": "g4BRw4suQ9f7IZdNBT4L",
+    "source": "ROMAN Kourouma-Ahmadou-Quand-on-refuse-on-dit-non by Tehua.pdf",
+    "date": "2026-10-28T16:35:25.350Z"
+  },
+  "fichier:981400e7540108d358abdea6a90f42456cfe9349": {
+    "id": "G82nOwZshNEehWEGFiXr",
+    "source": "Roman L'enfant Noir - Camara Laye.pdf",
+    "date": "2026-10-28T16:35:27.125Z"
+  },
+  "fichier:b7cf52bfe8f716a373540c1d8350e10850e9e145": {
+    "id": "aIfqra6oDnX3p9xe7QYt",
+    "source": "Roman La carte d'identité-J.M Adiafi by Tehua.pdf",
+    "date": "2026-10-28T16:35:31.143Z"
+  },
+  "fichier:b79bc628772a0f518f3f91eec1006d1d5060ba02": {
+    "id": "rVVXEyXBCSR84bpyfZVU",
+    "source": "Autre\\309.pdf",
+    "date": "2026-10-29T00:19:16.449Z"
+  },
+  "fichier:0a09887e13526e307c43fd24ec64903d29ba2b60": {
+    "id": "WWZgR0xIXpjJ3Fenz9q4",
+    "source": "Autre\\60-stratégies-dentreprises-à-la-loupe.pdf",
+    "date": "2026-10-29T00:19:18.282Z"
+  },
+  "fichier:41e5fc4b7dbb5621745f9e09193029f2202fe1dc": {
+    "id": "BnpkU5Q8pMo41Q12spzg",
+    "source": "Autre\\Aliko Dangote les 21 secrets de la reussite en affaires.pdf",
+    "date": "2026-10-29T00:19:21.003Z"
+  },
+  "fichier:d6750ba54748d307c6624ec1fc4051f33e526b99": {
+    "id": "R4Vbn7PfSGNUz0xKt6Zu",
+    "source": "Autre\\Anonymous-espions_-hackers_-lanceurs-dalertes...pdf",
+    "date": "2026-10-29T00:19:30.144Z"
+  },
+  "fichier:97cd0b571cb813834d73cf12e3eaeb6e6bfa2ef9": {
+    "id": "scGkURkJDpOO7oppCajm",
+    "source": "Autre\\Asterisk - La téléphonie dentreprise libre.pdf",
+    "date": "2026-10-29T00:19:33.765Z"
+  },
+  "fichier:9c718f8e38eacc9e62e823a1aead0bc0590961fa": {
+    "id": "4xyJEr3JZsrqXutEsxmx",
+    "source": "Autre\\Astuces & Déblocage V.1.pdf",
+    "date": "2026-10-29T00:19:35.717Z"
+  },
+  "fichier:f4dbf80e0a06de079cef63971e8900e8bbbcd978": {
+    "id": "LFeUXB0jxla1gnfoTyAT",
+    "source": "Autre\\Bitcoin-et-cryptomonnaies.pdf",
+    "date": "2026-10-29T00:19:40.464Z"
+  },
+  "fichier:81f4bc5f711f744af325ef8e121fe8e38c51941f": {
+    "id": "vEnMkubM4uYovVQLu8wJ",
+    "source": "Autre\\Business Analysis Methodology Book- Business Analysts Guide.pdf",
+    "date": "2026-10-29T00:19:43.529Z"
+  },
+  "fichier:fdfa52788c6e612b85e57ccffb4d57ca11cbcca5": {
+    "id": "krI08EJWiHuUBie0DEBj",
+    "source": "Autre\\ChatGpt Potential- autonomiser les vies, amplifier les.pdf",
+    "date": "2026-10-29T00:19:46.598Z"
+  },
+  "fichier:27d2b5f29ff480a6a62f4840bbd2bd42e0a3811c": {
+    "id": "MlGyFzCfiTyIFb8Nr55V",
+    "source": "Autre\\ChatGPT pour les développeurs.pdf",
+    "date": "2026-10-29T00:19:49.056Z"
+  },
+  "fichier:173dfeb128cc1c774f69547f41a2c1a21560a295": {
+    "id": "SH2SejVXsFjIp2uGt5HN",
+    "source": "Autre\\ChatGpt-Potential-autonomiser.pdf",
+    "date": "2026-10-29T00:19:51.234Z"
+  },
+  "fichier:6c028cdc0ff007b0cf2b2847c18402a6bbe200cc": {
+    "id": "BIIwA3sD2T0sBAIQQKc7",
+    "source": "Autre\\Cisco-CCNA-Certification-Guide.pdf",
+    "date": "2026-10-29T00:19:54.302Z"
+  },
+  "fichier:64e3ca233a8fb7b84487d2a87251331e45ddc11e": {
+    "id": "AOLhlIVtypxJ3aYXE5Mf",
+    "source": "Autre\\Comment Ecrire des Livres en Utilisant ChatGPT.pdf",
+    "date": "2026-10-29T00:19:57.664Z"
+  },
+  "fichier:a273ccd15e706dcb3499575f1020187aec44b8bc": {
+    "id": "vLydwCqiVvsyxoEogIao",
+    "source": "Autre\\Comment-écrire-un-roman-avec-ChatGPT.pdf",
+    "date": "2026-10-29T00:20:00.283Z"
+  },
+  "fichier:01ac28432b4446bdf64885071b12151c50fb66b6": {
+    "id": "3UGS59w8K1DfmxAYYiMF",
+    "source": "Autre\\Comment-être-un-hacker-éthique-en-7-étapes-simples-.pdf",
+    "date": "2026-10-29T00:20:21.734Z"
+  },
+  "fichier:e3a35754de3a1f3ac6add1220db843fa9e960dea": {
+    "id": "f3ZTC2mIxHxjiCzcHuY6",
+    "source": "Autre\\Comment_Ecrire_des_Livres_en_Utilisant_ChatGPT_Martín_Arellano.pdf",
+    "date": "2026-10-29T00:20:23.989Z"
+  },
+  "fichier:e0c1d118a5892095760cd2d55a097521b6e05f4f": {
+    "id": "ZyGsDLxIsaSdwHxn6a46",
+    "source": "Autre\\Comprendre-la-révolution-de-lintelligence.pdf",
+    "date": "2026-10-29T00:20:27.599Z"
+  },
+  "fichier:dfe0df5e7730c948e893afa37d3ced84f9c20a63": {
+    "id": "22dAcu8ofESueALYBvE1",
+    "source": "Autre\\Comprendre_la_Bourse_pour_gagner_à_la_hausse_comme_à_la_Olivier.pdf",
+    "date": "2026-10-29T00:20:30.111Z"
+  },
+  "fichier:fd73c4ecd8663218a636135cbf510221c91938be": {
+    "id": "VurKaqp9eVCIfYIaV69r",
+    "source": "Autre\\Crypto_monnaies_Générer_des_revenus_passifs_avec_le_bitcoin_intelligente.pdf",
+    "date": "2026-10-29T00:20:33.568Z"
+  },
+  "fichier:cad5de70d45605917a3561bca866ebfb6c63730c": {
+    "id": "7cevj1q6NMhAMn7hJLby",
+    "source": "Autre\\Créer un nom de marque et un nom de domaine.pdf",
+    "date": "2026-10-29T00:20:36.431Z"
+  },
+  "fichier:6b941514399984de10ade9fdfe5f87956158e38a": {
+    "id": "lbXtW0wxjXVlz0whkLc1",
+    "source": "Autre\\Créer une application Android- Les fonctions principales.pdf",
+    "date": "2026-10-29T00:20:39.670Z"
+  },
+  "fichier:e05db567e8048e78b3f8b4097a69de5642da39a4": {
+    "id": "F5ayfW3IYmd9OPASark7",
+    "source": "Autre\\Créer-son-podcast-pour-les-Nuls.pdf",
+    "date": "2026-10-29T00:20:45.907Z"
+  },
+  "fichier:53475b3d20502b4ea81537d6154d720df444b962": {
+    "id": "sfk41ppINJN9SUTdCNe9",
+    "source": "Autre\\Créer_et_animer_une_chaîne_YouTube_Pour_les_Nuls_2e_Rob_Ciampa_Theresa.pdf",
+    "date": "2026-10-29T00:20:50.955Z"
+  },
+  "fichier:0b5c72c2e94211c95fd6b10d400b853603d13ec9": {
+    "id": "lSUhPaw6zve4dbDNz9YE",
+    "source": "Autre\\Cyber-criminologie.pdf",
+    "date": "2026-10-29T00:20:54.833Z"
+  },
+  "fichier:e8e30cbf03fe06970084764d5a1f263f993048d4": {
+    "id": "SRLfnD7QDlrnlGyHYFmB",
+    "source": "Autre\\Cybersecurity - protecting critical infrastructures.pdf",
+    "date": "2026-10-29T00:20:58.445Z"
+  },
+  "fichier:56345ad131db17b04dd62bb340b564bc4b592c77": {
+    "id": "v2TchXDePeZDuzyHtbmC",
+    "source": "Autre\\Data Science (The MIT Press Essential Knowledge series).pdf",
+    "date": "2026-10-29T00:21:00.691Z"
+  },
+  "fichier:11959bda9846fd4647e0dea2d0ed057194bb5ed0": {
+    "id": "bRs4plkQJpJvuJsCieEo",
+    "source": "Autre\\De zéro a millionnaire. Investir en bourse sans souffrir.pdf",
+    "date": "2026-10-29T00:21:04.598Z"
+  },
+  "fichier:07e6a8d93990943abf2bebb093c1476e1fcd9190": {
+    "id": "9fmKFVFKG7s9mFlFfTwU",
+    "source": "Autre\\Deep Work - Retrouver la concentration dans un monde.pdf",
+    "date": "2026-10-29T00:21:06.790Z"
+  },
+  "fichier:dd8b6f5c67bcff1cf5287a847d15bb1f202c50d3": {
+    "id": "2ZwwYRuBQqxLzEGVLecA",
+    "source": "Autre\\Devenir-Hacker.pdf",
+    "date": "2026-10-29T00:21:10.433Z"
+  },
+  "fichier:07fb337c98be023d1b243b3c35b56f362836a599": {
+    "id": "lsO3auc4wHKv7tIo0YzH",
+    "source": "Autre\\Docker - Kubernetes.pdf",
+    "date": "2026-10-29T00:21:20.026Z"
+  },
+  "fichier:90e9a01e646941d9b29b240859c8f022c2fff42a": {
+    "id": "aJZ2fMJVfIrJmPi7lNqt",
+    "source": "Autre\\Entreprendre_en_solo - @CahiersJaunes.pdf",
+    "date": "2026-10-29T00:21:22.980Z"
+  },
+  "fichier:119368bdff8d43a7f7cfe36201fe09fd1529701a": {
+    "id": "mVZ3hwrJ4yYvw5dJUwkb",
+    "source": "Autre\\Formation power_point.pdf",
+    "date": "2026-10-29T00:21:25.496Z"
+  },
+  "fichier:c4f5c404fe681764b083043a98a64b1712e1ad81": {
+    "id": "yzfkIyaboABjEEMazDKk",
+    "source": "Autre\\Guide_Initiation_Securite.pdf",
+    "date": "2026-10-29T00:21:27.001Z"
+  },
+  "fichier:2f131bd6c0c1c4b11281a33c35d596bd55d40ffd": {
+    "id": "Xz7v5cWJzciFmMrdk1lQ",
+    "source": "Autre\\Hacking- A Comprehensive, Step-By-Step Guide to Techniques.pdf",
+    "date": "2026-10-29T00:21:29.855Z"
+  },
+  "fichier:10651224b2dca9af6e84f504bfaa701c22cdd897": {
+    "id": "XU6FJt81yMHp05crsyjE",
+    "source": "Autre\\Hacking- WiFi Hacking, Wireless Hacking for Beginners - step.pdf",
+    "date": "2026-10-29T00:21:31.957Z"
+  },
+  "fichier:5bf4c27d36538244b33428e7cf8942816143bab2": {
+    "id": "zgFVE09xr9L2KLJ3qArs",
+    "source": "Autre\\Hacking_ Computer Hacking Beginners Guide ( PDFDrive ).pdf",
+    "date": "2026-10-29T00:21:37.226Z"
+  },
+  "fichier:6eb8616e93d478bdd76d5ce8e9abb36cd66a5932": {
+    "id": "cwNLfs6F6aA1Tl2U6QOW",
+    "source": "Autre\\Impossible dêtre fauché si vous avez un smartphone.pdf",
+    "date": "2026-10-29T00:21:39.175Z"
+  },
+  "fichier:3f8da784e0e75450edcee3faed752e80139f6ae5": {
+    "id": "rJAnRrcdNEJnFeH85A7F",
+    "source": "Autre\\Infinity-ethical-hacking-learn-basic-to-advance-hacks.pdf",
+    "date": "2026-10-29T00:21:42.564Z"
+  },
+  "fichier:1b9d54f4fd656705144b1137645b7496771938ac": {
+    "id": "Xo9wpxaZAnHOcYnHYxwh",
+    "source": "Autre\\Investir-dans-limmobilier-locatif-pour-les-Nuls.org-_.pdf",
+    "date": "2026-10-29T00:21:46.510Z"
+  },
+  "fichier:0c06a42f53ee852647ea9792dda9824e4367aecb": {
+    "id": "VUHCKGZfqAzWZ0XJOYvh",
+    "source": "Autre\\La boîte à outils du coaching - 3e éd.pdf",
+    "date": "2026-10-29T00:21:50.931Z"
+  },
+  "fichier:80e1c1bce127c7bc4c45b7394182ea11d1394807": {
+    "id": "HbYY6P8zqx8qnWObZcdc",
+    "source": "Autre\\La révolution Tesla - Comment Elon Musk nous fait prendre.pdf",
+    "date": "2026-10-29T00:21:56.698Z"
+  },
+  "fichier:a0d2d5e85dc5a20a20dcf217039d7acb7c0dc239": {
+    "id": "NCq3rqj2h5qD69vbYD8d",
+    "source": "Autre\\La-boîte-à-outils-de-lOrganisation.pdf",
+    "date": "2026-10-29T00:22:01.393Z"
+  },
+  "fichier:b16b039365b8e1f6b103b6fef42b635c79341c20": {
+    "id": "HGcBymyBCzXMkxOGVgnU",
+    "source": "Autre\\La-boîte-à-outils-des-formateurs-4e-éd.-.pdf",
+    "date": "2026-10-29T00:22:05.322Z"
+  },
+  "fichier:01d60821550e9ba2700f3141cc7b04798628129f": {
+    "id": "o6Li6F0UfqRX68wJzDA4",
+    "source": "Autre\\La-boîte-à-outils-du-Personal-Branding-.pdf",
+    "date": "2026-10-29T00:22:09.266Z"
+  },
+  "fichier:572e108d81947162fa00e3958be04a91e5c49f0d": {
+    "id": "M6wlQpXQxgY9FQJ7Kkqx",
+    "source": "Autre\\Lart de négocier avec la méthode Harvard.pdf",
+    "date": "2026-10-29T00:22:12.483Z"
+  },
+  "fichier:b2e00a88efdc9f1b8e2f15c14187739b97be7932": {
+    "id": "gTLJrkHQAQSqhuHQDNvl",
+    "source": "Autre\\La_boite_a_outils_du_chef_de_projet_3e_edition (3) (2).pdf",
+    "date": "2026-10-29T00:22:13.709Z"
+  },
+  "fichier:5c064dbc342c28506464163cfe0081c43a98c310": {
+    "id": "Tf73VJuL0gE6i7sqGV6s",
+    "source": "Autre\\Le grand livre du DSI - Mettre en oeuvre la direction.pdf",
+    "date": "2026-10-29T00:22:17.101Z"
+  },
+  "fichier:f3172d4a31161e00925618a49b766ac3e66e55ed": {
+    "id": "ZbNcKDGpBOxipQB9MsUx",
+    "source": "Autre\\Le Hacking pour les Nuls, grand format (French Edition).pdf",
+    "date": "2026-10-29T00:22:21.305Z"
+  },
+  "fichier:d9f3d5ed021270fb2012d1169f5b744e1256f665": {
+    "id": "gpUpiwuN99Ue8p3B5j4G",
+    "source": "Autre\\Les mots clés de la lettre de motivation.pdf",
+    "date": "2026-10-29T00:22:25.750Z"
+  },
+  "fichier:9343ac8773a030f7b21886b030c604a3ef2340f1": {
+    "id": "tDtDGORajG4nxc0LLr9Q",
+    "source": "Autre\\Leve-toi et code - Confessions - Rabbin Des bois.pdf",
+    "date": "2026-10-29T00:22:27.122Z"
+  },
+  "fichier:6c8095a7ba60440e69913331d9015e2440437e17": {
+    "id": "iCG5ieOkbWSht74odxQK",
+    "source": "Autre\\Le_renseignement_criminel_François_Farcy,_Jean_François_Gayraud.pdf",
+    "date": "2026-10-29T00:22:30.489Z"
+  },
+  "fichier:b1af52b041a3af5499f449a1b6bc015901ae44bf": {
+    "id": "lYU20C18mU9jCazCbeUK",
+    "source": "Autre\\Livre Concevoir et lancer un projet.pdf",
+    "date": "2026-10-29T00:22:33.121Z"
+  },
+  "fichier:bcb4e29583543aea0c6c8702d4a0bce67852e054": {
+    "id": "oI9amrqdsC0NrbVoTUhy",
+    "source": "Autre\\Lélectricité_de_la_production_à_la_consommation_pour_les_Enguerand.pdf",
+    "date": "2026-10-29T00:22:37.297Z"
+  },
+  "fichier:6f59446eea41683dfcfd476fe59e19b391270f05": {
+    "id": "iauO6ZhF8oV01AIxKpPG",
+    "source": "Autre\\Mastering Kali Purple- For Vulnerability Assessment.pdf",
+    "date": "2026-10-29T00:22:40.417Z"
+  },
+  "fichier:7ddc6a4d03b6cd35d203426e6ffecfe9d2ea6556": {
+    "id": "dlU5ywjWhJcbX3FZmF7t",
+    "source": "Autre\\Maîtriser les prompts ChatGPT.pdf",
+    "date": "2026-10-29T00:22:43.218Z"
+  },
+  "fichier:53ed0d9b517e9cc7a5a90ef02315a9ed57234ba0": {
+    "id": "77dU9ZQlnd6gqIS58wLT",
+    "source": "Autre\\Microsoft Office 365- 9 en 1 Le guide tout-en-un le plus.pdf",
+    "date": "2026-10-29T00:22:47.790Z"
+  },
+  "fichier:38145f91a66e186ddb56b0085eb8db1535c032fe": {
+    "id": "i5IV94dIuFhfT0FXE2BU",
+    "source": "Autre\\Microsoft-Office-365-_9-en-1_-Le-guide-tout-en-un-le-plus-.pdf",
+    "date": "2026-10-29T00:22:51.131Z"
+  },
+  "fichier:a05e3bf52e838788f9547ad83446cb824799ca4b": {
+    "id": "b2q3RRVwLpfkB6OJi0xs",
+    "source": "Autre\\Mémento CSS3.pdf",
+    "date": "2026-10-29T00:22:52.487Z"
+  },
+  "fichier:184791d1c09a485d4c121704b7d14989aec7ddf2": {
+    "id": "THkZqQJdqJJoGnB8RG76",
+    "source": "Autre\\Mémoire\\Traitement du signal - aide-mémoire.pdf",
+    "date": "2026-10-29T00:22:55.892Z"
+  },
+  "fichier:19bec3bec58b49475dd7c2deb2fa8bd0cc8d5c61": {
+    "id": "eWimcKRUTMUM5kj2bGrz",
+    "source": "Autre\\Paramétrage Cisco.pdf",
+    "date": "2026-10-29T00:22:58.363Z"
+  },
+  "fichier:a3e01d71ae40aa73ce047961f73065eaf58b493d": {
+    "id": "3ZkzWUN60lSL7AtRzIcn",
+    "source": "Autre\\Penetration Testing- Penetration Testing- A Hands-On Guide.pdf",
+    "date": "2026-10-29T00:23:01.961Z"
+  },
+  "fichier:00459b6c6306dfbe9d7a82e14ed068e959da5b79": {
+    "id": "uZ6whs2JHovrWq9Xm1fe",
+    "source": "Autre\\PREPAREZ_AVEC_EFFICACITE_VOTRE_CERTIFICATION_CISCO_CCNA_Serge_Ntiam.pdf",
+    "date": "2026-10-29T00:23:06.322Z"
+  },
+  "fichier:c5e77b6f1aedc678852311789b879d69699fa6be": {
+    "id": "2AAXuNkvGWhdCeKOiilL",
+    "source": "Autre\\Père_riche,_père_pauvre_ce_que_les_gens_riches_enseignent.pdf",
+    "date": "2026-10-29T00:23:08.386Z"
+  },
+  "fichier:608be764ea6ec9943845e2548669e9b16f7cbdb4": {
+    "id": "pAxitaPDxNbjpVb6BooW",
+    "source": "Autre\\Qui Senrichit en Bourse.pdf",
+    "date": "2026-10-29T00:23:11.196Z"
+  },
+  "fichier:c47a06cefd060c8118d4d15e3f72fee595f0ab26": {
+    "id": "CXZZ1wh6tgQzrAHAVAkL",
+    "source": "Autre\\Serverless-Computing-guide-for-Novices-and-Dummies.pdf",
+    "date": "2026-10-29T00:23:12.471Z"
+  },
+  "fichier:5378ba28599014b31db9eef36c0d4522a004d365": {
+    "id": "lWX7YLlB5fd2kbee8Y3U",
+    "source": "Autre\\Social Engineering- The Art of Psychological Warfare, Human.pdf",
+    "date": "2026-10-29T00:23:14.942Z"
+  },
+  "fichier:349b3a51a2cf101c6acd676f5a5f6ce2d9542028": {
+    "id": "amgm7QdbmOIU7ZOP6qyY",
+    "source": "Autre\\termux-guide.pdf",
+    "date": "2026-10-29T00:23:17.047Z"
+  },
+  "fichier:6ebe89fea637d19f8889cc1308e6f836757ce80c": {
+    "id": "TocUopRENWl7cBY5381O",
+    "source": "Autre\\TikTok 2022- Comment devenir un célèbre influenceur TikTok.pdf",
+    "date": "2026-10-29T00:23:20.218Z"
+  },
+  "fichier:c2927496ef824abb8e8fff1650d59878683c96c9": {
+    "id": "ZD8I8vUWg7IaDTWxXKNp",
+    "source": "Autre\\tome2.pdf",
+    "date": "2026-10-29T00:23:22.811Z"
+  },
+  "fichier:6dc9fe83a42c3989d31041b22a36575db5a0b50b": {
+    "id": "SwWEveDMtU9Duj2Z9ckU",
+    "source": "Autre\\Travailler avec lIA - Vraies histoires de collaboration.pdf",
+    "date": "2026-10-29T00:23:26.663Z"
+  },
+  "fichier:d6d5aa6969a1fa73b8836842d6eaa104e416b440": {
+    "id": "oyLCc0NybBlKOW5xbYkP",
+    "source": "Autre\\tuto word.pdf",
+    "date": "2026-10-29T00:23:29.586Z"
+  },
+  "fichier:677d2bbfccecb24a67fe5f3abbaaf495d6de909f": {
+    "id": "Mr1SnnXb0B4Ssqok9Rtg",
+    "source": "Autre\\Vendre de façon rentable !.pdf",
+    "date": "2026-10-29T00:23:32.597Z"
+  },
+  "fichier:39663aa71ca9057b2bad00e341149e4446074665": {
+    "id": "3ACmBzyL3VeuwPUYNGiG",
+    "source": "Autre\\Youtubeur pour les nuls - Daniel Ichbiah.pdf",
+    "date": "2026-10-29T00:23:37.823Z"
+  },
+  "fichier:dcd71d08b8f17bdc65cd20fe779c594fe1ddf215": {
+    "id": "khjzyep53vMbHnIrGlIC",
+    "source": "Droit\\Droit\\Tout pour réussir en droit des affaires.pdf",
+    "date": "2026-10-29T00:23:40.507Z"
+  },
+  "fichier:e9359cd862d03f081edb4928f436a1206e25c86f": {
+    "id": "bjeoX7Gr1nGcHIbI0vxa",
+    "source": "Finance-Comptabilité\\Comptabilité\\Comptabilité_et_audit_MANUEL_ET_APPLICATIONS_Robert_Obert,_Marie.pdf",
+    "date": "2026-10-29T00:23:46.038Z"
+  },
+  "fichier:15461be15ad2d9226bc77f3c8a747190fb43fcdc": {
+    "id": "REY5hZq9asCaNicpRhuy",
+    "source": "Finance-Comptabilité\\Corrigé\\Comptabilité générale\\74 exercices corrigés de comptabilité générale.pdf",
+    "date": "2026-10-29T00:23:53.832Z"
+  },
+  "fichier:5fd98dc80601ddb03beca0770ae667cb705383ce": {
+    "id": "p16YVf8XFZFZagSadJb5",
+    "source": "Finance-Comptabilité\\Corrigé\\Contrôle de gestion\\DCG 11 Exercices de contrôle de gestion avec corrigés.pdf",
+    "date": "2026-10-29T00:24:02.284Z"
+  },
+  "fichier:d1438aa5bd9d0944c27739157668b9de1239fd72": {
+    "id": "EWiO4eslxECwaTryUrLK",
+    "source": "Finance-Comptabilité\\Finance\\La_Finance_pour_les_Nuls_en_50_notions_clés_NIJDAM_Christophe.pdf",
+    "date": "2026-10-29T00:24:06.310Z"
+  },
+  "fichier:55a608b76c96d9fdeb71b8f20a3da3487d1c93bc": {
+    "id": "lAKWV0KyWlSwq45B5KA8",
+    "source": "Finance-Comptabilité\\Finance\\Warren Buffett- Le gourou de la finance. (EYROLLES).pdf",
+    "date": "2026-10-29T00:24:09.493Z"
+  },
+  "fichier:5705a0c42bd689f4b5b479aa77045439c4ddde86": {
+    "id": "E9YWEAqdeXJNIKEnOka1",
+    "source": "Finance-Comptabilité\\Résumé\\Finance\\Lessentiel_des_finances_publiques_en_fiches_Messaoud_Saoudi_WeLib.pdf",
+    "date": "2026-10-29T00:24:13.252Z"
+  },
+  "fichier:bf31807e645682f1cbbb7fdb9f5aff3b6a93c68b": {
+    "id": "8szcM3Az61mTfc95OdLn",
+    "source": "Gestion\\Management\\community_management_comment_les_marques_se_transforment_au_contact.pdf",
+    "date": "2026-10-29T00:24:16.499Z"
+  },
+  "fichier:6b743f1ca81e7055aad1ad7a44129ca44a7b513b": {
+    "id": "4rhbhqJte8RR91Sd4bRT",
+    "source": "Gestion\\Management\\Le-management-pour-les-Nuls-en-50-notions-clés-.pdf",
+    "date": "2026-10-29T00:24:30.284Z"
+  },
+  "fichier:4f4bffb67f4a782439575d808679b16d1e7be46d": {
+    "id": "ACTQ2xqyk8y2rRRGzVWg",
+    "source": "Gestion\\Management\\Project-Management-Explained-by-Business-Explained-v5.pdf",
+    "date": "2026-10-29T00:24:32.578Z"
+  },
+  "fichier:44446da037c3781aeb8439070efb3ec63d6d7206": {
+    "id": "a5pB4YEyHRx0HYwRHLXD",
+    "source": "Informatique\\Acheter des services informatiques - avec ITIL v3.pdf",
+    "date": "2026-10-29T00:24:42.670Z"
+  },
+  "fichier:1fb2a1899e8eb9f315e34b0036c643beac8b71d4": {
+    "id": "3m9h0bQnEYIWqqPSjben",
+    "source": "Informatique\\Algorithmique\\Algorithmique - Raisonner pour concevoir.pdf",
+    "date": "2026-10-29T00:24:46.412Z"
+  },
+  "fichier:7b0536f6a2bb11ba630eed1403685c3da4d5a5b8": {
+    "id": "DBsT3azA4MzEBFlwzsb7",
+    "source": "Informatique\\Algorithmique\\La Vie algorithmique- Critique de la raison numérique.pdf",
+    "date": "2026-10-29T00:24:50.592Z"
+  },
+  "fichier:362bf02faa3ad82c13f63c639da38b38de6c51d4": {
+    "id": "oHZWbgTcSemNRXYWYSCZ",
+    "source": "Informatique\\Bureautique\\CREATE DYNAMIC EXCEL DASHBOARDS.pdf",
+    "date": "2026-10-29T00:24:53.208Z"
+  },
+  "fichier:0fd0c8fd7a31407384e69dee31b3b9a158d2ea0f": {
+    "id": "g4Ek7ZdoGyDT6ZQHV8rH",
+    "source": "Informatique\\Bureautique\\Excel Formulas and Functions- The Step by Step Excel Guide.pdf",
+    "date": "2026-10-29T00:24:56.600Z"
+  },
+  "fichier:2a8968d18c01b1cae0997d00db4f7e8de30ea081": {
+    "id": "HWp7GDjK0D5xjvb5q06d",
+    "source": "Informatique\\Bureautique\\Excel_2024_Pour_Debutant_Maitrisez_les_fondamentaux_de_A_Z_Léonard.pdf",
+    "date": "2026-10-29T00:25:01.020Z"
+  },
+  "fichier:d11d537420993614633ba8430b3596cc784b4dcb": {
+    "id": "7sFOh0Y84tOndoZM0ifr",
+    "source": "Informatique\\Bureautique\\tuto excel.pdf",
+    "date": "2026-10-29T00:25:05.815Z"
+  },
+  "fichier:b852f8fdf9bb699246c4ca03f980dbe12b3efb43": {
+    "id": "bF9DO2usNd3yMPul7TFI",
+    "source": "Informatique\\Conduire_un_projet_informatique_Les_leviers_du_Philippe_Taché_Taché.pdf",
+    "date": "2026-10-29T00:25:11.150Z"
+  },
+  "fichier:a7e5e7d9158622b2e6bdd60211051a8127996dae": {
+    "id": "jPHClIDDHZcHJBX1RlTV",
+    "source": "Informatique\\Cours\\Bureautique\\cours d'Excel.xlsx",
+    "date": "2026-10-29T00:25:12.703Z"
+  },
+  "fichier:46e0f5cc928ad2f0d527b82bcdd58a0effc272a4": {
+    "id": "orUu59WiNDGbRaeISP1p",
+    "source": "Informatique\\Données\\La_boîte_à_outils_de_lanalyse_de_données_en_entreprise_BàO_Clotilde.pdf",
+    "date": "2026-10-29T00:25:17.341Z"
+  },
+  "fichier:2d29a4a807f36fc78cc57e6b911f5fa943d805b8": {
+    "id": "qOmOxLF76iyVWVBa2kce",
+    "source": "Informatique\\Données\\Optimisation des bases de données.pdf",
+    "date": "2026-10-29T00:25:21.123Z"
+  },
+  "fichier:6d2d4724194f7025e7a52d9b4e67f803264a1ee7": {
+    "id": "L6JfL8zf6thik9r5viTV",
+    "source": "Informatique\\Développement web\\La_boîte_à_outils_Ecrire_pour_le_Web_BàO_La_Boîte_à_Outils_.pdf",
+    "date": "2026-10-29T00:25:24.214Z"
+  },
+  "fichier:dbc4dff4de66492498cae5b0e7c9714d2ffb5ebb": {
+    "id": "HdedFkfehgvLqcpo9rfD",
+    "source": "Informatique\\Développement web\\Learn CSS in One Day and Learn It Well (Includes HTML5).pdf",
+    "date": "2026-10-29T00:25:26.031Z"
+  },
+  "fichier:dcb77efb4a293d40a2f73f3c42ebb64ccbd68a58": {
+    "id": "0XtboSfXanCI09l7wEMk",
+    "source": "Informatique\\Informatique Pratique- Astuces Internet.pdf",
+    "date": "2026-10-29T00:25:30.130Z"
+  },
+  "fichier:86555a8579a36acf2e13fec7c66bcf917e4e654d": {
+    "id": "cZpnxVOVodsYVvSVudpd",
+    "source": "Informatique\\Intelligence artificielle\\Comprendre la révolution de lintelligence artificielle.pdf",
+    "date": "2026-10-29T00:25:35.114Z"
+  },
+  "fichier:cc8813de9a67fbe224e72254ff00a95332ba9738": {
+    "id": "jUCTibvbcxhNxvO96DRB",
+    "source": "Informatique\\Intelligence artificielle\\Intelligence Artificielle- Comprendre le Machine Learning.pdf",
+    "date": "2026-10-29T00:25:39.868Z"
+  },
+  "fichier:0d11cd104797e46cde996d6caacb5c9ae154931a": {
+    "id": "87PgYx5MSANxMGeewaRP",
+    "source": "Informatique\\Intelligence artificielle\\LIntelligence artificielle Pour les Nuls (French Edition).pdf",
+    "date": "2026-10-29T00:25:44.534Z"
+  },
+  "fichier:19667cc6e1d8130812e6e48fb5df264e727acb2a": {
+    "id": "3fndRQecBUwYqvAcxIwc",
+    "source": "Informatique\\Intelligence artificielle\\LIntelligence artificielle pour les Nuls.pdf",
+    "date": "2026-10-29T00:25:52.502Z"
+  },
+  "fichier:ffd3d8b419ecd5f5292471680d2ff5e5ad2b52a8": {
+    "id": "RWuwz8YMNhToYMTMSbOX",
+    "source": "Informatique\\Intelligence artificielle\\Lintelligence_artificielle_en_50_notions_clés_pour_les_Nuls_Thomas.pdf",
+    "date": "2026-10-29T00:25:56.207Z"
+  },
+  "fichier:3d72b010286e6f128da97827c538b037d99391c0": {
+    "id": "LjyYMy5d7SqPlP9CmJs2",
+    "source": "Informatique\\Java\\JavaScript- JavaScript For Beginners - Learn JavaScript.pdf",
+    "date": "2026-10-29T00:25:57.451Z"
+  },
+  "fichier:69a7f5079b9f4f75d861fdd7294a5261bf438142": {
+    "id": "MDetIpyk3XBhIpX00htF",
+    "source": "Informatique\\Java\\Structures de données en Java.pdf",
+    "date": "2026-10-29T00:26:02.003Z"
+  },
+  "fichier:21cc02b07a8cd86b2121ea2b8e8192ad0709f95a": {
+    "id": "odbRe9LRUQbS55vZCIQE",
+    "source": "Informatique\\Les guerres de linformation à lère numérique.pdf",
+    "date": "2026-10-29T00:26:07.598Z"
+  },
+  "fichier:002a592f86a1f86369fbb447fbf8542423ded682": {
+    "id": "ggVWuDImeYwqwXuW15ZD",
+    "source": "Informatique\\Les-fondements-de-linformatique.pdf",
+    "date": "2026-10-29T00:26:13.015Z"
+  },
+  "fichier:6ba372895fc97c65719e49b9abc21311e8823fe7": {
+    "id": "rj4zUoRSmQX3ViSWOA4m",
+    "source": "Informatique\\Lidentité numérique en question- [10 scénarios pour la.pdf",
+    "date": "2026-10-29T00:26:16.335Z"
+  },
+  "fichier:bf49bc9ab899f6b8c8b3443564e760e35a3c2e1d": {
+    "id": "bRYZUlrvxgfB5NatYfeB",
+    "source": "Informatique\\Programmation\\Programmation Shell- Apprendre étape par étape Linux.pdf",
+    "date": "2026-10-29T00:26:18.077Z"
+  },
+  "fichier:0f027bec1c02b97b201b8e979e4583918cd270d3": {
+    "id": "l0dSlEv1iBjASbgT7gDu",
+    "source": "Informatique\\Programmation\\Sinitier-à-la-programmation-et-à-lorienté-objet.pdf",
+    "date": "2026-10-29T00:26:22.540Z"
+  },
+  "fichier:fe8eab2ef323adc14c65b2a17449b12f2f87e2e7": {
+    "id": "rzvtP9QlVaj0buUtfzbl",
+    "source": "Informatique\\Python\\Apprendre_Python_Cahier_dexercices_Python_pour_les_LANDRY,_FABIEN.pdf",
+    "date": "2026-10-29T00:26:27.361Z"
+  },
+  "fichier:b6dc4ec2e7bdafdfb2b4218d7a8f23e88204c02c": {
+    "id": "GKz3S8vefHbPpESVayUP",
+    "source": "Informatique\\Python\\Programmer-en-samusant-avec-Python-pour-les-Nuls.pdf",
+    "date": "2026-10-29T00:26:31.757Z"
+  },
+  "fichier:7e77f2b4b726567d9a2f5b0c767fd4b9709f3f53": {
+    "id": "BSaBRczqXIappdcU5PqB",
+    "source": "Informatique\\Python\\PYTHON PROGRAMMING FOR BEGINNERS.pdf",
+    "date": "2026-10-29T00:26:34.320Z"
+  },
+  "fichier:fcec8209df7bd56592595c39a9c4c6737b3da457": {
+    "id": "Dj9gS0kCHdPdqGioyMwt",
+    "source": "Informatique\\Réseaux\\7_jours_pour_déployer_votre_activité_sur_les_réseaux_sociaux.pdf",
+    "date": "2026-10-29T00:26:38.418Z"
+  },
+  "fichier:7b76478e3dcb604c278c8d535306dd1ced621697": {
+    "id": "06RyrpKBIZgLRUC4hoev",
+    "source": "Informatique\\Réseaux\\Administration_système_réseaux_bases_de_l’administration_Alain_MOUHLI.pdf",
+    "date": "2026-10-29T00:26:40.872Z"
+  },
+  "fichier:3a91b764befac56d46d948f8172d1d95bd4a3550": {
+    "id": "NzfSCglSsBTGRg4WwBje",
+    "source": "Informatique\\Réseaux\\Le-grand-livre-des-réseaux-sociaux-Bielka_-Samuel.pdf",
+    "date": "2026-10-29T00:26:44.916Z"
+  },
+  "fichier:f14a5089396b7f1322c469bde376c92054b5a847": {
+    "id": "qBph23GoCDLPLT020XZU",
+    "source": "Informatique\\Réseaux\\Sécurité_Du_Périmètre_Réseau_Bases_de_la_sécurité_réseau.pdf",
+    "date": "2026-10-29T00:26:49.418Z"
+  },
+  "fichier:c24c9440af9cf11e4de2a1d2e9316f807f1087d0": {
+    "id": "K3UtrQjkxGSSjgit6P7E",
+    "source": "Informatique\\Résumé\\Bureautique\\41_fiches_pratiques_pour_maîtriser_les_fonctions_essentielles_d'Excel.pdf",
+    "date": "2026-10-29T00:26:53.978Z"
+  },
+  "fichier:bea6b6e702629f066622803db32cca7e55f90762": {
+    "id": "26EUK0JFja2lWqMDeyJl",
+    "source": "Informatique\\Systèmes\\KALI-LINUX-HACKING-ÉTHIQUE.pdf",
+    "date": "2026-10-29T00:26:55.513Z"
+  },
+  "fichier:9cc062d82f3fa55c84b3e8312ceb398e1133bff7": {
+    "id": "zpbxNoRRMxpZjglycXyG",
+    "source": "Informatique\\Systèmes\\LINUX- Easy Linux For Beginners, Your Step-By-Step Guide To.pdf",
+    "date": "2026-10-29T00:26:57.991Z"
+  },
+  "fichier:65bc93d3db6cae7e1a687e760dfc451512b9ac4d": {
+    "id": "nfklVKp9491nCRs7lzck",
+    "source": "Informatique\\Sécurité\\Cybersécurité et e-commerce- maîtriser les risques.pdf",
+    "date": "2026-10-29T00:27:04.933Z"
+  },
+  "fichier:6b42cf86554aab2a47577330893713bdc6e0b219": {
+    "id": "jCjsiM2L5W2cH5kXF8MF",
+    "source": "Informatique\\Sécurité\\CYBERSÉCURITÉ-Passez-au-Zero.pdf",
+    "date": "2026-10-29T00:27:07.645Z"
+  },
+  "fichier:f998e794f56ac9abe72e914c7ffa208c1ce9edd1": {
+    "id": "qtlCUIlDixaxkvvF3VEu",
+    "source": "Informatique\\Sécurité\\La-cybersécurité-au-delà-de-la-technologie.pdf",
+    "date": "2026-10-29T00:27:10.709Z"
+  },
+  "fichier:4bbe95298a1195172070a08d789a310d35c7ee4d": {
+    "id": "lTA3jQYwQvIsksi31k6L",
+    "source": "Informatique\\Sécurité\\La_Cybersécurité_pour_les_Nuls_grand_format_Joseph_STEINBERG.pdf",
+    "date": "2026-10-29T00:27:15.201Z"
+  },
+  "fichier:e2776c4706b6c3648781e6165e8bc73e7173dadb": {
+    "id": "GOwh8Yegc8t5nTlhGbbY",
+    "source": "Informatique\\Sécurité\\Le-secret-de-la-cybersécurité.pdf",
+    "date": "2026-10-29T00:27:29.683Z"
+  },
+  "fichier:e0425221b7ca206dbea3a170cbce880d7cda6d7b": {
+    "id": "fI5azh9hsQXhYNWu75MQ",
+    "source": "Informatique\\Tout savoir sur les virus informatiques by Meye Protect Lab.pdf",
+    "date": "2026-10-29T00:27:31.657Z"
+  },
+  "fichier:ee0356c50a7cbe3ddb2ae1537d6448723ca271f6": {
+    "id": "KR3b55uH1NHlA5PrybOg",
+    "source": "Informatique\\Télécommunications\\OSI Reference Model for Telecommunications.pdf",
+    "date": "2026-10-29T00:27:34.800Z"
+  },
+  "fichier:84c376de5da34cc4cfb02310ea06eff415dfc713": {
+    "id": "VgnsiENNZ835W1EVKCOe",
+    "source": "Langues\\Anglais\\2000-mots-et-expressions-pour-tout-dire-en-anglais.pdf",
+    "date": "2026-10-29T00:27:38.307Z"
+  },
+  "fichier:e7fcfbf89273570ab00be5f05d05162e54d3e604": {
+    "id": "45S54bESTFmo5eP5nX1v",
+    "source": "Langues\\Anglais\\Anglais_scientifique_pour_les_prépas_Vocabulaire,_Lexique,_Catherine.pdf",
+    "date": "2026-10-29T00:27:41.932Z"
+  },
+  "fichier:42714002724f3a270df61bf2642f242ccaedcf88": {
+    "id": "vzADfUGoj8bJVCWuY5eT",
+    "source": "Langues\\Anglais\\Etre pro en anglais (Vos atouts métier).pdf",
+    "date": "2026-10-29T00:27:46.479Z"
+  },
+  "fichier:58ccf40a6e50c2f65b82747f22c18628c01532a2": {
+    "id": "m63KZejWE3gA9gTnt7mD",
+    "source": "Marketing\\Marketing\\Digital Marketing- The New Rules Of Digital Marketing..pdf",
+    "date": "2026-10-29T00:27:47.945Z"
+  },
+  "fichier:82bbe1a86238f5b47f4b5e4b4e1ef27f84977ee9": {
+    "id": "dSqShxzwmABjuYTcRWuw",
+    "source": "Marketing\\Techniques de vente\\Créer un point de vente - Petits, moyens, grands.pdf",
+    "date": "2026-10-29T00:27:50.005Z"
+  },
+  "fichier:c18c2e94887d616c31126bf9d2baa3a30b9155a9": {
+    "id": "jeJRXagbIfBDNVVbEBQl",
+    "source": "Mathématiques\\Statistiques\\Statistique appliquée aux sciences de la vie.pdf",
+    "date": "2026-10-29T00:27:55.215Z"
+  },
+  "fichier:f2e3006acf801d2f239d18db50e412ebccd321f2": {
+    "id": "afj3trBpudfM4S70FKBk",
+    "source": "Électronique\\Le_Commerce_électronique_Vendre_en_ligne_et_optimiser_ses_Guy_Hervier.pdf",
+    "date": "2026-10-29T00:27:59.866Z"
+  },
+  "fichier:734dd51340e542caa3ea0f7e2c22e819bf045441": {
+    "id": "q5dpMkaiu96edndpBZ0c",
+    "source": "Autre\\Apprendre_le_piano_A_a_Z.pdf",
+    "date": "2026-10-29T07:25:24.299Z"
+  },
+  "fichier:980f8eb67cf3552f3cd7a47b8a4f8f3e313726e5": {
+    "id": "bwtTxVyckfBMIJtzbphk",
+    "source": "Autre\\Cours\\Cours_Trading_Or_Actions_XM_MT5 (1).pdf",
+    "date": "2026-10-29T07:25:29.476Z"
+  },
+  "fichier:3c112b5d71765ec69dee938fe5fe6368bc929168": {
+    "id": "2eXdnLsnE8etQvez3Qbq",
+    "source": "Autre\\cyber-camera-micro-labo.pdf",
+    "date": "2026-10-29T07:25:32.556Z"
+  },
+  "fichier:700175fcf8d2a303987e7f42bd5448aca9867866": {
+    "id": "45uZd4lVibo8xF7b6k7F",
+    "source": "Autre\\TP\\cyber-cahier-labo-TP.pdf",
+    "date": "2026-10-29T07:25:34.802Z"
+  },
+  "fichier:6ba67906a5b3d7eefa1fc2823009b2d88323766a": {
+    "id": "4ych7ANZaa5JK7DkcKI1",
+    "source": "Informatique\\Cours\\Merise\\Cours_MERISE_BTS_IDA2.pdf",
+    "date": "2026-10-29T07:26:28.028Z"
+  },
+  "site:https://www.fomesoutra.com/livres/romans/29158-oeuvre-il-est-venu-liberer-les-captifs-de-rebecca-brown-by-tehua/file": {
+    "id": "gKB7BJna5f3dDouxBocr",
+    "source": "https://www.fomesoutra.com/livres/romans",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-10-30T01:51:36.880Z"
+  },
+  "site:https://www.fomesoutra.com/livres/romans/23158-roman-allah-nest-pas-oblige-dahmadou-kourouma/file": {
+    "id": "6zN5qoJsR7phLZbcFNPD",
+    "source": "https://www.fomesoutra.com/livres/romans",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-10-30T01:51:58.471Z"
+  },
+  "site:https://www.fomesoutra.com/livres/romans/23157-roman-la-carte-didentite-j-m-adiafi-by-tehua/file": {
+    "id": "yhiqV9zheLCQcHRqo9Le",
+    "source": "https://www.fomesoutra.com/livres/romans",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-10-30T01:52:44.255Z"
+  }
+}

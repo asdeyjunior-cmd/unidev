@@ -1,0 +1,161 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Si vous changez le prix ou le pack dans js/config.js, changez-les aussi ici
+    function prixPack() { return 100; }
+    function creditsParPack() { return 5; }
+    function creditsBienvenue() { return 2; } // = CREDITS_BIENVENUE dans js/config.js
+
+    // Seuls les fichiers de TON compte Cloudinary sont acceptés
+    function cloudinaryRaw() { return 'https://res\\.cloudinary\\.com/iugeyztf/raw/upload/.+'; }
+    function cloudinaryImage() { return 'https://res\\.cloudinary\\.com/iugeyztf/image/upload/.+'; }
+    function texte(champ, max) {
+      return !(champ in request.resource.data)
+        || (request.resource.data[champ] is string && request.resource.data[champ].size() <= max);
+    }
+
+    function signedIn() { return request.auth != null; }
+    function userPath(uid) { return /databases/$(database)/documents/users/$(uid); }
+    function achatPath(uid, docId) { return /databases/$(database)/documents/users/$(uid)/achats/$(docId); }
+    // Un seul admin : son UID est dans parametres/admin (créé à la main dans la console)
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/parametres/admin)
+        && get(/databases/$(database)/documents/parametres/admin).data.uid == request.auth.uid;
+    }
+    function onlyKeys(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    /* ---------- Utilisateurs ---------- */
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+
+      // Création : toujours "etudiant" avec les crédits de bienvenue
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['nom', 'email', 'role', 'credits', 'createdAt', 'bonusEnAttente'])
+        && request.resource.data.role == 'etudiant'
+        // Crédits offerts : seulement si l'e-mail est vérifié (sinon 0, réclamés après vérification)
+        && (
+          (request.resource.data.credits == 0 && request.resource.data.get('bonusEnAttente', false) is bool)
+          || (request.resource.data.credits == creditsBienvenue()
+              && request.resource.data.get('bonusEnAttente', false) == false
+              && request.auth.token.email_verified == true)
+        )
+        && texte('nom', 80) && texte('email', 120);
+
+      allow update: if isAdmin()
+        || (signedIn() && request.auth.uid == uid
+            && request.resource.data.role == resource.data.role
+            && (
+              (onlyKeys(['nom']) && texte('nom', 80))
+              // Crédits offerts réclamés une seule fois, après vérification de l'e-mail
+              || (onlyKeys(['credits', 'bonusEnAttente'])
+                  && resource.data.get('bonusEnAttente', false) == true
+                  && request.resource.data.bonusEnAttente == false
+                  && request.resource.data.credits == resource.data.get('credits', 0) + creditsBienvenue()
+                  && request.auth.token.email_verified == true)
+              // Dépense d'1 crédit : uniquement en même temps que la création d'un achat
+              || (onlyKeys(['credits', 'dernierAchat'])
+                  && resource.data.get('credits', 0) >= 1
+                  && request.resource.data.credits == resource.data.get('credits', 0) - 1
+                  && existsAfter(achatPath(uid, request.resource.data.dernierAchat))
+                  && !exists(achatPath(uid, request.resource.data.dernierAchat)))
+            ));
+      allow delete: if isAdmin();
+
+      // Documents débloqués par l'utilisateur
+      match /achats/{docId} {
+        allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+        allow create: if signedIn() && request.auth.uid == uid
+          && get(/databases/$(database)/documents/documents/$(docId)).data.statut == 'publie'
+          && getAfter(userPath(uid)).data.dernierAchat == docId
+          && getAfter(userPath(uid)).data.credits == get(userPath(uid)).data.get('credits', 0) - 1;
+        allow update, delete: if false;
+      }
+    }
+
+    /* ---------- Documents ---------- */
+    match /documents/{docId} {
+      // Fiche visible de tous si publiée (le lien du fichier n'y est pas)
+      allow read: if resource.data.statut == 'publie'
+                  || (signedIn() && resource.data.auteurId == request.auth.uid)
+                  || isAdmin();
+
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['titre', 'matiere', 'filiere', 'type', 'niveau', 'annee', 'universite',
+             'description', 'format', 'taille', 'nomFichier', 'imageUrl', 'auteurId', 'auteurNom',
+             'statut', 'telechargements', 'creditAccorde', 'createdAt'])
+        && texte('matiere', 80) && texte('filiere', 80) && texte('type', 30) && texte('niveau', 30)
+        && texte('annee', 20) && texte('universite', 100) && texte('description', 600)
+        && texte('format', 10) && texte('nomFichier', 200) && texte('auteurNom', 120)
+        && request.resource.data.auteurId == request.auth.uid
+        && request.resource.data.statut == 'en_attente'
+        && request.resource.data.telechargements == 0
+        && request.resource.data.creditAccorde == false
+        && request.resource.data.titre is string && request.resource.data.titre.size() > 0
+        && request.resource.data.titre.size() <= 140
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.matches(cloudinaryImage());
+
+      allow update: if isAdmin()
+        // Compteur +1 seulement lors d'un vrai déblocage
+        || (signedIn() && resource.data.statut == 'publie'
+            && onlyKeys(['telechargements'])
+            && request.resource.data.telechargements == resource.data.telechargements + 1
+            && existsAfter(achatPath(request.auth.uid, docId))
+            && !exists(achatPath(request.auth.uid, docId)));
+
+      allow delete: if isAdmin();
+
+      // Lien du fichier : auteur, admin, ou utilisateur ayant débloqué le document
+      match /prive/{f} {
+        allow read: if signedIn() && (
+          resource.data.auteurId == request.auth.uid
+          || isAdmin()
+          || exists(achatPath(request.auth.uid, docId)));
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly(['fileUrl', 'publicId', 'auteurId', 'parts'])
+          && request.resource.data.auteurId == request.auth.uid
+          && getAfter(/databases/$(database)/documents/documents/$(docId)).data.auteurId == request.auth.uid
+          && request.resource.data.fileUrl is string
+          && request.resource.data.fileUrl.matches(cloudinaryRaw())
+          && (!('parts' in request.resource.data)
+              || (request.resource.data.parts is list && request.resource.data.parts.size() <= 12));
+        allow update: if false;
+        allow delete: if isAdmin();
+      }
+    }
+
+    /* ---------- Index de recherche (lu par tous, écrit par l'admin) ---------- */
+    match /index/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    /* ---------- Paramètres (lecture seule depuis le site) ---------- */
+    match /parametres/{id} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    /* ---------- Paiements ---------- */
+    match /paiements/{id} {
+      allow read: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['uid', 'nom', 'email', 'packs', 'montant', 'credits',
+             'operateur', 'numero', 'reference', 'statut', 'createdAt'])
+        && texte('nom', 80) && texte('email', 120) && texte('operateur', 30) && texte('numero', 20)
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.statut == 'en_attente'
+        && request.resource.data.packs is int
+        && request.resource.data.packs >= 1 && request.resource.data.packs <= 10
+        && request.resource.data.montant == request.resource.data.packs * prixPack()
+        && request.resource.data.credits == request.resource.data.packs * creditsParPack()
+        && request.resource.data.reference is string
+        && request.resource.data.reference.size() >= 3 && request.resource.data.reference.size() <= 60;
+      allow update, delete: if isAdmin();
+    }
+  }
+}
