@@ -305,15 +305,14 @@
       try {
         const { surs, douteux } = await trouverDoublons();
         $("rebuild-etat").textContent = "";
-        const aSuppr = surs.flatMap((g) => g.slice(1).map((d) => d.id));
-        const ligne = (g, sur) => `<li><b>${esc(g[0].titre)}</b> <span class="muted">· ${g.length} exemplaires${sur ? "" : " (tailles différentes)"}</span>
-          ${sur ? "" : `<br><span class="muted">${g.map((d) => `${esc(d.filiere || "")} · ${d.taille ? Math.round(d.taille / 1024) + " Ko" : "?"} · ${d.statut === "publie" ? "publié" : "en attente"}`).join(" / ")}</span>`}</li>`;
+        // Même titre = doublon : on garde un exemplaire par titre (publié, le plus téléchargé, le plus ancien)
+        const groupes = [...surs, ...douteux];
+        const aSuppr = groupes.flatMap((g) => g.slice(1).map((d) => d.id));
+        const ligne = (g) => `<li><b>${esc(g[0].titre)}</b> <span class="muted">· ${g.length} exemplaires, on en garde 1</span></li>`;
         const m = modal(`<h3>Doublons</h3>
-          ${surs.length ? `<p style="margin:8px 0">${aSuppr.length} copie(s) exacte(s) (même titre, même taille). Pour chaque document, on garde le plus téléchargé ou le plus ancien.</p>
-            <ul class="liste-doublons">${surs.map((g) => ligne(g, true)).join("")}</ul>
-            <button class="btn btn-danger btn-block" id="doublons-ok" style="margin-top:12px">Supprimer ${aSuppr.length} copie(s)</button>` : `<p style="margin:8px 0">Aucune copie exacte.</p>`}
-          ${douteux.length ? `<p style="margin:16px 0 6px"><b>À vérifier toi-même</b> : même titre mais tailles différentes (peut-être deux versions différentes). Supprime le mauvais avec « Supprimer » dans l'onglet Publiés.</p>
-            <ul class="liste-doublons">${douteux.map((g) => ligne(g, false)).join("")}</ul>` : ""}
+          ${groupes.length ? `<p style="margin:8px 0">${aSuppr.length} doublon(s) trouvé(s) (même titre). Pour chaque titre, on garde l'exemplaire publié, le plus téléchargé ou le plus ancien.</p>
+            <ul class="liste-doublons">${groupes.map(ligne).join("")}</ul>
+            <button class="btn btn-danger btn-block" id="doublons-ok" style="margin-top:12px">Supprimer ${aSuppr.length} doublon(s)</button>` : `<p style="margin:8px 0">Aucun doublon : chaque titre n'existe qu'une fois.</p>`}
           <button class="btn btn-ghost-ink btn-block" data-close style="margin-top:12px">Fermer</button>`);
         m.querySelector("#doublons-ok")?.addEventListener("click", async (ev) => {
           if (!confirm(`Supprimer définitivement ${aSuppr.length} copie(s) ?`)) return;

@@ -93,11 +93,9 @@ async function couvertureGenerique(infos) {
 const existants = new Map(); // titre simplifié -> [{ taille, universite }]
 const cleTitre = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
 function retenir(d) { const k = cleTitre(d.titre); if (!k) return; if (!existants.has(k)) existants.set(k, []); existants.get(k).push({ taille: d.taille || 0, universite: cleTitre(d.universite) }); }
-/** Vrai si un document de même titre existe déjà avec la même taille ou la même source/école */
-function estDoublon(infos, taille = null) {
-  const l = existants.get(cleTitre(infos.titre)); if (!l) return false;
-  const u = cleTitre(infos.universite);
-  return l.some((x) => (taille && x.taille === taille) || (u && x.universite === u));
+/** Vrai si un document de même titre existe déjà sur unidev (même titre = doublon) */
+function estDoublon(infos) {
+  return existants.has(cleTitre(infos.titre));
 }
 const erreurDoublon = () => Object.assign(new Error("déjà sur unidev : ignoré (doublon)"), { doublon: true });
 
@@ -112,7 +110,7 @@ async function envoyerImage(chemin) {
 
 /** Envoie un document et crée sa fiche publiée. Renvoie l'ID Firestore. */
 async function publier(buffer, nomFichier, infos, imageChemin = null) {
-  if (estDoublon(infos, buffer.length)) throw erreurDoublon();
+  if (estDoublon(infos)) throw erreurDoublon();
   infos = { ...infos, filiere: canonFiliere(infos.filiere) || "Autre" };
   const ext = path.extname(nomFichier).slice(1).toLowerCase();
   let fichier = null;

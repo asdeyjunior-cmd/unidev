@@ -176,7 +176,7 @@ Garde l'accord écrit du site (e-mail ou message) : c'est ta preuve en cas de r�
 
 ## Bon à savoir
 
-- **Doublons** : avant chaque envoi, l'outil vérifie qu'un document de même titre (et même taille ou même source) n'est pas déjà sur unidev ; si oui, il le saute. Pour nettoyer les doublons déjà en ligne : page Modération → « Supprimer les doublons ».
+- **Doublons** : avant chaque envoi, l'outil vérifie qu'aucun document de même titre n'est déjà sur unidev ; si oui, il le saute. Pour nettoyer les doublons déjà en ligne : page Modération → « Supprimer les doublons ».
 - **Reprise** : le fichier `import-journal.json` note ce qui a déjà été importé. Si l'import s'arrête (coupure internet), relance la même commande : il reprend là où il s'était arrêté, sans doublon.
 - **Images** : ta propre image si tu en as mis une (même nom que le fichier). Sinon, pour un PDF de 10 Mo maximum, la première page du document ; sinon, une couverture verte avec le titre.
 - **Gros fichiers** : au-delà de 9 Mo, le fichier est découpé en morceaux, comme sur le site. Maximum : 100 Mo.
