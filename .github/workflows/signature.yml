@@ -35,6 +35,13 @@ jobs:
           REF: ${{ inputs.refaire && '--refaire' || '' }}
         run: |
           npm install --no-audit --no-fund
+          export NODE_OPTIONS=--max-old-space-size=5120
           printf '%s' "$CLE" > cle-firebase.json
           printf 'CLOUDINARY_CLOUD_NAME=iugeyztf\nCLOUDINARY_API_KEY=%s\nCLOUDINARY_API_SECRET=%s\nFIREBASE_CLE=./cle-firebase.json\n' "$CK" "$CS" > .env
-          node signature.js --site "$SITE" --remplacer "$REMP" $REF
+          set -o pipefail
+          node signature.js --site "$SITE" --remplacer "$REMP" $REF 2>&1 | tee resultat.txt
+      - name: Résumé
+        if: always()
+        working-directory: outils/import
+        run: |
+          { echo "### Remplacement"; echo '```'; tail -n 30 resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true

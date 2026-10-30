@@ -59,7 +59,10 @@ jobs:
           URL: ${{ inputs.url }}
           PROF: ${{ inputs.profondeur }}
           REMP: ${{ inputs.remplacer }}
+          NODE_OPTIONS: --max-old-space-size=5120
         run: |
+          set -o pipefail
+          {
           case "$SOURCE" in
             wikiversite) node importer.js wiki --projet wikiversite --recherche "$RECHERCHE" --max "$MAX" ;;
             wikilivres)  node importer.js wiki --projet wikilivres --recherche "$RECHERCHE" --max "$MAX" ;;
@@ -67,6 +70,11 @@ jobs:
             romans)      node importer.js romans --recherche "$RECHERCHE" --max "$MAX" ;;
             *)           node importer.js "$SOURCE" --recherche "$RECHERCHE" --max "$MAX" ;;
           esac
+          } 2>&1 | tee resultat.txt
+      - name: Résumé
+        if: always()
+        run: |
+          { echo "### Résultat de l'import"; echo '```'; grep -E "Terminé|Arrêt du parcours|ERREUR|Erreur|indisponible|=====" resultat.txt | tail -n 40; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
       - name: Garder le journal (pour ne rien importer deux fois)
         if: always()
         run: |
@@ -76,9 +84,11 @@ jobs:
           git pull --rebase && git push || echo "Journal non enregistré (sans gravité)"
       - name: Pages Google des documents
         if: always()
+        continue-on-error: true
         run: node pages.js
       - name: Mise en ligne
         if: always()
+        continue-on-error: true
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
@@ -87,4 +97,5 @@ jobs:
           channelId: live
       - name: Prévenir Bing
         if: always()
+        continue-on-error: true
         run: node indexnow.js

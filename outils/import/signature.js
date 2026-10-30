@@ -18,7 +18,7 @@ import "dotenv/config";
 import admin from "firebase-admin";
 import { v2 as cloudinary } from "cloudinary";
 import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF } from "./outils.js";
-import { remplacerSignature, empreintesImages } from "./marque.js";
+import { remplacerSignature } from "./marque.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -64,11 +64,9 @@ try {
 console.log(`${concernes.length} document(s) PDF de « ${site} » à traiter (signature : ${motifs.join(", ")}).`);
 console.log(`${concernes.filter((s) => originaux.has(s.id)).length} avec leur fichier d'origine retrouvé (les autres partent du fichier actuel).\n`);
 
-/* ---------- 1er passage : récupérer les fichiers et reconnaître le logo du site ---------- */
-// Le logo du site = la MÊME image présente dans plusieurs documents du site. Une image propre à un seul document
-// (logo d'école, titre, figure du cours) n'est jamais considérée comme un logo.
+/* ---------- 1er passage : récupérer les fichiers (l'original de Fomesoutra quand c'est possible) ---------- */
+// Le logo du site est reconnu à son ASPECT (modèles du dossier « logos ») : les logos d'écoles et les titres ne sont jamais touchés.
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "unidev-signature-"));
-const compte = new Map(); // empreinte -> nombre de documents
 const sources = new Map(); // id -> { chemin, original }
 for (const [i, s] of concernes.entries()) {
   const d = s.data();
@@ -76,7 +74,7 @@ for (const [i, s] of concernes.entries()) {
   try {
     let buffer, original = false;
     if (originaux.has(s.id)) {
-      try { buffer = await telecharger(originaux.get(s.id), { "User-Agent": "Mozilla/5.0 unidev-import" }, { pdf: true }); original = true; } catch {}
+      try { buffer = await telecharger(originaux.get(s.id), { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36" }, { pdf: true }); original = true; } catch {}
     }
     if (!buffer) {
       const fichier = (await s.ref.collection("prive").doc("fichier").get()).data();
@@ -87,17 +85,13 @@ for (const [i, s] of concernes.entries()) {
     const chemin = path.join(TMP, `${s.id}.pdf`);
     fs.writeFileSync(chemin, buffer);
     sources.set(s.id, { chemin, original });
-    for (const e of await empreintesImages(buffer)) compte.set(e, (compte.get(e) || 0) + 1);
   } catch (e) { console.log(`\n   ${d.titre} : lecture impossible (${e.message})`); }
 }
 console.log("");
-const deja = new Set((await db.doc("parametres/logos").get()).data()?.empreintes || []);
-// Le logo du SITE revient dans une grande partie de ses documents (toutes écoles confondues) ;
-// le logo d'une école ne revient que dans les documents de cette école.
-const seuil = sources.size >= 6 ? Math.max(3, Math.ceil(sources.size * 0.3)) : Math.max(2, Math.ceil(sources.size * 0.5));
-const logos = new Set([...deja, ...[...compte].filter(([, n]) => n >= seuil).map(([e]) => e)]);
-console.log(`Logo(s) du site reconnu(s) : ${logos.size} (image large, en haut ou en bas de page, présente dans au moins ${seuil} documents sur ${sources.size}).\n`);
-if (!ESSAI && logos.size) await db.doc("parametres/logos").set({ empreintes: [...logos].slice(0, 200) }, { merge: true });
+const sansOriginal = [...sources.values()].filter((x) => !x.original).length;
+if (sansOriginal) console.log(`Attention : ${sansOriginal} document(s) sans fichier d'origine : s'ils ont été abîmés par l'ancienne version, ils ne pourront pas être réparés.\n`);
+// Les anciennes « empreintes de logo » se trompaient (elles prenaient des en-têtes d'écoles pour le logo) : on les efface.
+if (!ESSAI) await db.doc("parametres/logos").delete().catch(() => {});
 
 if (ESSAI) {
   concernes.slice(0, 50).forEach((s, i) => console.log(`[${i + 1}] ${s.data().titre}${sources.get(s.id)?.original ? "" : "  (fichier actuel)"}`));
@@ -116,7 +110,7 @@ for (const [i, s] of concernes.entries()) {
   console.log(`[${i + 1}/${concernes.length}] ${d.titre}`);
   try {
     const avant = fs.readFileSync(src.chemin);
-    const r = await remplacerSignature(avant, motifs, { logos });
+    const r = await remplacerSignature(avant, motifs);
     const change = r.lignes || r.liens || r.logos;
     // Fichier d'origine récupéré : on le renvoie même sans signature trouvée (ça répare une ancienne version abîmée)
     if (!change && !src.original) {

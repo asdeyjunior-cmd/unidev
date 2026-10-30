@@ -207,3 +207,9 @@ Supprimer un document dans Modération l'efface de Firebase et du site, mais **s
 Pour les documents d'un site partenaire **déjà sur unidev** (importés avec le choix 9), avec l'accord écrit du site : double-clique sur **REMPLACER-SIGNATURE.bat**, tape le nom du site (ex. `fomesoutra`) et les mots à remplacer (ex. `fomesoutra,fo me soutra`). L'outil repart du **fichier d'origine** de chaque document (retéléchargé sur le site partenaire grâce à `import-journal.json`), reconnaît le logo du site en comparant tous les documents, liste les documents concernés, puis, après **O**, remplace la signature dans chaque PDF **sans changer le document sur le site** (même titre, même place, mêmes téléchargements). Il note les documents traités et ne les refait jamais. Sur GitHub : Actions → « Remplacer la signature d'un site ».
 
 Ensuite, lance NETTOYER-CLOUDINARY.bat pour supprimer les anciens fichiers.
+
+## Logo du site partenaire (dossier `logos`)
+L'outil « Remplacer la signature » reconnaît le logo d'un site en le **comparant aux images du dossier `logos`**
+(ex. `fomesoutra.png`). Seules les images qui lui ressemblent sont remplacées, une seule fois par endroit :
+les logos d'écoles, les titres et les autres images ne sont jamais touchés.
+Pour un autre site, ajoute simplement une capture nette de son logo (PNG, fond blanc) dans ce dossier.

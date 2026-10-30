@@ -71,7 +71,6 @@ async function connecter() {
   ADMIN_UID = (await db.doc("parametres/admin").get()).data()?.uid;
   if (!ADMIN_UID) throw new Error("Document parametres/admin introuvable dans Firestore (voir README).");
   ajouterFilieres((await db.doc("index/filieres").get()).data()?.liste || []);
-  LOGOS = new Set((await db.doc("parametres/logos").get()).data()?.empreintes || []);
   // Documents déjà sur unidev : pour ne jamais publier deux fois le même
   const snap = await db.collection("documents").select("titre", "taille", "universite", "statut").get();
   snap.docs.forEach((s) => { const d = s.data(); if (d.statut !== "rejete") retenir(d); });
@@ -332,6 +331,7 @@ async function importerSource(nom, generateur, max) {
   const ecartes = {};
   console.log(`${nom} : ${mode === "site" ? `page de départ ${opt("url")}` : `recherche « ${opt("recherche", "cours")} »`} · ${max} documents au maximum\n`);
   const it = generateur({ deja: (cle) => !!journal[cle], onEcarte: (raison) => (ecartes[raison] = (ecartes[raison] || 0) + 1) });
+  try {
   for await (const d of it) {
     const infos = { ...d.infos, filiere: canonFiliere(d.infos.filiere) || "Autre" };
     console.log(`[${ok + erreurs + 1}] ${d.titre}  ·  ${infos.filiere} · ${d.licence} · ${(d.buffer.length / 1048576).toFixed(1)} Mo`);
@@ -347,11 +347,14 @@ async function importerSource(nom, generateur, max) {
       console.log(`   ERREUR : ${e.message}`);
     }
   }
+  } catch (e) { console.log(`\nArrêt du parcours (${e.message}) : les documents déjà importés sont gardés.`); }
   const ec = Object.entries(ecartes).map(([k, v]) => `${v} ${k}`).join(", ");
   console.log(`\nTerminé : ${ok} ${ESSAI ? "trouvé(s)" : "importé(s)"}, ${doublons} doublon(s) sauté(s), ${erreurs} erreur(s).${ec ? ` Écartés : ${ec}.` : ""}${ESSAI ? " (mode essai : rien n'a été envoyé)" : ""}`);
 }
 
 /* ---------- Lancement ---------- */
+// Une erreur imprévue dans un document ne doit jamais arrêter tout l'import
+process.on("unhandledRejection", (e) => console.log(`   (erreur ignorée : ${e?.message || e})`));
 try {
   if (!ESSAI) await connecter();
   if (mode === "dossier") await importerDossier();

@@ -22,6 +22,13 @@ jobs:
           CS: ${{ secrets.CLOUDINARY_API_SECRET }}
         run: |
           npm install --no-audit --no-fund
+          export NODE_OPTIONS=--max-old-space-size=5120
           printf '%s' "$CLE" > cle-firebase.json
           printf 'CLOUDINARY_CLOUD_NAME=iugeyztf\nCLOUDINARY_API_KEY=%s\nCLOUDINARY_API_SECRET=%s\nFIREBASE_CLE=./cle-firebase.json\n' "$CK" "$CS" > .env
-          node nettoyer.js
+          set -o pipefail
+          node nettoyer.js 2>&1 | tee resultat.txt
+      - name: Résumé
+        if: always()
+        working-directory: outils/import
+        run: |
+          { echo "### Nettoyage"; echo '```'; tail -n 30 resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true

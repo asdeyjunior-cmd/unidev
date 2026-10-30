@@ -40,6 +40,8 @@ function depuisUrl(u) {
   return { type: m[1], id: m[1] === "raw" ? reste : reste.replace(/\.[a-z0-9]+$/i, "") };
 }
 
+process.on("unhandledRejection", (e) => { console.log(`Erreur : ${e?.error?.message || e?.message || e}`); process.exit(1); });
+
 /* ---------- 1. Tout ce que les documents utilisent encore ---------- */
 console.log("Lecture des documents d'unidev…");
 const utilises = new Set();
@@ -56,14 +58,28 @@ fichiers.forEach((s) => {
   // publicId enregistré : on le garde quel que soit le type
   for (const id of [f.publicId, ...(f.parts || []).map((p) => p.publicId)]) if (id) { garder("raw", id); garder("image", id); }
 });
+if (!docs.size) { console.log("Aucun document lu : nettoyage annulé par sécurité."); process.exit(0); }
 console.log(`${docs.size} document(s), ${utilises.size} fichier(s) et image(s) utilisés.\n`);
 
 /* ---------- 2. Tout ce qui est stocké sur Cloudinary (dossiers unidev/) ---------- */
+const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+/** Cloudinary refuse parfois (trop de demandes, coupure) : on réessaie avant d'abandonner */
+async function essayer(f, nom) {
+  for (let i = 0; ; i++) {
+    try { return await f(); }
+    catch (e) {
+      const msg = e?.error?.message || e?.message || String(e);
+      if (i >= 4) throw new Error(`${nom} : ${msg}`);
+      console.log(`   (${nom} : ${msg} — nouvel essai dans ${15 * (i + 1)} s)`);
+      await attendre(15000 * (i + 1));
+    }
+  }
+}
 async function lister(type) {
   const out = [];
   let curseur;
   do {
-    const r = await cloudinary.api.resources({ type: "upload", resource_type: type, prefix: "unidev/", max_results: 500, next_cursor: curseur });
+    const r = await essayer(() => cloudinary.api.resources({ type: "upload", resource_type: type, prefix: "unidev/", max_results: 500, ...(curseur ? { next_cursor: curseur } : {}) }), "liste Cloudinary");
     out.push(...r.resources);
     curseur = r.next_cursor;
   } while (curseur);
@@ -71,8 +87,10 @@ async function lister(type) {
 }
 
 let total = 0, octets = 0;
+let echecs = 0;
 for (const type of ["raw", "image"]) {
-  const tous = await lister(type);
+  let tous;
+  try { tous = await lister(type); } catch (e) { console.log(`Impossible de lister les ${type === "raw" ? "fichiers" : "images"} : ${e.message}`); echecs++; continue; }
   const orphelins = tous.filter((r) => !utilises.has(`${type}:${r.public_id}`) && Date.now() - Date.parse(r.created_at) > AGE_MIN);
   const taille = orphelins.reduce((a, r) => a + (r.bytes || 0), 0);
   console.log(`${type === "raw" ? "Fichiers" : "Images et PDF avec aperçu"} : ${tous.length} sur Cloudinary, ${orphelins.length} inutilisé(s) (${(taille / 1048576).toFixed(1)} Mo).`);
@@ -81,10 +99,11 @@ for (const type of ["raw", "image"]) {
   total += orphelins.length; octets += taille;
   if (!ESSAI) {
     for (let i = 0; i < orphelins.length; i += 100) {
-      await cloudinary.api.delete_resources(orphelins.slice(i, i + 100).map((r) => r.public_id), { resource_type: type, type: "upload" });
+      try { await essayer(() => cloudinary.api.delete_resources(orphelins.slice(i, i + 100).map((r) => r.public_id), { resource_type: type, type: "upload" }), "suppression"); }
+      catch (e) { console.log(`   ${e.message}`); echecs++; }
     }
   }
 }
 
-console.log(`\n${ESSAI ? "Seraient supprimés" : "Supprimés"} : ${total} élément(s), ${(octets / 1048576).toFixed(1)} Mo libérés.${ESSAI ? " (mode essai : rien n'a été touché)" : ""}`);
+console.log(`\n${ESSAI ? "Seraient supprimés" : "Supprimés"} : ${total} élément(s), ${(octets / 1048576).toFixed(1)} Mo libérés.${ESSAI ? " (mode essai : rien n'a été touché)" : ""}${echecs ? ` ${echecs} étape(s) en échec : relance plus tard.` : ""}`);
 process.exit(0);
