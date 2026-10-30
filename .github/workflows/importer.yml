@@ -82,6 +82,13 @@ jobs:
           git add import-journal.json 2>/dev/null || true
           git commit -m "Journal d'import" || echo "Rien de nouveau"
           git pull --rebase && git push || echo "Journal non enregistré (sans gravité)"
+      - name: Cache des pages (économise les lectures Firestore)
+        if: always()
+        uses: actions/cache@v4
+        with:
+          path: outils/import/pages-cache.json
+          key: pages-cache-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: pages-cache-
       - name: Pages Google des documents
         if: always()
         continue-on-error: true

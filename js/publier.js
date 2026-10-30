@@ -1,4 +1,4 @@
-import { createDocument, listMine, listPublished, filieresPretes } from "./firebase.js";
+import { createDocument, listMine, getSearchIndex, filieresPretes } from "./firebase.js";
 import { toutesLesFilieres, canonFiliere } from "./filieres.js";
 import { uploadFile, uploadDocument } from "./cloudinary.js";
 import { photosEnPdf, photoLegere } from "./photos-pdf.js";
@@ -36,7 +36,7 @@ initLayout("publier", async (state) => {
   };
   remplirFilieres();
   filieresPretes.then(() => remplirFilieres());
-  listPublished().then((docs) => remplirFilieres(docs.map((d) => d.filiere).filter(Boolean))).catch(() => {});
+  getSearchIndex().then((docs) => remplirFilieres(docs.map((d) => d.filiere).filter(Boolean))).catch(() => {});
 });
 
 async function loadMine() {

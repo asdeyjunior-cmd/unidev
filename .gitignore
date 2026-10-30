@@ -7,3 +7,5 @@ node_modules/
 firebase-debug.log
 *.log
 resultat.txt
+outils/import/pages-cache.json
+resultat.txt

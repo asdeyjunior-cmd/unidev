@@ -19,6 +19,12 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20 }
+      - name: Cache des pages (économise les lectures Firestore)
+        uses: actions/cache@v4
+        with:
+          path: outils/import/pages-cache.json
+          key: pages-cache-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: pages-cache-
       - name: Pages Google des documents
         working-directory: outils/import
         env: { CLE: "${{ secrets.FIREBASE_CLE_JSON }}" }

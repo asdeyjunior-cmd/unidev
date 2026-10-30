@@ -93,13 +93,51 @@ ${corps}
 }
 
 /* ---------- Lecture des documents publiés ---------- */
+// Économie de lectures Firestore (quota gratuit : 50 000 par jour) : la liste vient de l'index (1 seule lecture)
+// et seules les fiches NOUVELLES sont lues ; les autres viennent de pages-cache.json (gardé d'une fois sur l'autre).
 console.log("Lecture des documents publiés…");
-const snap = await db.collection("documents").where("statut", "==", "publie").get();
-const docs = snap.docs.map((s) => {
-  const d = { id: s.id, ...s.data() };
+const CACHE = path.join(ICI, "pages-cache.json");
+let cache = {};
+try { cache = JSON.parse(fs.readFileSync(CACHE, "utf8")); } catch {}
+const CHAMPS = ["titre", "matiere", "filiere", "type", "niveau", "annee", "universite", "format", "taille", "telechargements", "description", "imageUrl"];
+const resumer = (s) => {
+  const d = s.data(); const o = { lu: Date.now(), cree: date(d.createdAt)?.getTime() || 0 };
+  for (const k of CHAMPS) if (d[k] !== undefined && d[k] !== "") o[k] = d[k];
+  return o;
+};
+const index = (await db.doc("index/catalogue").get()).data()?.docs;
+let ids;
+if (index && Object.keys(index).length) {
+  ids = Object.keys(index);
+  // Fiches à lire : les nouvelles, plus 150 des plus anciennes en cache (pour garder les compteurs à jour)
+  const nouvelles = ids.filter((id) => !cache[id]);
+  const vieilles = ids.filter((id) => cache[id]).sort((a, b) => cache[a].lu - cache[b].lu).slice(0, 150);
+  const aLire = [...nouvelles, ...vieilles];
+  for (let i = 0; i < aLire.length; i += 100) {
+    const snaps = await db.getAll(...aLire.slice(i, i + 100).map((id) => db.collection("documents").doc(id)));
+    for (const s of snaps) if (s.exists && s.data().statut === "publie") cache[s.id] = resumer(s); else delete cache[s.id];
+  }
+  console.log(`${aLire.length} fiche(s) lue(s) dans Firestore (${nouvelles.length} nouvelle(s)), le reste vient du cache.`);
+  // L'index fait foi pour les infos visibles (titre, image…) ; un document retiré de l'index n'a plus de page
+  const garder = new Set(ids);
+  for (const id of Object.keys(cache)) if (!garder.has(id)) delete cache[id];
+  for (const id of ids) {
+    const e = index[id], c = cache[id];
+    if (!c || !Array.isArray(e)) continue;
+    [c.titre, c.matiere, c.filiere, c.type, c.niveau, c.imageUrl, c.format, c.universite] = e.map((v, k) => v || [c.titre, c.matiere, c.filiere, c.type, c.niveau, c.imageUrl, c.format, c.universite][k]);
+  }
+} else {
+  // Pas d'index : lecture complète (ancienne méthode)
+  const snap = await db.collection("documents").where("statut", "==", "publie").get();
+  cache = {};
+  snap.docs.forEach((s) => { cache[s.id] = resumer(s); });
+}
+fs.writeFileSync(CACHE, JSON.stringify(cache));
+const docs = Object.entries(cache).map(([id, c]) => {
+  const d = { id, ...c };
   d.filiere = canonFiliere(d.filiere) || "Autre";
   d.page = `${slug(d.titre)}-${d.id.slice(0, 8).toLowerCase()}.html`;
-  d.date = date(d.createdAt);
+  d.date = c.cree ? new Date(c.cree) : null;
   return d;
 }).sort((a, b) => (b.date?.getTime() || 0) - (a.date?.getTime() || 0));
 console.log(`${docs.length} document(s) publié(s).`);

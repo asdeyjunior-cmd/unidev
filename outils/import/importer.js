@@ -72,8 +72,12 @@ async function connecter() {
   if (!ADMIN_UID) throw new Error("Document parametres/admin introuvable dans Firestore (voir README).");
   ajouterFilieres((await db.doc("index/filieres").get()).data()?.liste || []);
   // Documents déjà sur unidev : pour ne jamais publier deux fois le même
-  const snap = await db.collection("documents").select("titre", "taille", "universite", "statut").get();
-  snap.docs.forEach((s) => { const d = s.data(); if (d.statut !== "rejete") retenir(d); });
+  // Économie de lectures Firestore : les documents publiés viennent de l'index (1 seule lecture),
+  // plus ceux qui attendent la validation (peu nombreux)
+  const index = (await db.doc("index/catalogue").get()).data()?.docs || {};
+  for (const e of Object.values(index)) if (Array.isArray(e)) retenir({ titre: e[0], universite: e[7] });
+  const attente = await db.collection("documents").where("statut", "==", "en_attente").select("titre", "universite").get();
+  attente.docs.forEach((s) => retenir(s.data()));
   console.log(`${existants.size} titre(s) déjà sur unidev (les doublons seront sautés).\n`);
 }
 
