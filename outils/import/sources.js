@@ -436,7 +436,7 @@ export async function* documentsDuSite({ url, profondeur = 3, max = 50, deja = (
             const { remplacerSignature } = await import("./marque.js");
             const r = await remplacerSignature(buffer, remplacer);
             buffer = r.buffer;
-            if (r.lignes || r.liens) console.log(`   signature remplacée : ${r.lignes} ligne(s), ${r.liens} lien(s)${r.ignores ? ` · ${r.ignores} filigrane(s) penché(s) laissé(s)` : ""}`);
+            if (r.lignes || r.liens || r.logos) console.log(`   signature remplacée : ${r.logos ? `${r.logos} logo(s), ` : ""}${r.lignes} ligne(s), ${r.liens} lien(s)${r.ignores ? ` · ${r.ignores} filigrane(s) penché(s) laissé(s)` : ""}`);
           } catch (e) { console.log(`   (signature non remplacée : ${e.message})`); }
         }
         const nomDispo = (f.dispo.match(/filename\*?=(?:UTF-8'')?"?([^";]+)/i) || [])[1];

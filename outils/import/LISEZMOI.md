@@ -172,7 +172,7 @@ L'outil suit les liens « Télécharger », passe les pages de téléchargement 
 
 Garde l'accord écrit du site (e-mail ou message) : c'est ta preuve en cas de réclamation.
 
-**Remplacer la signature du site par celle d'unidev** (seulement si le site t'a autorisé à le faire) : réponds **O** à la question, puis tape les mots à remplacer (ex. `fomesoutra,fo me soutra`). Dans chaque PDF, les lignes d'en-tête ou de pied de page qui contiennent ces mots sont remplacées par « unidev-2026.web.app », et les liens cliquables vers le site renvoient vers unidev. Limites : un **logo en image** ou un **filigrane en diagonale** ne peuvent pas être retirés sans abîmer le cours ; ils restent. Les noms des **auteurs** ne sont jamais touchés.
+**Remplacer la signature du site par celle d'unidev** (seulement si le site t'a autorisé à le faire) : réponds **O** à la question, puis tape les mots à remplacer (ex. `fomesoutra,fo me soutra`). Dans chaque PDF, les lignes d'en-tête ou de pied de page qui contiennent ces mots sont remplacées par « unidev-2026.web.app », et les liens cliquables vers le site renvoient vers unidev. Le **logo du site en image** (ex. « Fomesoutra.com – Docs à portée de main ») est recouvert par le logo unidev **sur toutes les pages** : en haut, en bas, répété à chaque page, et partout où la même image réapparaît, y compris dans les documents suivants. Un logo d'école carré ou une figure du cours ne sont jamais touchés. Limite : un **filigrane en diagonale** au milieu de la page reste (l'effacer abîmerait le cours). Les noms des **auteurs** ne sont jamais touchés.
 
 ---
 

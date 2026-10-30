@@ -73,9 +73,9 @@ for (const [i, s] of concernes.entries()) {
 
     // 2. Remplacer la signature
     const r = await remplacerSignature(avant, motifs);
-    if (!r.lignes && !r.liens) {
+    if (!r.lignes && !r.liens && !r.logos) {
       sansSignature++;
-      console.log("   aucune signature trouvée (logo en image ou filigrane penché ?) : inchangé");
+      console.log("   aucune signature trouvée (filigrane penché ou logo de forme inhabituelle ?) : inchangé");
       await s.ref.update({ signatureRemplacee: true });
       continue;
     }
@@ -110,7 +110,7 @@ for (const [i, s] of concernes.entries()) {
     if (d.statut === "publie" && maj.imageUrl) batch.set(db.doc("index/catalogue"), { docs: { [s.id]: [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", maj.imageUrl, d.format || "", d.universite || ""] } }, { merge: true });
     await batch.commit();
     ok++;
-    console.log(`   remplacée : ${r.lignes} ligne(s), ${r.liens} lien(s)${r.ignores ? ` · ${r.ignores} filigrane(s) penché(s) laissé(s)` : ""}`);
+    console.log(`   remplacée : ${r.logos ? `${r.logos} logo(s), ` : ""}${r.lignes} ligne(s), ${r.liens} lien(s)${r.ignores ? ` · ${r.ignores} filigrane(s) penché(s) laissé(s)` : ""}`);
   } catch (e) {
     erreurs++;
     console.log(`   ERREUR : ${e.message}`);
