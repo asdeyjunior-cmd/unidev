@@ -351,7 +351,7 @@ async function lirePage(url) {
  * Parcourt un site à partir d'une page et récupère les documents liés (PDF, Word, PowerPoint…).
  * opts : { url, profondeur (1 = seulement cette page), max, deja, onEcarte, essai }
  */
-export async function* documentsDuSite({ url, profondeur = 2, max = 50, deja = () => false, onEcarte = () => {}, essai = false }) {
+export async function* documentsDuSite({ url, profondeur = 2, max = 50, deja = () => false, onEcarte = () => {}, essai = false, remplacer = [] }) {
   const depart = new URL(url);
   const memeSite = (u) => { try { const h = new URL(u).hostname.replace(/^www\./, ""); return h === depart.hostname.replace(/^www\./, ""); } catch { return false; } };
   const file = [{ url: depart.href, niveau: 1 }];
@@ -419,6 +419,15 @@ export async function* documentsDuSite({ url, profondeur = 2, max = 50, deja = (
         if (genre === "autre") { onEcarte("format inconnu"); continue; }
         if (f.buffer.length > 100 * 1048576) { onEcarte("plus de 100 Mo"); continue; }
         buffer = f.buffer;
+        // Signature du site partenaire -> unidev (seulement si demandé, et seulement dans les PDF)
+        if (remplacer.length && genre === "pdf") {
+          try {
+            const { remplacerSignature } = await import("./marque.js");
+            const r = await remplacerSignature(buffer, remplacer);
+            buffer = r.buffer;
+            if (r.lignes || r.liens) console.log(`   signature remplacée : ${r.lignes} ligne(s), ${r.liens} lien(s)${r.ignores ? ` · ${r.ignores} filigrane(s) penché(s) laissé(s)` : ""}`);
+          } catch (e) { console.log(`   (signature non remplacée : ${e.message})`); }
+        }
         const nomDispo = (f.dispo.match(/filename\*?=(?:UTF-8'')?"?([^";]+)/i) || [])[1];
         if (nomDispo) nomFichier = decodeURIComponent(nomDispo);
         const eDispo = (nomFichier.match(/\.([a-z0-9]{2,5})$/i)?.[1] || "").toLowerCase();

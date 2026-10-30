@@ -24,6 +24,10 @@ on:
       profondeur:
         description: "Seulement pour « site » : 1 = cette page, 2 = + les pages qu'elle liste"
         default: "2"
+      remplacer:
+        description: "Seulement pour « site », avec l'accord du site : mots de sa signature à remplacer par unidev (ex : fomesoutra,fo me soutra)"
+        required: false
+        default: ""
 
 concurrency: { group: unidev-import, cancel-in-progress: false }
 permissions: { contents: write }
@@ -54,11 +58,12 @@ jobs:
           MAX: ${{ inputs.max }}
           URL: ${{ inputs.url }}
           PROF: ${{ inputs.profondeur }}
+          REMP: ${{ inputs.remplacer }}
         run: |
           case "$SOURCE" in
             wikiversite) node importer.js wiki --projet wikiversite --recherche "$RECHERCHE" --max "$MAX" ;;
             wikilivres)  node importer.js wiki --projet wikilivres --recherche "$RECHERCHE" --max "$MAX" ;;
-            site)        node importer.js site --url "$URL" --profondeur "$PROF" --max "$MAX" ;;
+            site)        node importer.js site --url "$URL" --profondeur "$PROF" --max "$MAX" --remplacer "$REMP" ;;
             romans)      node importer.js romans --recherche "$RECHERCHE" --max "$MAX" ;;
             *)           node importer.js "$SOURCE" --recherche "$RECHERCHE" --max "$MAX" ;;
           esac

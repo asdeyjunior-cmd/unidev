@@ -172,6 +172,8 @@ L'outil suit les liens « Télécharger », passe les pages de téléchargement 
 
 Garde l'accord écrit du site (e-mail ou message) : c'est ta preuve en cas de réclamation.
 
+**Remplacer la signature du site par celle d'unidev** (seulement si le site t'a autorisé à le faire) : réponds **O** à la question, puis tape les mots à remplacer (ex. `fomesoutra,fo me soutra`). Dans chaque PDF, les lignes d'en-tête ou de pied de page qui contiennent ces mots sont remplacées par « unidev-2026.web.app », et les liens cliquables vers le site renvoient vers unidev. Limites : un **logo en image** ou un **filigrane en diagonale** ne peuvent pas être retirés sans abîmer le cours ; ils restent. Les noms des **auteurs** ne sont jamais touchés.
+
 ---
 
 ## Bon à savoir
@@ -197,3 +199,11 @@ Le plus simple : double-clique sur **METTRE-EN-LIGNE.bat** (à la racine du doss
 ## Nettoyer Cloudinary (NETTOYER-CLOUDINARY.bat)
 
 Supprimer un document dans Modération l'efface de Firebase et du site, mais **son fichier reste sur Cloudinary** (le site ne peut pas l'effacer sans exposer ta clé secrète). Double-clique sur **NETTOYER-CLOUDINARY.bat** de temps en temps : il liste les fichiers et images qui ne servent plus à aucun document, te montre la place libérée, puis les supprime si tu tapes **O**. Les fichiers de moins de 48 h ne sont jamais touchés (envois en cours).
+
+---
+
+## Remplacer la signature dans les documents déjà publiés (REMPLACER-SIGNATURE.bat)
+
+Pour les documents d'un site partenaire **déjà sur unidev** (importés avec le choix 9), avec l'accord écrit du site : double-clique sur **REMPLACER-SIGNATURE.bat**, tape le nom du site (ex. `fomesoutra`) et les mots à remplacer (ex. `fomesoutra,fo me soutra`). L'outil liste les documents concernés, puis, après **O**, remplace la signature dans chaque PDF **sans changer le document sur le site** (même titre, même place, mêmes téléchargements). Il note les documents traités et ne les refait jamais. Sur GitHub : Actions → « Remplacer la signature d'un site ».
+
+Ensuite, lance NETTOYER-CLOUDINARY.bat pour supprimer les anciens fichiers.

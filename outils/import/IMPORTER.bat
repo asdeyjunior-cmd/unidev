@@ -18,7 +18,7 @@ if errorlevel 1 (
   exit /b
 )
 
-if not exist node_modules\pdfkit (
+if not exist node_modules\pdfjs-dist (
   echo  Premiere utilisation : installation des composants ^(1 a 2 minutes^)...
   call npm install --silent
   if errorlevel 1 ( echo  L'installation a echoue. Verifie ta connexion internet. & pause & exit /b )
@@ -161,6 +161,11 @@ if "%MAX%"=="" set MAX=30
 echo.
 set /p ACCORD=  Confirmes-tu avoir l'accord ECRIT de ce site pour reprendre ses documents (O/N) :
 if /i not "%ACCORD%"=="O" ( echo  Sans accord du site, l'import est annule. & pause & exit /b )
+set REMP=
+echo.
+echo  Le site t'autorise-t-il aussi a remplacer SA signature ^(nom, adresse, liens^) par celle d'unidev dans les PDF ?
+set /p SIGN=  (O/N) :
+if /i "%SIGN%"=="O" set /p REMP=  Mots a remplacer, separes par des virgules ^(ex : fomesoutra,fo me soutra^) :
 echo.
 echo  ---- Verification ^(rien n'est envoye^) ----
 call node importer.js site --url "%URL%" --profondeur %PROF% --max %MAX% --essai
@@ -168,6 +173,6 @@ echo.
 set /p OK=  Importer ces documents pour de vrai (O/N) :
 if /i not "%OK%"=="O" ( echo  Annule. & pause & exit /b )
 echo.
-call node importer.js site --url "%URL%" --profondeur %PROF% --max %MAX%
+call node importer.js site --url "%URL%" --profondeur %PROF% --max %MAX% --remplacer "%REMP%"
 echo.
 pause

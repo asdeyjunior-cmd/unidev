@@ -1,0 +1,35 @@
+# Remplace la signature d'un site partenaire par celle d'unidev dans les documents déjà publiés.
+# À utiliser UNIQUEMENT avec l'accord écrit du site.
+name: Remplacer la signature d'un site
+
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: "Nom du site (ex : fomesoutra)"
+        required: true
+      remplacer:
+        description: "Mots à remplacer, séparés par des virgules (ex : fomesoutra,fo me soutra)"
+        required: true
+
+jobs:
+  signature:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    defaults: { run: { working-directory: outils/import } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Remplacement
+        env:
+          CLE: ${{ secrets.FIREBASE_CLE_JSON }}
+          CK: ${{ secrets.CLOUDINARY_API_KEY }}
+          CS: ${{ secrets.CLOUDINARY_API_SECRET }}
+          SITE: ${{ inputs.site }}
+          REMP: ${{ inputs.remplacer }}
+        run: |
+          npm install --no-audit --no-fund
+          printf '%s' "$CLE" > cle-firebase.json
+          printf 'CLOUDINARY_CLOUD_NAME=iugeyztf\nCLOUDINARY_API_KEY=%s\nCLOUDINARY_API_SECRET=%s\nFIREBASE_CLE=./cle-firebase.json\n' "$CK" "$CS" > .env
+          node signature.js --site "$SITE" --remplacer "$REMP"

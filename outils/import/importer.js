@@ -38,7 +38,7 @@ if (!["dossier", "hal", "wiki", "zenodo", "tout", "romans", "site"].includes(mod
   node importer.js zenodo [--recherche "mots"] [--max 50] [--types lesson,presentation] [--essai]
   node importer.js tout --recherche "mots" [--max 20] [--essai]   (HAL + Wikiversité + Wikilivres + Zenodo)
   node importer.js romans [--recherche "titre ou auteur"] [--max 20] [--essai]   (Wikisource, domaine public)
-  node importer.js site --url "https://..." [--profondeur 2] [--max 50] [--essai]   (site qui t'a donné son accord)`);
+  node importer.js site --url "https://..." [--profondeur 2] [--max 50] [--remplacer "mot1,mot2"] [--essai]   (site qui t'a donné son accord)`);
   process.exit(1);
 }
 
@@ -378,7 +378,10 @@ try {
       const url = opt("url");
       if (!url || !/^https?:\/\//.test(url)) throw new Error('Indique la page de départ : --url "https://..."');
       const profondeur = Math.max(1, Math.min(4, Number(opt("profondeur", "2"))));
-      await importerSource(`Site ${new URL(url).hostname}`, (o) => documentsDuSite({ url, profondeur, max, essai: ESSAI, ...o }), max);
+      // --remplacer "fomesoutra,fo me soutra" : remplace la signature du site par celle d'unidev (accord écrit du site obligatoire)
+      const remplacer = (opt("remplacer", "") || "").split(",").map((m) => m.trim()).filter((m) => m.length >= 4);
+      if (remplacer.length) console.log(`Signature remplacée par unidev dans les PDF : ${remplacer.join(", ")}\n`);
+      await importerSource(`Site ${new URL(url).hostname}`, (o) => documentsDuSite({ url, profondeur, max, essai: ESSAI, remplacer, ...o }), max);
     } else if (mode === "romans") {
       await importerSource("Romans (Wikisource)", (o) => romansWikisource({ recherche, max, essai: ESSAI, ...o }), max);
     } else if (mode === "wiki") {
