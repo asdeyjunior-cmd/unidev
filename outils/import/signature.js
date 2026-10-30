@@ -11,13 +11,14 @@
  * À utiliser UNIQUEMENT avec l'accord écrit du site concerné.
  */
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
 import { v2 as cloudinary } from "cloudinary";
 import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF } from "./outils.js";
-import { remplacerSignature } from "./marque.js";
+import { remplacerSignature, empreintesImages } from "./marque.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -52,36 +53,80 @@ const concernes = snap.docs.filter((s) => {
     || (norm(d.description).includes("autorisation de") && norm(d.description).includes(norm(site)));
 }).filter((s) => (REFAIRE || !s.data().signatureRemplacee) && String(s.data().format || "pdf").toLowerCase() === "pdf");
 
-console.log(`${concernes.length} document(s) PDF de « ${site} » à traiter (signature : ${motifs.join(", ")}).\n`);
+// Adresse du fichier ORIGINAL de chaque document (notée par l'import dans import-journal.json) :
+// on repart toujours de l'original, ce qui répare aussi les documents abîmés par une version précédente de l'outil.
+const originaux = new Map();
+try {
+  const journal = JSON.parse(fs.readFileSync(path.join(ICI, "import-journal.json"), "utf8"));
+  for (const [k, v] of Object.entries(journal)) if (k.startsWith("site:") && v?.id) originaux.set(v.id, k.slice(5));
+} catch {}
+
+console.log(`${concernes.length} document(s) PDF de « ${site} » à traiter (signature : ${motifs.join(", ")}).`);
+console.log(`${concernes.filter((s) => originaux.has(s.id)).length} avec leur fichier d'origine retrouvé (les autres partent du fichier actuel).\n`);
+
+/* ---------- 1er passage : récupérer les fichiers et reconnaître le logo du site ---------- */
+// Le logo du site = la MÊME image présente dans plusieurs documents du site. Une image propre à un seul document
+// (logo d'école, titre, figure du cours) n'est jamais considérée comme un logo.
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "unidev-signature-"));
+const compte = new Map(); // empreinte -> nombre de documents
+const sources = new Map(); // id -> { chemin, original }
+for (const [i, s] of concernes.entries()) {
+  const d = s.data();
+  process.stdout.write(`\r   lecture ${i + 1}/${concernes.length}…`);
+  try {
+    let buffer, original = false;
+    if (originaux.has(s.id)) {
+      try { buffer = await telecharger(originaux.get(s.id), { "User-Agent": "Mozilla/5.0 unidev-import" }, { pdf: true }); original = true; } catch {}
+    }
+    if (!buffer) {
+      const fichier = (await s.ref.collection("prive").doc("fichier").get()).data();
+      if (!fichier?.fileUrl) continue;
+      const morceaux = fichier.parts?.length ? fichier.parts.map((p) => p.url) : [fichier.fileUrl];
+      buffer = Buffer.concat(await Promise.all(morceaux.map((u) => telecharger(u))));
+    }
+    const chemin = path.join(TMP, `${s.id}.pdf`);
+    fs.writeFileSync(chemin, buffer);
+    sources.set(s.id, { chemin, original });
+    for (const e of await empreintesImages(buffer)) compte.set(e, (compte.get(e) || 0) + 1);
+  } catch (e) { console.log(`\n   ${d.titre} : lecture impossible (${e.message})`); }
+}
+console.log("");
+const deja = new Set((await db.doc("parametres/logos").get()).data()?.empreintes || []);
+// Le logo du SITE revient dans une grande partie de ses documents (toutes écoles confondues) ;
+// le logo d'une école ne revient que dans les documents de cette école.
+const seuil = sources.size >= 6 ? Math.max(3, Math.ceil(sources.size * 0.3)) : Math.max(2, Math.ceil(sources.size * 0.5));
+const logos = new Set([...deja, ...[...compte].filter(([, n]) => n >= seuil).map(([e]) => e)]);
+console.log(`Logo(s) du site reconnu(s) : ${logos.size} (image large, en haut ou en bas de page, présente dans au moins ${seuil} documents sur ${sources.size}).\n`);
+if (!ESSAI && logos.size) await db.doc("parametres/logos").set({ empreintes: [...logos].slice(0, 200) }, { merge: true });
+
 if (ESSAI) {
-  concernes.slice(0, 50).forEach((s, i) => console.log(`[${i + 1}] ${s.data().titre}`));
+  concernes.slice(0, 50).forEach((s, i) => console.log(`[${i + 1}] ${s.data().titre}${sources.get(s.id)?.original ? "" : "  (fichier actuel)"}`));
   if (concernes.length > 50) console.log(`… et ${concernes.length - 50} autre(s)`);
   console.log("\n(mode essai : rien n'a été modifié)");
+  fs.rmSync(TMP, { recursive: true, force: true });
   process.exit(0);
 }
 
+/* ---------- 2e passage : remplacer et renvoyer ---------- */
 let ok = 0, sansSignature = 0, erreurs = 0;
 for (const [i, s] of concernes.entries()) {
   const d = s.data();
+  const src = sources.get(s.id);
+  if (!src) continue;
   console.log(`[${i + 1}/${concernes.length}] ${d.titre}`);
   try {
-    // 1. Récupérer le PDF actuel (en un ou plusieurs morceaux)
-    const fichier = (await s.ref.collection("prive").doc("fichier").get()).data();
-    if (!fichier?.fileUrl) throw new Error("fichier introuvable");
-    const morceaux = fichier.parts?.length ? fichier.parts.map((p) => p.url) : [fichier.fileUrl];
-    const avant = Buffer.concat(await Promise.all(morceaux.map((u) => telecharger(u))));
-
-    // 2. Remplacer la signature
-    const r = await remplacerSignature(avant, motifs);
-    if (!r.lignes && !r.liens && !r.logos) {
+    const avant = fs.readFileSync(src.chemin);
+    const r = await remplacerSignature(avant, motifs, { logos });
+    const change = r.lignes || r.liens || r.logos;
+    // Fichier d'origine récupéré : on le renvoie même sans signature trouvée (ça répare une ancienne version abîmée)
+    if (!change && !src.original) {
       sansSignature++;
-      console.log("   aucune signature trouvée (filigrane penché ou logo de forme inhabituelle ?) : inchangé");
+      console.log("   aucune signature trouvée : inchangé");
       await s.ref.update({ signatureRemplacee: true });
       continue;
     }
-    const pdf = r.buffer;
+    const pdf = change ? r.buffer : avant;
 
-    // 3. Envoyer le nouveau PDF (avec aperçu de la 1re page si possible)
     let nouveau = null, imageUrl = null;
     if (pdf.length <= MAX_IMAGE_PDF) {
       try {
@@ -100,8 +145,7 @@ for (const [i, s] of concernes.entries()) {
         nouveau = { fileUrl: parts[0].url, publicId: parts[0].publicId, parts };
       }
     }
-
-    // 4. Mettre à jour la fiche (l'ancienne image de 1re page montrait encore l'ancienne signature)
+    const fichier = (await s.ref.collection("prive").doc("fichier").get()).data() || {};
     const ancienneImageApercu = String(d.imageUrl || "").includes("/image/upload/") && String(d.imageUrl).includes("pg_1");
     const maj = { taille: pdf.length, signatureRemplacee: true, ...(imageUrl && ancienneImageApercu ? { imageUrl } : {}) };
     const batch = db.batch();
@@ -110,12 +154,13 @@ for (const [i, s] of concernes.entries()) {
     if (d.statut === "publie" && maj.imageUrl) batch.set(db.doc("index/catalogue"), { docs: { [s.id]: [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", maj.imageUrl, d.format || "", d.universite || ""] } }, { merge: true });
     await batch.commit();
     ok++;
-    console.log(`   remplacée : ${r.logos ? `${r.logos} logo(s), ` : ""}${r.lignes} ligne(s), ${r.liens} lien(s)${r.ignores ? ` · ${r.ignores} filigrane(s) penché(s) laissé(s)` : ""}`);
+    console.log(`   ${change ? `remplacée : ${r.logos ? `${r.logos} logo(s), ` : ""}${r.lignes} ligne(s), ${r.liens} lien(s)` : "rétabli depuis l'original (aucune signature à remplacer)"}${src.original ? " · depuis le fichier d'origine" : ""}`);
   } catch (e) {
     erreurs++;
     console.log(`   ERREUR : ${e.message}`);
   }
 }
+fs.rmSync(TMP, { recursive: true, force: true });
 console.log(`\nTerminé : ${ok} document(s) mis à jour, ${sansSignature} sans signature à remplacer, ${erreurs} erreur(s).`);
-console.log("Les anciens fichiers restent sur Cloudinary : lance NETTOYER-CLOUDINARY.bat pour libérer la place.");
+console.log("Les anciens fichiers restent sur Cloudinary : lance le nettoyage pour libérer la place.");
 process.exit(0);

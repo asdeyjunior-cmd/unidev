@@ -49,6 +49,7 @@ const noter = (cle, valeur) => { journal[cle] = valeur; fs.writeFileSync(JOURNAL
 
 /* ---------- Connexions (seulement hors mode essai) ---------- */
 let cloudinary, db, FieldValue, ADMIN_UID;
+let LOGOS = new Set(); // logos de sites partenaires reconnus par signature.js (parametres/logos)
 async function connecter() {
   const manque = ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET", "FIREBASE_CLE"].filter((k) => !process.env[k]);
   if (manque.length) throw new Error(`Variables manquantes dans .env : ${manque.join(", ")}`);
@@ -70,6 +71,7 @@ async function connecter() {
   ADMIN_UID = (await db.doc("parametres/admin").get()).data()?.uid;
   if (!ADMIN_UID) throw new Error("Document parametres/admin introuvable dans Firestore (voir README).");
   ajouterFilieres((await db.doc("index/filieres").get()).data()?.liste || []);
+  LOGOS = new Set((await db.doc("parametres/logos").get()).data()?.empreintes || []);
   // Documents déjà sur unidev : pour ne jamais publier deux fois le même
   const snap = await db.collection("documents").select("titre", "taille", "universite", "statut").get();
   snap.docs.forEach((s) => { const d = s.data(); if (d.statut !== "rejete") retenir(d); });
@@ -381,7 +383,7 @@ try {
       // --remplacer "fomesoutra,fo me soutra" : remplace la signature du site par celle d'unidev (accord écrit du site obligatoire)
       const remplacer = (opt("remplacer", "") || "").split(",").map((m) => m.trim()).filter((m) => m.length >= 4);
       if (remplacer.length) console.log(`Signature remplacée par unidev dans les PDF : ${remplacer.join(", ")}\n`);
-      await importerSource(`Site ${new URL(url).hostname}`, (o) => documentsDuSite({ url, profondeur, max, essai: ESSAI, remplacer, ...o }), max);
+      await importerSource(`Site ${new URL(url).hostname}`, (o) => documentsDuSite({ url, profondeur, max, essai: ESSAI, remplacer, logos: LOGOS, ...o }), max);
     } else if (mode === "romans") {
       await importerSource("Romans (Wikisource)", (o) => romansWikisource({ recherche, max, essai: ESSAI, ...o }), max);
     } else if (mode === "wiki") {

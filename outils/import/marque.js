@@ -5,7 +5,9 @@
 //   - les lignes de texte horizontales (en-têtes, pieds de page…) qui contiennent la signature : recouvertes
 //     d'un fond blanc puis réécrites « unidev-2026.web.app » ;
 //   - les liens cliquables vers le site : redirigés vers unidev.
-// Ce qui ne peut pas l'être : un logo en image, ou un filigrane en diagonale (l'effacer abîmerait le texte du cours).
+//   - le logo du site en image, UNIQUEMENT s'il a été reconnu (même image dans plusieurs documents du site : options.logos).
+// Ce qui ne peut pas l'être : un filigrane en diagonale (l'effacer abîmerait le texte du cours).
+import crypto from "node:crypto";
 import { PDFDocument, PDFName, PDFString, PDFArray, PDFDict, PDFRawStream, PDFRef, decodePDFRawStream, rgb, StandardFonts, setTextRenderingMode, TextRenderingMode, pushGraphicsState, popGraphicsState } from "pdf-lib";
 
 const SITE = "https://unidev-2026.web.app";
@@ -37,7 +39,9 @@ function imagesDessinees(ctx, contenu, ressources, depart, sortie, profondeur = 
       const sous = dict?.get(PDFName.of("Subtype"))?.toString();
       if (sous === "/Image") {
         const w = dict.get(PDFName.of("Width"))?.asNumber?.() || 0, h = dict.get(PDFName.of("Height"))?.asNumber?.() || 0;
-        sortie.push({ ref, ctm, empreinte: `${w}x${h}:${obj.contents?.length || 0}` });
+        // Empreinte = contenu exact de l'image : le logo du site est le même fichier dans tous ses documents
+        const empreinte = obj.contents ? crypto.createHash("sha1").update(obj.contents).digest("hex").slice(0, 20) : `${w}x${h}`;
+        sortie.push({ ref, ctm, empreinte });
       }
       else if (sous === "/Form" && profondeur < 2 && ref instanceof PDFRef) {
         const mat = dict.lookup(PDFName.of("Matrix"));
@@ -54,20 +58,10 @@ function cadre(ctm) {
   const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
   return { x: Math.min(...xs), y: Math.min(...ys), w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) };
 }
-// Logos déjà reconnus pendant cet import : la même image sera remplacée partout, dans tous les documents suivants
-const LOGOS_CONNUS = new Set();
-
-/**
- * Repère le logo du site, sur TOUTES les pages :
- *  - une image LARGE (2 fois plus large que haute au moins) et PETITE (moins de 70 % de la largeur, 15 % de la hauteur)
- *    placée en HAUT ou en BAS d'une page (en-tête, pied de page) ;
- *  - ou une petite image répétée au même endroit sur plusieurs pages (en-tête ou pied de page de chaque page) ;
- *  - ou une image identique à un logo déjà reconnu dans un document précédent.
- * Un logo d'école carré seul, une figure du cours ou une page scannée entière ne sont jamais touchés.
- */
-function trouverLogos(doc) {
-  const ctx = doc.context, pages = doc.getPages(), trouves = [];
-  const parPage = pages.map((page) => {
+/** Toutes les images dessinées dans le PDF, page par page, avec leur place et leur empreinte */
+function imagesDuDocument(doc) {
+  const ctx = doc.context;
+  return doc.getPages().map((page) => {
     const c = page.node.get(PDFName.of("Contents"));
     const refs = c ? (ctx.lookup(c) instanceof PDFArray ? ctx.lookup(c).asArray() : [c]) : [];
     const contenu = refs.map((r) => texteDuFlux(ctx, r)).join("\n");
@@ -76,29 +70,37 @@ function trouverLogos(doc) {
     const { width: W, height: H } = page.getSize();
     return imgs.map((im) => ({ ...im, b: cadre(im.ctm), W, H }));
   });
+}
 
-  // Images répétées sur plusieurs pages (même image, même place à 10 points près)
-  const reps = new Map();
-  parPage.forEach((imgs, i) => imgs.forEach((im) => {
-    const k = `${im.ref}|${Math.round(im.b.x / 10)}|${Math.round(im.b.y / 10)}`;
-    if (!reps.has(k)) reps.set(k, new Set());
-    reps.get(k).add(i);
-  }));
+/**
+ * Empreintes des petites images d'un PDF (candidates au rôle de logo).
+ * Le logo du site est reconnu PLUS TARD, en comparant plusieurs documents : c'est la même image dans beaucoup d'entre eux.
+ */
+export async function empreintesImages(buffer) {
+  try {
+    const doc = await PDFDocument.load(buffer, { ignoreEncryption: true, updateMetadata: false });
+    const set = new Set();
+    // Candidates : images LARGES (2 fois plus larges que hautes), PETITES, en HAUT ou en BAS de page,
+    // comme un logo de site. Un logo d'école carré, une figure ou une page scannée n'en font pas partie.
+    for (const imgs of imagesDuDocument(doc)) for (const im of imgs) {
+      const { b, W, H } = im;
+      if (b.h < 5 || b.w / b.h < 2 || b.w > W * 0.8 || b.h > H * 0.15) continue;
+      if (b.y + b.h >= H * 0.75 || b.y <= H * 0.25) set.add(im.empreinte);
+    }
+    return [...set];
+  } catch { return []; }
+}
 
-  const logos = new Set(); // empreintes retenues pour ce document
-  parPage.forEach((imgs, i) => imgs.forEach((im) => {
-    const { b, W, H } = im;
-    if (b.w < 30 || b.h < 8 || b.w > W * 0.8) return;
-    const large = b.w / b.h >= 2, petit = b.w <= W * 0.7 && b.h <= H * 0.15;
-    const bord = b.y + b.h >= H * 0.78 || b.y <= H * 0.22;
-    const repetee = b.h <= H * 0.15 && (reps.get(`${im.ref}|${Math.round(b.x / 10)}|${Math.round(b.y / 10)}`)?.size || 0) >= 2 && bord;
-    if ((large && petit && bord) || repetee || LOGOS_CONNUS.has(im.empreinte)) logos.add(im.empreinte);
+/** Images à remplacer : SEULEMENT celles dont l'empreinte est un logo reconnu (jamais de devinette) */
+function trouverLogos(doc, logos) {
+  const trouves = [];
+  if (!logos?.size) return trouves;
+  imagesDuDocument(doc).forEach((imgs, i) => imgs.forEach((im) => {
+    if (logos.has(im.empreinte) && im.b.w <= im.W * 0.8 && im.b.h <= im.H * 0.25 && im.b.w > 10 && im.b.h > 5) trouves.push({ page: i, ...im.b });
   }));
-  if (!logos.size) return trouves;
-  logos.forEach((e) => LOGOS_CONNUS.add(e));
-  parPage.forEach((imgs, i) => imgs.forEach((im) => { if (logos.has(im.empreinte) && im.b.w <= im.W * 0.8) trouves.push({ page: i, ...im.b }); }));
   return trouves;
 }
+
 /** Dessine le logo unidev dans le cadre (carré vert « u » + « unidev » + adresse) */
 function dessinerLogo(page, b, gras) {
   page.drawRectangle({ x: b.x - 2, y: b.y - 2, width: b.w + 4, height: b.h + 4, color: rgb(1, 1, 1) });
@@ -212,8 +214,8 @@ export async function remplacerSignature(buffer, motifs, options = {}) {
 
   // 4. Logo en image en haut de la 1re page -> logo unidev
   let logos = 0;
-  if (options.logo !== false) {
-    for (const b of trouverLogos(doc)) {
+  {
+    for (const b of trouverLogos(doc, options.logos)) {
       const page = pages[b.page];
       isoler(page);
       page.pushOperators(pushGraphicsState(), setTextRenderingMode(TextRenderingMode.Fill));
