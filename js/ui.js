@@ -249,7 +249,7 @@ export function fileModal(d, info, { texte = "", bouton = "Ouvrir le document", 
     etat.textContent = `Téléchargement de ${morceaux.length} morceaux…`;
     try {
       const ext = (d.format || "").toLowerCase();
-      const blob = await assembleParts(morceaux, (p) => (bar.firstElementChild.style.width = p + "%"), TYPES_MIME[ext]);
+      const blob = await assembleParts(morceaux, (p) => (bar.firstElementChild.style.width = p + "%"), TYPES_MIME[ext], (t) => (etat.textContent = t));
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -262,8 +262,10 @@ export function fileModal(d, info, { texte = "", bouton = "Ouvrir le document", 
       btn.textContent = "Télécharger à nouveau";
     } catch (err) {
       console.error(err);
-      etat.textContent = "";
-      toast("Le téléchargement a échoué. Vérifie ta connexion et réessaie.", "err");
+      // Les morceaux déjà reçus sont gardés : « Reprendre » continue là où ça s'est arrêté
+      etat.textContent = `Interrompu (${err.message}). Les morceaux déjà reçus sont gardés.`;
+      btn.textContent = "Reprendre le téléchargement";
+      toast("Connexion coupée pendant le téléchargement. Appuie sur « Reprendre ».", "err");
     }
     btn.disabled = false;
   };

@@ -84,15 +84,61 @@ export function lienSur(url, genre = "raw") {
 }
 
 /** Télécharge les morceaux et les recolle en un seul fichier (Blob) */
-export async function assembleParts(urls, onProgress = () => {}, type = "application/octet-stream") {
-  if (!urls.length || urls.length > 12 || !urls.every((u) => lienSur(u))) throw new Error("Lien de fichier non autorisé.");
-  const blobs = [];
-  for (let i = 0; i < urls.length; i++) {
-    const res = await fetch(urls[i]);
-    if (!res.ok) throw new Error(`Morceau ${i + 1} introuvable (${res.status}).`);
-    blobs.push(await res.blob());
-    onProgress(Math.round(((i + 1) / urls.length) * 100));
+// Morceaux déjà reçus : si la connexion coupe, « Réessayer » reprend là où ça s'est arrêté
+const morceauxRecus = new Map();
+
+/** Télécharge un morceau, avec la progression octet par octet et jusqu'à 4 essais */
+async function morceau(url, onOctets) {
+  if (morceauxRecus.has(url)) { onOctets(morceauxRecus.get(url).size); return morceauxRecus.get(url); }
+  let derniere;
+  for (let essai = 1; essai <= 4; essai++) {
+    try {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw Object.assign(new Error(`erreur ${res.status}`), { definitive: res.status === 404 || res.status === 403 });
+      let blob;
+      if (res.body && res.body.getReader) {
+        const lecteur = res.body.getReader(), parts = [];
+        let recu = 0;
+        for (;;) {
+          const { done, value } = await lecteur.read();
+          if (done) break;
+          parts.push(value); recu += value.length; onOctets(recu);
+        }
+        blob = new Blob(parts);
+      } else { blob = await res.blob(); onOctets(blob.size); }
+      morceauxRecus.set(url, blob);
+      return blob;
+    } catch (e) {
+      derniere = e;
+      onOctets(0);
+      if (e.definitive) break;
+      await new Promise((r) => setTimeout(r, 1500 * essai));
+    }
   }
+  throw derniere;
+}
+
+/** Reconstitue un gros fichier envoyé en plusieurs morceaux (2 morceaux à la fois, reprise possible) */
+export async function assembleParts(urls, onProgress = () => {}, type = "application/octet-stream", onEtat = () => {}) {
+  if (!urls.length || urls.length > 15 || !urls.every((u) => lienSur(u))) throw new Error("Lien de fichier non autorisé.");
+  const TAILLE = 9 * 1024 * 1024; // taille d'un morceau (le dernier est plus petit)
+  const total = urls.length * TAILLE;
+  const recus = new Array(urls.length).fill(0);
+  const maj = () => onProgress(Math.min(99, Math.round((recus.reduce((a, b) => a + b, 0) / total) * 100)));
+  const blobs = new Array(urls.length);
+  let suivant = 0, finis = 0;
+  const travailleur = async () => {
+    while (suivant < urls.length) {
+      const i = suivant++;
+      try {
+        blobs[i] = await morceau(urls[i], (o) => { recus[i] = o; maj(); });
+      } catch (e) { throw new Error(`Morceau ${i + 1} sur ${urls.length} : ${e.message}`); }
+      finis++;
+      onEtat(`${finis} morceau(x) sur ${urls.length} reçus…`);
+    }
+  };
+  await Promise.all([travailleur(), travailleur()]);
+  onProgress(100);
   return new Blob(blobs, { type });
 }
 
