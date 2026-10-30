@@ -5,6 +5,7 @@
  *
  *   node signature.js --site fomesoutra --remplacer "fomesoutra,fo me soutra" --essai
  *   node signature.js --site fomesoutra --remplacer "fomesoutra,fo me soutra"
+ *   … --refaire   -> retraite aussi les documents déjà traités
  *
  * --site : documents dont la description contient « autorisation de <site> » (ajoutée par le choix 9 de l'import)
  * À utiliser UNIQUEMENT avec l'accord écrit du site concerné.
@@ -22,6 +23,7 @@ const ICI = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
 const opt = (n, d = null) => { const i = args.indexOf(`--${n}`); return i >= 0 ? args[i + 1] : d; };
 const ESSAI = args.includes("--essai");
+const REFAIRE = args.includes("--refaire"); // retraite aussi les documents déjà traités (ex. après une correction de l'outil)
 const site = (opt("site", "") || "").trim().toLowerCase();
 const motifs = (opt("remplacer", "") || "").split(",").map((m) => m.trim()).filter((m) => m.length >= 4);
 const norm = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -48,7 +50,7 @@ const concernes = snap.docs.filter((s) => {
   const d = s.data();
   return norm(d.description).includes(`autorisation de ${norm(site)}`) || norm(d.description).includes(`autorisation de www.${norm(site)}`)
     || (norm(d.description).includes("autorisation de") && norm(d.description).includes(norm(site)));
-}).filter((s) => !s.data().signatureRemplacee && String(s.data().format || "pdf").toLowerCase() === "pdf");
+}).filter((s) => (REFAIRE || !s.data().signatureRemplacee) && String(s.data().format || "pdf").toLowerCase() === "pdf");
 
 console.log(`${concernes.length} document(s) PDF de « ${site} » à traiter (signature : ${motifs.join(", ")}).\n`);
 if (ESSAI) {

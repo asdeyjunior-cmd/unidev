@@ -14,12 +14,15 @@ set /p ACCORD=  As-tu l'accord ECRIT du site pour remplacer sa signature (O/N) :
 if /i not "%ACCORD%"=="O" ( echo  Annule. & pause & exit /b )
 set /p SITE=  Nom du site ^(ex : fomesoutra^) :
 set /p REMP=  Mots a remplacer, separes par des virgules ^(ex : fomesoutra,fo me soutra^) :
+set REF=
+set /p REFQ=  Refaire aussi les documents deja traites ^(si la signature avait ete effacee sans etre remplacee^) (O/N) :
+if /i "%REFQ%"=="O" set REF=--refaire
 echo.
 echo  ---- Verification ^(rien n'est modifie^) ----
-call node signature.js --site "%SITE%" --remplacer "%REMP%" --essai
+call node signature.js --site "%SITE%" --remplacer "%REMP%" %REF% --essai
 echo.
 set /p OK=  Remplacer la signature dans ces documents (O/N) :
 if /i not "%OK%"=="O" ( echo  Annule. & pause & exit /b )
-call node signature.js --site "%SITE%" --remplacer "%REMP%"
+call node signature.js --site "%SITE%" --remplacer "%REMP%" %REF%
 echo.
 pause

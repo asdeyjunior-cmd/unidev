@@ -11,6 +11,10 @@ on:
       remplacer:
         description: "Mots à remplacer, séparés par des virgules (ex : fomesoutra,fo me soutra)"
         required: true
+      refaire:
+        description: "Refaire aussi les documents déjà traités (si la signature avait été effacée sans être remplacée)"
+        type: boolean
+        default: false
 
 jobs:
   signature:
@@ -28,8 +32,9 @@ jobs:
           CS: ${{ secrets.CLOUDINARY_API_SECRET }}
           SITE: ${{ inputs.site }}
           REMP: ${{ inputs.remplacer }}
+          REF: ${{ inputs.refaire && '--refaire' || '' }}
         run: |
           npm install --no-audit --no-fund
           printf '%s' "$CLE" > cle-firebase.json
           printf 'CLOUDINARY_CLOUD_NAME=iugeyztf\nCLOUDINARY_API_KEY=%s\nCLOUDINARY_API_SECRET=%s\nFIREBASE_CLE=./cle-firebase.json\n' "$CK" "$CS" > .env
-          node signature.js --site "$SITE" --remplacer "$REMP"
+          node signature.js --site "$SITE" --remplacer "$REMP" $REF

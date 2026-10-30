@@ -6,7 +6,7 @@
 //     d'un fond blanc puis réécrites « unidev-2026.web.app » ;
 //   - les liens cliquables vers le site : redirigés vers unidev.
 // Ce qui ne peut pas l'être : un logo en image, ou un filigrane en diagonale (l'effacer abîmerait le texte du cours).
-import { PDFDocument, PDFName, PDFString, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument, PDFName, PDFString, PDFArray, rgb, StandardFonts, setTextRenderingMode, TextRenderingMode, pushGraphicsState, popGraphicsState } from "pdf-lib";
 
 const SITE = "https://unidev-2026.web.app";
 const TEXTE = "unidev-2026.web.app";
@@ -57,12 +57,33 @@ export async function remplacerSignature(buffer, motifs) {
   const doc = await PDFDocument.load(buffer, { ignoreEncryption: true, updateMetadata: false });
   const police = await doc.embedFont(StandardFonts.HelveticaBold);
   const pages = doc.getPages();
+  // Le contenu d'origine peut laisser derrière lui un état « piégé » (texte invisible des PDF scannés,
+  // repère déplacé…) : on l'enferme entre q … Q pour que notre texte s'affiche toujours.
+  const isolees = new Set();
+  const isoler = (page) => {
+    if (isolees.has(page)) return;
+    isolees.add(page);
+    const ctx = doc.context;
+    const debut = ctx.register(ctx.stream("q\n"));
+    const fin = ctx.register(ctx.stream("\nQ\n"));
+    const actuel = page.node.get(PDFName.of("Contents"));
+    const resolu = actuel ? ctx.lookup(actuel) : null;
+    const liste = ctx.obj([]);
+    liste.push(debut);
+    if (resolu instanceof PDFArray) for (let i = 0; i < resolu.size(); i++) liste.push(resolu.get(i));
+    else if (actuel) liste.push(actuel);
+    liste.push(fin);
+    page.node.set(PDFName.of("Contents"), liste);
+  };
   for (const z of zones) {
     const page = pages[z.page];
+    isoler(page);
     page.drawRectangle({ x: z.x - 1, y: z.y - z.h * 0.3, width: z.w + 2, height: z.h * 1.35, color: rgb(1, 1, 1) });
     let taille = Math.max(6, Math.min(z.h, 14));
     while (taille > 5 && police.widthOfTextAtSize(TEXTE, taille) > Math.max(z.w, 60)) taille -= 0.5;
+    page.pushOperators(pushGraphicsState(), setTextRenderingMode(TextRenderingMode.Fill));
     page.drawText(TEXTE, { x: z.x, y: z.y, size: taille, font: police, color: rgb(0.12, 0.62, 0.33) });
+    page.pushOperators(popGraphicsState());
   }
 
   // 3. Liens cliquables vers le site partenaire -> unidev
