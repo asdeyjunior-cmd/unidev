@@ -6,3 +6,4 @@ cle-firebase.json
 node_modules/
 firebase-debug.log
 *.log
+/.firebase
