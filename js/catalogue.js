@@ -27,7 +27,10 @@ els.niveau.innerHTML = `<option value="">Niveau</option>` +
 const norm = (s = "") => s.toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
 /* ---------- Chargement progressif : 8 documents à la fois ---------- */
-const PAGE = 8;
+// Téléphone : 8 documents à la fois ; PC (5 par ligne) : 20, pour remplir des lignes entières
+const PAGE = matchMedia("(min-width: 1200px)").matches ? 20 : matchMedia("(min-width: 601px)").matches ? 16 : 8;
+// Vrai si le bas de la liste est visible (ou presque) : il faut charger la suite
+const procheDuBas = () => $("more").getBoundingClientRect().top < innerHeight + 600;
 let cursor = null;
 let done = false;
 let loading = false;
@@ -130,7 +133,8 @@ async function loadPage() {
   // Avec un filtre ou une recherche, on continue tant qu'il y a moins de 8 résultats visibles
   if (!done && filtersActive() && visibleDocs().length < PAGE) loadPage();
   // Si la page n'est pas encore remplie, on charge la suite
-  else if (!done && document.documentElement.scrollHeight <= innerHeight + 200) loadPage();
+  // Le bas de la liste est encore visible (écran large, page courte) : on charge la suite tout de suite
+  else if (!done && procheDuBas()) loadPage();
 }
 
 function resetAndLoad() {
@@ -141,6 +145,13 @@ function resetAndLoad() {
 }
 
 // La suite se charge quand on arrive près du bas de la liste
+// Filet de sécurité : en descendant, on vérifie aussi à chaque défilement (certains PC ne relancent pas l'observateur)
+let attenteScroll = null;
+addEventListener("scroll", () => {
+  if (attenteScroll) return;
+  attenteScroll = setTimeout(() => { attenteScroll = null; if (!firstLoad && !done && !loading && procheDuBas()) loadPage(); }, 150);
+}, { passive: true });
+
 new IntersectionObserver((entries) => {
   if (entries[0].isIntersecting && !firstLoad) loadPage();
 }, { rootMargin: "400px" }).observe($("more"));
