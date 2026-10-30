@@ -22,8 +22,8 @@ on:
         required: false
         default: ""
       profondeur:
-        description: "Seulement pour « site » : 1 = cette page, 2 = + les pages qu'elle liste"
-        default: "2"
+        description: "Seulement pour « site » : 1 = cette page, 2 = + ses dossiers, 3 = + sous-dossiers (conseillé), 4 = un niveau de plus"
+        default: "3"
       remplacer:
         description: "Seulement pour « site », avec l'accord du site : mots de sa signature à remplacer par unidev (ex : fomesoutra,fo me soutra)"
         required: false

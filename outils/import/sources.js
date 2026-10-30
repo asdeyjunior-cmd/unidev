@@ -351,15 +351,24 @@ async function lirePage(url) {
  * Parcourt un site à partir d'une page et récupère les documents liés (PDF, Word, PowerPoint…).
  * opts : { url, profondeur (1 = seulement cette page), max, deja, onEcarte, essai }
  */
-export async function* documentsDuSite({ url, profondeur = 2, max = 50, deja = () => false, onEcarte = () => {}, essai = false, remplacer = [] }) {
+export async function* documentsDuSite({ url, profondeur = 3, max = 50, deja = () => false, onEcarte = () => {}, essai = false, remplacer = [] }) {
   const depart = new URL(url);
   const memeSite = (u) => { try { const h = new URL(u).hostname.replace(/^www\./, ""); return h === depart.hostname.replace(/^www\./, ""); } catch { return false; } };
-  const file = [{ url: depart.href, niveau: 1 }];
+  const file = [{ url: depart.href, niveau: 1, dossiers: [] }];
+  // On reste DANS le dossier de départ : seules les pages dont l'adresse commence comme la sienne sont visitées
+  // (sous-dossiers, pages suivantes). Adresse en « ?id=… » (pas de chemin) : tout le site, comme avant.
+  const base = depart.pathname.replace(/\/(index\.(html?|php))?$/i, "").replace(/\.(html?|php)$/i, "");
+  const dansLeDossier = (u) => {
+    if (base.split("/").filter(Boolean).length < 1) return true;
+    const p = new URL(u).pathname;
+    return p === depart.pathname || p.startsWith(base + "/") || p.startsWith(base + "?") || p.replace(/\.(html?|php)$/i, "") === base;
+  };
+  const titreDossier = (t) => t.length > 2 && t.length < 90 && !/^(accueil|cours|retour|suivant|précédent|precedent|\d+)$/i.test(t);
   const pagesVues = new Set(), docsVus = new Set();
   let rendus = 0, pagesLues = 0;
 
   while (file.length && rendus < max && pagesLues < 800) {
-    const { url: page, niveau } = file.shift();
+    const { url: page, niveau, dossiers = [] } = file.shift();
     if (pagesVues.has(page)) continue;
     pagesVues.add(page);
     let res;
@@ -385,11 +394,13 @@ export async function* documentsDuSite({ url, profondeur = 2, max = 50, deja = (
         || /^(suivant(e)?|page suivante|next|»|›|>|>>|\d{1,3})$/i.test(texte)
         || (/([?&](page|p|paged|pg|start|debut)=\d+|\/page\/\d+\/?$)/i.test(lien) && /\d|suiv|next|»|›/i.test(texte)));
       if (pagination) {
-        if (!pagesVues.has(lien) && !file.some((x) => x.url === lien)) file.unshift({ url: lien, niveau });
+        if (!pagesVues.has(lien) && !file.some((x) => x.url === lien)) file.unshift({ url: lien, niveau, dossiers });
         continue;
       }
       if (!estDoc) {
-        if (niveau < profondeur && memeSite(lien) && !PAS_DES_PAGES.test(new URL(lien).pathname) && !pagesVues.has(lien)) file.push({ url: lien, niveau: niveau + 1 });
+        // Sous-dossier (ex. « ANALYSE NUMERIQUE ») : visité, et son nom sert à classer les documents qu'il contient
+        if (niveau < profondeur && memeSite(lien) && dansLeDossier(lien) && !PAS_DES_PAGES.test(new URL(lien).pathname) && !pagesVues.has(lien) && !file.some((x) => x.url === lien))
+          file.push({ url: lien, niveau: niveau + 1, dossiers: titreDossier(texte) ? [...dossiers, texte] : dossiers });
         continue;
       }
       if (!memeSite(lien) && !EXTENSIONS.includes(e)) continue;
@@ -413,7 +424,7 @@ export async function* documentsDuSite({ url, profondeur = 2, max = 50, deja = (
         const genre = genreFichier(f.buffer);
         if (genre === "html") {
           // Page de téléchargement intermédiaire : on la visitera pour trouver le vrai fichier
-          if (memeSite(f.final) && !pagesVues.has(f.final)) file.unshift({ url: f.final, niveau: Math.min(niveau + 1, profondeur) });
+          if (memeSite(f.final) && !pagesVues.has(f.final)) file.unshift({ url: f.final, niveau: Math.min(niveau + 1, profondeur), dossiers });
           continue;
         }
         if (genre === "autre") { onEcarte("format inconnu"); continue; }
@@ -440,12 +451,15 @@ export async function* documentsDuSite({ url, profondeur = 2, max = 50, deja = (
 
       // Le titre décide en priorité ; la page et l'adresse complètent (sans « .html », « .php »…)
       const chemin = (u) => decodeURIComponent(new URL(u).pathname).replace(/\.(html?|php|aspx?)\b/gi, " ").replace(/[\/_-]+/g, " ");
-      const devine = devinerAvecTheme(titre, `${titrePage} ${chemin(page)}`);
+      const devine = devinerAvecTheme(titre, `${dossiers.join(" ")} ${titrePage} ${chemin(page)}`);
+      // Nom du dossier le plus proche (« ANALYSE NUMERIQUE ») = la matière, si le titre ne la donne pas
+      const dossierProche = dossiers.length ? dossiers[dossiers.length - 1] : "";
+      const enPhrase = (t) => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
       rendus++;
       yield {
         cle, titre, nomFichier: nomFichier.replace(/[\\/:*?"<>|]/g, " "), buffer, licence: `autorisation de ${depart.hostname}`, source: page,
         infos: {
-          titre, matiere: devine.matiere || devine.filiere || "Divers", filiere: devine.filiere || "Autre", type: devine.type || "Autre",
+          titre, matiere: deviner(titre).matiere || (dossierProche ? enPhrase(dossierProche) : "") || devine.matiere || devine.filiere || "Divers", filiere: devine.filiere || "Autre", type: devine.type || "Autre",
           niveau: devine.niveau || "Autre", annee: (titre.match(/\b(20\d\d|19\d\d)\b/) || [])[1] || "", universite: "",
           description: `Document partagé avec l'autorisation de ${depart.hostname.replace(/^www\./, "")}. Source : ${page}`,
         },

@@ -165,7 +165,7 @@ Les romans **récents** (auteurs vivants ou morts il y a moins de 70 ans : Kouro
 
 1. Ouvre le site dans ton navigateur et va sur une page qui **liste des documents** (ex. « Épreuves BTS Finance-Comptabilité »). Copie son adresse.
 2. IMPORTER.bat → **9** → colle l'adresse (clic droit dans la fenêtre noire).
-3. Choisis jusqu'où chercher : **1** = cette page seulement, **2** = cette page et les pages qu'elle liste (conseillé), **3** = encore plus loin.
+3. Choisis jusqu'où chercher : **1** = cette page seulement, **2** = cette page et ses dossiers, **3** = + leurs sous-dossiers (conseillé), **4** = un niveau de plus. L'outil **reste dans le dossier de départ** (il ne part pas dans les autres rubriques du site) et le **nom de chaque dossier** (ex. « ANALYSE NUMERIQUE ») devient la matière des documents qu'il contient.
 4. Confirme que tu as l'accord écrit du site, vérifie la liste, puis tape **O**.
 
 L'outil suit les liens « Télécharger », passe les pages de téléchargement intermédiaires, **parcourt automatiquement les pages suivantes** de la liste (« Suivant », « 2 », « 3 »… : pas besoin de les donner une par une), ne garde que les vrais fichiers (PDF, Word, PowerPoint…), devine la filière, le niveau et le type d'après le titre, et écrit « Document partagé avec l'autorisation de … · Source : … » dans la description. Il va doucement (1 page par seconde) pour ne pas gêner le site. Recommence avec d'autres pages du site : les documents déjà importés sont sautés.

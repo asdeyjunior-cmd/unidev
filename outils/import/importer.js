@@ -377,7 +377,7 @@ try {
     if (mode === "site") {
       const url = opt("url");
       if (!url || !/^https?:\/\//.test(url)) throw new Error('Indique la page de départ : --url "https://..."');
-      const profondeur = Math.max(1, Math.min(4, Number(opt("profondeur", "2"))));
+      const profondeur = Math.max(1, Math.min(4, Number(opt("profondeur", "3"))));
       // --remplacer "fomesoutra,fo me soutra" : remplace la signature du site par celle d'unidev (accord écrit du site obligatoire)
       const remplacer = (opt("remplacer", "") || "").split(",").map((m) => m.trim()).filter((m) => m.length >= 4);
       if (remplacer.length) console.log(`Signature remplacée par unidev dans les PDF : ${remplacer.join(", ")}\n`);

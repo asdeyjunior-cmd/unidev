@@ -152,10 +152,12 @@ set /p URL=  Adresse de la page :
 set URL=%URL:"=%
 echo.
 echo    1 - Seulement les documents de cette page
-echo    2 - Cette page et les pages qu'elle liste ^(conseille^)
-echo    3 - Plus loin encore ^(long^)
-set /p PROF=  Jusqu'ou chercher (1, 2 ou 3) :
-if "%PROF%"=="" set PROF=2
+echo    2 - Cette page et ses dossiers
+echo    3 - Cette page, ses dossiers et leurs sous-dossiers ^(conseille^)
+echo    4 - Encore un niveau de plus
+echo  ^(l'outil reste toujours dans le dossier de depart et suit les pages suivantes^)
+set /p PROF=  Jusqu'ou chercher (1 a 4, Entree = 3) :
+if "%PROF%"=="" set PROF=3
 set /p MAX=  Nombre maximum de documents ^(ex : 30^) :
 if "%MAX%"=="" set MAX=30
 echo.
