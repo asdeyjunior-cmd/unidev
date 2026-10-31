@@ -7,7 +7,15 @@ const ROMAINS = { i: 1, ii: 2, iii: 3, iv: 4, v: 5, vi: 6, vii: 7, viii: 8, ix: 
 const MOTS = "partie|part|suite|tome|chapitre|chap|ch|volume|vol|fascicule|fasc|lecon|seance|module|episode|livre|sequence|n|no|numero";
 
 /** Titre -> { base, rang } (rang = place dans la série) ou null si le titre ne se termine pas par un numéro */
-const normal = (titre) => sansAccent(titre).replace(/\.(pdf|docx?|pptx?)$/, "").replace(/[^a-z0-9]+/g, " ").trim();
+// Code ajouté devant le nom par certains sites (« 612a0b117cf71sujet… ») : ignoré pour former les séries
+function sansCodeDevant(t) {
+  const m = t.match(/^[0-9a-f]+/);
+  if (!m || m[0].length < 8) return t;
+  let n = m[0].length >= 13 ? 13 : 0;
+  if (!n) for (let i = m[0].length - 1; i >= 0; i--) if (/\d/.test(m[0][i])) { n = i + 1; break; }
+  return n >= 8 && (m[0].slice(0, n).match(/\d/g) || []).length >= 3 && /^[a-z]/.test(t.slice(n)) ? t.slice(n) : t;
+}
+const normal = (titre) => sansCodeDevant(sansAccent(titre).replace(/\.(pdf|docx?|pptx?)$/, "")).replace(/[^a-z0-9]+/g, " ").trim();
 export function cleSerie(titre) {
   let t = normal(titre);
   // « … suite » sans numéro : 2e partie

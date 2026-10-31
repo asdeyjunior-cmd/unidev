@@ -220,3 +220,9 @@ Chaque PDF reçoit en bas à droite de chaque page une petite pastille « [u] un
 - Les documents déjà publiés (y compris ceux des étudiants) : GitHub > Actions > « Tamponner les documents » ;
   cela tourne aussi chaque nuit, 300 documents à la fois, jusqu'à ce que tout soit fait.
 - Jamais tamponnés : les fichiers qui ne sont pas des PDF, les PDF protégés, et les licences CC BY-ND (« pas de modification »).
+
+## Titres lisibles et séries (`titres.js`)
+Les séries (« … 1 », « … 2 », « Partie 3 », « suite »…) sont reconnues automatiquement sur le site d'après les titres.
+Pour les documents déjà publiés dont le titre est resté au format « nom de fichier »
+(« 612a0b117cf71sujet-corrige-etude-de-cas »), lance une fois GitHub > Actions > « Corriger les titres »
+(case « Essai » pour voir d'abord ce qui changera). 1 seule lecture Firestore.

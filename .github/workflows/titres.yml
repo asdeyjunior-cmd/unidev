@@ -1,0 +1,34 @@
+# Rend lisibles les titres des documents déjà publiés (« 612a0b117cf71sujet-corrige… » -> « Sujet corrige… »).
+# Les séries (1, 2, 3…) se forment ensuite d'elles-mêmes sur le site.
+name: Corriger les titres
+
+on:
+  workflow_dispatch:
+    inputs:
+      essai:
+        description: "Essai seulement (montre les changements sans rien modifier)"
+        type: boolean
+        default: false
+
+jobs:
+  titres:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults: { run: { working-directory: outils/import } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Titres
+        env:
+          CLE: ${{ secrets.FIREBASE_CLE_JSON }}
+          ESSAI: ${{ inputs.essai && '--essai' || '' }}
+        run: |
+          npm install --no-audit --no-fund
+          printf '%s' "$CLE" > cle-firebase.json
+          set -o pipefail
+          node titres.js $ESSAI 2>&1 | tee resultat.txt
+      - name: Résumé
+        if: always()
+        run: |
+          { echo "### Titres"; echo '```'; head -n 30 resultat.txt; echo '…'; tail -n 2 resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true

@@ -32,13 +32,22 @@ export function normaliserType(v) {
 }
 
 /** Nom de fichier → titre lisible */
+/** Retire le code ajouté devant le nom par certains sites (ex. « 612a0b117cf71sujet… », « 5d1254cf6corrige… ») */
+export function sansCodeDevant(t) {
+  const m = String(t || "").match(/^[0-9a-f]+/i);
+  if (!m || m[0].length < 8) return t;
+  const run = m[0];
+  let n = run.length >= 13 ? 13 : 0;
+  if (!n) for (let i = run.length - 1; i >= 0; i--) if (/\d/.test(run[i])) { n = i + 1; break; }
+  const code = run.slice(0, n), reste = t.slice(n);
+  if (n < 8 || (code.match(/\d/g) || []).length < 3 || !/^[a-zà-ÿ]/i.test(reste)) return t;
+  return reste;
+}
+/** Titre lisible à partir d'un nom de fichier (ou d'un titre resté au format « nom de fichier ») */
 export function titreDepuisFichier(nom) {
-  let t = nom.replace(/\.[^.]+$/, "");
-  // Code ajouté par certains sites devant le nom (ex. « 5d1254cf6corrige-etude-de-cas… »)
-  const code = t.match(/^[0-9a-f]{9}(?=[a-z])/i);
-  if (code && (code[0].match(/\d/g) || []).length >= 3) t = t.slice(9);
+  let t = sansCodeDevant(String(nom || "").replace(/\.(pdf|docx?|pptx?|xlsx?|odt|txt|zip)$/i, ""));
   // Nom « en-tirets » sans espace : les tirets deviennent des espaces
-  if (!/\s/.test(t) && (t.match(/-/g) || []).length >= 3) t = t.replace(/-+/g, " ");
+  if (!/\s/.test(t) && (t.match(/-/g) || []).length >= 2) t = t.replace(/-+/g, " ");
   t = t.replace(/[_]+/g, " ").replace(/\s+-\s+|\s*-{2,}\s*/g, " — ").replace(/\s{2,}/g, " ").trim();
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
@@ -268,4 +277,13 @@ export function semblaAnglais(t) {
   const en = (n.match(/ (the|of|and|for|with|from|to|in|on|an|a|is|are|using|towards|new|what's|how) /g) || []).length;
   const fr = (n.match(/ (le|la|les|des|du|de|et|pour|avec|une|un|sur|dans|aux|au|à|d'|l')|[éèêàùçôî]/g) || []).length;
   return en >= 2 && en > fr;
+}
+
+/** Titre déjà enregistré mais illisible (code devant, mots-en-tirets) -> titre propre ; null s'il est déjà bon */
+export function titreAReparer(titre) {
+  const t = String(titre || "").trim();
+  const code = sansCodeDevant(t) !== t, tirets = !/\s/.test(t) && (t.match(/-/g) || []).length >= 2;
+  if (!code && !tirets) return null;
+  const propre = titreDepuisFichier(t);
+  return propre && propre !== t && propre.length >= 3 ? propre : null;
 }

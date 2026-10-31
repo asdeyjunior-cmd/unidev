@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
 import { v2 as cloudinary } from "cloudinary";
-import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF, titreDepuisFichier } from "./outils.js";
+import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF, titreAReparer } from "./outils.js";
 import { remplacerSignature, tamponUnidev, sansModification } from "./marque.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
@@ -145,8 +145,8 @@ for (const [i, s] of concernes.entries()) {
     const fichier = (await s.ref.collection("prive").doc("fichier").get()).data() || {};
     const ancienneImageApercu = String(d.imageUrl || "").includes("/image/upload/") && String(d.imageUrl).includes("pg_1");
     // Titre resté au format « nom de fichier » (ex. 5d1254cf6corrige-etude-de-cas…) : on le rend lisible
-    const titrePropre = titreDepuisFichier(d.titre || "");
-    if (titrePropre && titrePropre !== d.titre && (/^[0-9a-f]{9}[a-z]/i.test(d.titre) || (!/\s/.test(d.titre) && /-.*-.*-/.test(d.titre)))) d.titre = titrePropre;
+    const titrePropre = titreAReparer(d.titre);
+    if (titrePropre) d.titre = titrePropre;
     const maj = { taille: pdf.length, signatureRemplacee: true, titre: d.titre, ...(tampon ? { tampon: true } : {}), ...(imageUrl && ancienneImageApercu ? { imageUrl } : {}) };
     const batch = db.batch();
     batch.update(s.ref, maj);
