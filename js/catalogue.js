@@ -1,6 +1,7 @@
 import { listPublishedPage, listPublished, getSearchIndex, getDocsByIds, getFileInfo, getCredits, listUnlocked, unlockDocument, filieresPretes } from "./firebase.js";
 import { thumb } from "./cloudinary.js";
 import { ouvrirDemandeFiliere } from "./demande-filiere.js";
+import { habiller } from "./choix.js";
 import { initLayout, docCard, fillSelect, toast, esc, modal, setNavCredits, fileModal } from "./ui.js";
 import { canonFiliere, toutesLesFilieres } from "./filieres.js";
 import { CATEGORIES, paymentConfig, CREDITS_PAR_PUBLICATION } from "./config.js";
@@ -23,7 +24,12 @@ fillSelect(els.type, CATEGORIES.types, "Type");
 // Libellés courts pour que le niveau choisi reste lisible dans la pastille
 const COURT = { "Licence 1": "L1", "Licence 2": "L2", "Licence 3": "L3", "Master 1": "M1", "Master 2": "M2", "Doctorat": "Doctorat" };
 els.niveau.innerHTML = `<option value="">Niveau</option>` +
-  CATEGORIES.niveaux.map((v) => `<option value="${esc(v)}">${esc(COURT[v] || v)}</option>`).join("");
+  CATEGORIES.niveaux.map((v) => `<option value="${esc(v)}" data-court="${esc(COURT[v] || v)}">${esc(v)}</option>`).join("");
+// Menus stylés (le <select> reste caché derrière)
+habiller(els.type, { tous: "Tous les types" });
+habiller(els.niveau, { tous: "Tous les niveaux" });
+habiller(els.filiere, { tous: "Toutes les filières" });
+habiller(els.sort, { icone: "tri" });
 
 const norm = (s = "") => s.toString().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
@@ -70,19 +76,13 @@ function updateFilieres(items) {
   items.forEach((d) => d.filiere && filieres.add(d.filiere));
   if (filieres.size !== before) remplirFilieres();
 }
-/* Choix « Filière » : TOUTES les filières tout de suite (sans attendre les documents, lents à venir sur téléphone),
-   celles qui ont déjà des documents en premier, puis « Ma filière n'est pas là… » */
+/* Choix « Filière » : toutes les filières tout de suite (sans attendre les documents, lents à venir sur téléphone),
+   par ordre alphabétique, puis « Ma filière n'est pas là… » */
 function remplirFilieres() {
-  const fr = (a, b) => a.localeCompare(b, "fr");
-  const avec = [...filieres].filter((f) => f !== "Autre").sort(fr);
-  const autres = toutesLesFilieres().filter((f) => !filieres.has(f) && f !== "Autre").sort(fr);
-  const opts = (l) => l.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+  const liste = [...new Set([...filieres, ...toutesLesFilieres()])].filter((f) => f && f !== "Autre").sort((a, b) => a.localeCompare(b, "fr"));
+  if (filieres.has("Autre")) liste.push("Autre");
   const current = els.filiere.value;
-  els.filiere.innerHTML = `<option value="">Filière</option>`
-    + (avec.length ? `<optgroup label="Avec des documents">${opts(avec)}</optgroup>` : "")
-    + (autres.length ? `<optgroup label="${avec.length ? "Autres filières (bientôt)" : "Filières"}">${opts(autres)}</optgroup>` : "")
-    + (filieres.has("Autre") ? `<option value="Autre">Autre</option>` : "")
-    + `<option value="__demande__">Ma filière n'est pas là…</option>`;
+  els.filiere.innerHTML = `<option value="">Filière</option>${liste.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("")}<option value="__demande__">Ma filière n'est pas là…</option>`;
   if (current && ![...els.filiere.options].some((o) => o.value === current)) els.filiere.add(new Option(current, current), els.filiere.options[1]);
   els.filiere.value = current;
 }
@@ -236,7 +236,7 @@ els.filiere.addEventListener("focus", () => { filiereAvant = els.filiere.value; 
 els.filiere.addEventListener("change", (e) => {
   if (els.filiere.value !== DEMANDE) { filiereAvant = els.filiere.value; return; }
   e.stopImmediatePropagation();
-  els.filiere.value = filiereAvant;
+  els.filiere.value = els.filiere.dataset.avant ?? filiereAvant;
   ouvrirDemandeFiliere();
 });
 document.addEventListener("click", (e) => {
