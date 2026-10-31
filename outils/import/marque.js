@@ -315,7 +315,7 @@ async function trouverLogos(doc) {
         if (r && r.score >= SEUIL_SCAN) {
           const x = b.x + r.x * b.w, w = r.w * b.w, h = r.h * b.h, y = b.y + b.h - (r.y + r.h) * b.h;
           const marge = Math.min(w, h) * 0.12;
-          trouves.push({ page: p, x: x - marge, y: y - marge, w: w + 2 * marge, h: h + 2 * marge, logo: true, fond: await couleurFond(im.obj, r) });
+          trouves.push({ page: p, x: x - marge, y: y - marge, w: w + 2 * marge, h: h + 2 * marge, logo: true, fond: await couleurFond(im.obj, r, l.px) });
         }
         continue;
       }
@@ -347,19 +347,35 @@ async function trouverLogos(doc) {
   return trouves;
 }
 
-/** Couleur du papier autour du logo (page scannée jaunie) : pour recouvrir sans faire une tache blanche */
-async function couleurFond(obj, r) {
+/** Couleur du papier tout AUTOUR du logo (page scannée jaunie, grise…) : le cache se fond dans la page */
+async function couleurFond(obj, r, px) {
+  const bandes = (w, h) => {
+    const x0 = Math.round(r.x * w), y0 = Math.round(r.y * h), x1 = Math.round((r.x + r.w) * w), y1 = Math.round((r.y + r.h) * h);
+    const e = Math.max(2, Math.round(0.012 * h));
+    return [[x0, y0 - e, x1 - x0, e], [x0, y1, x1 - x0, e], [x0 - e, y0, e, y1 - y0], [x1, y0, e, y1 - y0]]
+      .map(([x, y, bw, bh]) => { const l = Math.max(0, Math.min(w - 1, x)), t = Math.max(0, Math.min(h - 1, y)); return { left: l, top: t, width: Math.max(1, Math.min(w - l, bw)), height: Math.max(1, Math.min(h - t, bh)) }; });
+  };
+  const mediane = (v) => { const a = [...v].sort((x, y) => x - y); return a[Math.floor(a.length / 2)] ?? 255; };
   try {
     const filtres = nomFiltre(obj.dict);
-    if (!(filtres.length === 1 && filtres[0] === "/DCTDecode")) return null;
-    const im = sharp(Buffer.from(obj.contents));
-    const { width: w, height: h } = await im.metadata();
-    const left = Math.max(0, Math.round(r.x * w)), top = Math.max(0, Math.round((r.y + r.h) * h)), width = Math.max(1, Math.min(w - left, Math.round(r.w * w)));
-    const height = Math.max(1, Math.min(h - top, Math.round(0.02 * h)));
-    const st = await sharp(Buffer.from(obj.contents)).extract({ left, top, width, height }).stats();
-    const [R, G, B] = st.channels.map((c) => c.median ?? c.mean);
-    return [R / 255, G / 255, B / 255];
-  } catch { return null; }
+    if (filtres.length === 1 && filtres[0] === "/DCTDecode") {
+      const src = Buffer.from(obj.contents);
+      const { width: w, height: h } = await sharp(src).metadata();
+      const R = [], G = [], B = [];
+      for (const z of bandes(w, h)) {
+        const { data, info } = await sharp(src).extract(z).removeAlpha().toColourspace("srgb").raw().toBuffer({ resolveWithObject: true });
+        for (let i = 0; i + 2 < data.length; i += info.channels) { R.push(data[i]); G.push(data[i + 1]); B.push(data[i + 2]); }
+      }
+      return [mediane(R) / 255, mediane(G) / 255, mediane(B) / 255];
+    }
+    if (px) {
+      const v = [];
+      for (const z of bandes(px.w, px.h)) for (let y = z.top; y < z.top + z.height; y++) for (let x = z.left; x < z.left + z.width; x++) v.push(px.data[y * px.w + x]);
+      const g = mediane(v) / 255;
+      return [g, g, g];
+    }
+  } catch {}
+  return null;
 }
 
 /** Compatibilité : n'est plus utilisé (l'ancienne reconnaissance « même image dans plusieurs documents » se trompait) */
@@ -483,6 +499,21 @@ export async function remplacerSignature(buffer, motifs, options = {}) {
   const pages = doc.getPages();
   const ctx = doc.context;
 
+  // Pages scannées avec texte invisible (reconnaissance de caractères) : ce texte ne se voit pas,
+  // le recouvrir ferait apparaître un rectangle et un logo au milieu de la page. On n'y touche pas.
+  const scannees = pages.map((page) => {
+    const contenu = contenuPage(ctx, page);
+    if (!/(^|[\s\]])3\s+Tr\b/.test(contenu)) return [];
+    const imgs = [];
+    try { imagesDessinees(ctx, contenu, page.node.Resources(), [1, 0, 0, 1, 0, 0], imgs); } catch {}
+    const { width: W, height: H } = page.getSize();
+    return imgs.map((im) => cadre(im.ctm)).filter((b) => b.w > W * 0.5 && b.h > H * 0.4);
+  });
+  const dedans = (z, b) => z.x >= b.x - 2 && z.y >= b.y - 2 && z.x + z.w <= b.x + b.w + 2 && z.y + z.h <= b.y + b.h + 2;
+  for (let i = zones.length - 1; i >= 0; i--) {
+    if (scannees[zones[i].page]?.some((b) => dedans(zones[i], b))) { zones.splice(i, 1); lignes--; ignores++; }
+  }
+
   // 2. Logo du site en image (reconnu à son aspect, même découpé en plusieurs morceaux)
   const logosTrouves = await trouverLogos(doc);
   zones.push(...logosTrouves);
@@ -570,7 +601,7 @@ export async function remplacerSignature(buffer, motifs, options = {}) {
   }
 
   const sortie = Buffer.from(await doc.save());
-  return { buffer: sortie, lignes, liens, ignores, logos: logosTrouves.length + tampons };
+  return { buffer: sortie, lignes: Math.max(0, lignes), liens, ignores, logos: logosTrouves.length + tampons };
 }
 
 /* ======================================================================
@@ -622,7 +653,7 @@ export async function tamponUnidev(buffer) {
     const x = W - largeur - 12 * k, y = 8 * k;
 
     page.pushOperators(pushGraphicsState(), concatTransformationMatrix(...m), setTextRenderingMode(TextRenderingMode.Fill));
-    page.drawRectangle({ x, y, width: largeur, height: hauteur, color: rgb(1, 1, 1), opacity: 0.92, borderColor: rgb(0.82, 0.91, 0.86), borderWidth: 0.6 * k });
+    // Pas de cadre blanc : le logo se pose directement sur la page, quelle que soit la couleur du papier
     const yc = y + (hauteur - cote) / 2;
     page.drawRectangle({ x: x + pad, y: yc, width: cote, height: cote, color: vert });
     page.drawText("u", { x: x + pad + (cote - gras.widthOfTextAtSize("u", cote * 0.85)) / 2, y: yc + cote * 0.2, size: cote * 0.85, font: gras, color: rgb(1, 1, 1) });

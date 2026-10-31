@@ -3,7 +3,8 @@
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { auth, getDocument, getFileInfo } from "./firebase.js";
 import { recupererFichier } from "./cloudinary.js";
-import { enregistrer, typeMime, nomFichier, toast, formatSize, esc } from "./ui.js";
+import { enregistrer, typeMime, nomFichier, toast, formatSize, esc, blocSerie } from "./ui.js";
+import { serieDe } from "./series.js";
 
 const $ = (id) => document.getElementById(id);
 const id = new URLSearchParams(location.search).get("doc") || "";
@@ -42,6 +43,14 @@ async function demarrer() {
   const ext = (d.format || "pdf").toLowerCase();
   const taille = d.taille ? ` · ${formatSize(d.taille)}` : "";
   $("dl-texte").textContent = `Télécharger${taille}`;
+
+  // Série : précédent / suivant (« Partie 2 sur 4 »)
+  serieDe(d).then((s) => {
+    if (!s) return;
+    const lien = (x) => `lire.html?doc=${encodeURIComponent(x.id)}`;
+    $("serie").innerHTML = blocSerie(s, lien);
+    $("serie").hidden = false;
+  }).catch(() => {});
 
   // 1. Récupérer le fichier (une seule fois)
   message("Chargement du document…", { chargement: true });

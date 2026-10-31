@@ -1,5 +1,6 @@
 import { watchUser, logout, cachedProfile } from "./firebase.js";
 import { thumb, assembleParts, lienSur, recupererFichier } from "./cloudinary.js";
+import { serieDe } from "./series.js";
 
 export const esc = (s = "") =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -143,6 +144,17 @@ export function docCard(d, actions = "", { prix = "" } = {}) {
         ${actions}
       </div>
     </article>`;
+}
+
+/* ---------- Séries : « Partie 1, 2, 3… » ---------- */
+export function blocSerie(s, lien) {
+  return `<div class="serie">
+    <p class="serie-titre">Dans la même série · ${s.index + 1} sur ${s.docs.length}</p>
+    <div class="serie-liste">${s.docs.map((x, i) => i === s.index
+      ? `<span class="serie-n on" aria-current="true">${x.cle.rang}</span>`
+      : `<a class="serie-n" href="${lien(x)}" title="${esc(x.titre)}">${x.cle.rang}</a>`).join("")}</div>
+    ${s.suivant ? `<a class="serie-suite" href="${lien(s.suivant)}"><span>Suite : ${esc(s.suivant.titre)}</span><b>›</b></a>` : ""}
+  </div>`;
 }
 
 /* ---------- Application installable (PWA) ---------- */
@@ -362,9 +374,12 @@ document.addEventListener("click", (e) => {
       ${ligne("Université / école", d.universite)}${ligne("Format", (d.format || "").toUpperCase())}
       ${ligne("Taille", d.taille ? formatSize(d.taille) : "")}${ligne("Téléchargements", String(d.telechargements || 0))}
     </div>
+    <div id="fiche-serie"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost-ink" data-close>Fermer</button>
       ${btn ? `<button class="btn" id="fiche-dl">${esc(btn.textContent.trim())}</button>` : ""}
     </div>`);
   m.querySelector("#fiche-dl")?.addEventListener("click", () => { m.remove(); btn.click(); });
+  // Documents de la même série (1, 2, 3…) : on passe de l'un à l'autre d'un toucher
+  serieDe(d).then((s) => { if (s) m.querySelector("#fiche-serie").innerHTML = blocSerie(s, (x) => `index.html?doc=${encodeURIComponent(x.id)}`); }).catch(() => {});
 });

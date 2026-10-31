@@ -1272,3 +1272,16 @@ body.lecteur-page { padding-bottom: 0; background: #eef4f0; min-height: 100dvh; 
 .lecteur-dl { max-width: 520px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.1rem; padding: 16px 20px; box-shadow: 0 8px 22px rgba(31,157,85,.35); }
 .lecteur-dl svg { width: 24px; height: 24px; }
 .lecteur-dl:disabled { opacity: .55; box-shadow: none; }
+
+/* ---------- Séries de documents (1, 2, 3…) ---------- */
+.serie { margin: 14px 0 4px; padding: 12px; border-radius: 14px; background: var(--tint); }
+.serie-titre { font-weight: 700; font-size: .86rem; color: var(--accent-dark); margin-bottom: 8px; }
+.serie-liste { display: flex; flex-wrap: wrap; gap: 6px; }
+.serie-n { min-width: 36px; height: 36px; padding: 0 8px; border-radius: 10px; display: grid; place-items: center; background: #fff; color: var(--ink); font-weight: 700; text-decoration: none; border: 1.5px solid var(--line); }
+.serie-n:hover { border-color: var(--accent); }
+.serie-n.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.serie-suite { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border-radius: 10px; background: #fff; text-decoration: none; color: var(--ink); font-weight: 600; font-size: .9rem; }
+.serie-suite span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.serie-suite b { color: var(--accent); font-size: 1.4rem; line-height: 1; }
+.lecteur-serie[hidden] { display: none; }
+.lecteur-serie .serie { margin: 0 0 14px; }
