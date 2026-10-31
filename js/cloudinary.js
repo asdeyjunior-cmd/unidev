@@ -146,3 +146,16 @@ export async function assembleParts(urls, onProgress = () => {}, type = "applica
 export function thumb(url, w = 400, h = 300) {
   return url ? url.replace("/image/upload/", `/image/upload/c_fill,g_north,w_${w},h_${h},q_auto:eco,f_auto,dpr_auto/`) : "";
 }
+
+/**
+ * Récupère le fichier complet d'un document (un seul fichier ou plusieurs morceaux) sous forme de Blob.
+ * info = { fileUrl, parts } ; taille = taille attendue (pour la barre de progression)
+ */
+export async function recupererFichier(info, { type = "application/octet-stream", taille = 0, onProgress = () => {}, onEtat = () => {} } = {}) {
+  const morceaux = info.parts?.length > 1 ? info.parts.map((p) => p.url) : null;
+  if (morceaux) return assembleParts(morceaux, onProgress, type, onEtat);
+  if (!(lienSur(info.fileUrl) || lienSur(info.fileUrl, "image"))) throw new Error("Lien de fichier non autorisé.");
+  const blob = await morceau(info.fileUrl, (o) => onProgress(taille ? Math.min(99, Math.round((o / taille) * 100)) : 0));
+  onProgress(100);
+  return blob.type === type ? blob : new Blob([blob], { type });
+}

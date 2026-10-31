@@ -304,6 +304,11 @@ export async function getFileUrl(id) {
   return (await getFileInfo(id)).fileUrl;
 }
 /** { fileUrl, parts: [{url, publicId}] | null } — parts existe pour les gros fichiers découpés */
+/** Fiche d'un document (publié, à soi, ou admin) */
+export async function getDocument(id) {
+  const snap = await getDoc(doc(db, "documents", id));
+  return snap.exists() ? lireDoc(snap) : null;
+}
 export async function getFileInfo(id) {
   const snap = await getDoc(fileRef(id));
   if (!snap.exists()) throw new Error("Fichier introuvable.");

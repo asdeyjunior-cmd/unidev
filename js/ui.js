@@ -1,5 +1,5 @@
 import { watchUser, logout, cachedProfile } from "./firebase.js";
-import { thumb, assembleParts, lienSur } from "./cloudinary.js";
+import { thumb, assembleParts, lienSur, recupererFichier } from "./cloudinary.js";
 
 export const esc = (s = "") =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -223,6 +223,24 @@ const TYPES_MIME = { pdf: "application/pdf", doc: "application/msword", docx: "a
  * Affiche la fenêtre qui permet d'ouvrir ou de télécharger le document.
  * info = { fileUrl, parts } (getFileInfo) ; d = fiche du document (titre, nomFichier, format)
  */
+/** Enregistre un fichier sur l'appareil (dossier Téléchargements du téléphone) */
+export function enregistrer(blob, nom) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = String(nom || "document").replace(/[\\/:*?"<>|]+/g, " ").trim() || "document";
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 120000);
+}
+export const typeMime = (ext) => TYPES_MIME[String(ext || "").toLowerCase()] || "application/octet-stream";
+export const nomFichier = (d) => {
+  const ext = (d.format || "pdf").toLowerCase();
+  const base = d.nomFichier || d.titre || "document";
+  return new RegExp(`\\.${ext}$`, "i").test(base) ? base : `${base}.${ext}`;
+};
+
 export function fileModal(d, info, { texte = "", bouton = "Ouvrir le document", apres = "" } = {}) {
   const morceaux = info.parts?.length > 1 ? info.parts.map((p) => p.url) : null;
   // Fichier unique : stocké en « raw » (envoi depuis le site) ou en « image » (PDF importés en masse)
@@ -236,9 +254,30 @@ export function fileModal(d, info, { texte = "", bouton = "Ouvrir le document", 
       ? `<button class="btn btn-block" id="dl-assemble">Télécharger le document</button>
          <div class="progress hidden" id="dl-progress"><div></div></div>
          <p class="muted" id="dl-etat" style="margin-top:8px;text-align:center"></p>`
-      : `<a class="btn btn-block" href="${esc(info.fileUrl)}" target="_blank" rel="noopener" data-close>${bouton}</a>`}
+      : `<a class="btn btn-block btn-lg" href="lire.html?doc=${encodeURIComponent(d.id)}">${bouton}</a>
+         <button class="btn btn-ghost-ink btn-block" id="dl-direct" style="margin-top:8px">Télécharger sur mon téléphone</button>
+         <div class="progress hidden" id="dl-progress"><div></div></div>
+         <p class="muted" id="dl-etat" style="margin-top:8px;text-align:center"></p>`}
+    ${morceaux ? `<a class="btn btn-ghost-ink btn-block" href="lire.html?doc=${encodeURIComponent(d.id)}" style="margin-top:8px">Lire sans télécharger</a>` : ""}
     ${apres}`);
-  if (!morceaux) return m;
+  if (!morceaux) {
+    // Téléchargement direct : le fichier est enregistré sur le téléphone (pas seulement ouvert)
+    m.querySelector("#dl-direct").onclick = async (e) => {
+      const btn = e.currentTarget, bar = m.querySelector("#dl-progress"), etat = m.querySelector("#dl-etat");
+      btn.disabled = true; bar.classList.remove("hidden"); etat.textContent = "Téléchargement…";
+      try {
+        const blob = await recupererFichier(info, { type: typeMime(d.format), taille: d.taille, onProgress: (p) => (bar.firstElementChild.style.width = p + "%") });
+        enregistrer(blob, nomFichier(d));
+        etat.textContent = "Document enregistré dans tes téléchargements.";
+        btn.textContent = "Télécharger à nouveau";
+      } catch (err) {
+        etat.textContent = `Interrompu (${err.message}). Réessaie.`;
+        btn.textContent = "Réessayer";
+      }
+      btn.disabled = false;
+    };
+    return m;
+  }
 
   m.querySelector("#dl-assemble").onclick = async (e) => {
     const btn = e.currentTarget;
@@ -250,14 +289,7 @@ export function fileModal(d, info, { texte = "", bouton = "Ouvrir le document", 
     try {
       const ext = (d.format || "").toLowerCase();
       const blob = await assembleParts(morceaux, (p) => (bar.firstElementChild.style.width = p + "%"), TYPES_MIME[ext], (t) => (etat.textContent = t));
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = d.nomFichier || `${d.titre}.${ext || "pdf"}`;
-      document.body.append(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      enregistrer(blob, nomFichier(d));
       etat.textContent = "Document téléchargé.";
       btn.textContent = "Télécharger à nouveau";
     } catch (err) {

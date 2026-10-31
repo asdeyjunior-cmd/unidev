@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Lire le document — unidev</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap" />
+  <link rel="stylesheet" href="css/style.css?v=49" />
+</head>
+<body class="lecteur-page">
+  <header class="lecteur-tete">
+    <a href="index.html" class="lecteur-retour" id="retour" aria-label="Retour aux documents">
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+    </a>
+    <div class="lecteur-titre">
+      <b id="titre">Chargement…</b>
+      <span id="pages" class="muted"></span>
+    </div>
+  </header>
+
+  <main class="lecteur" id="lecteur">
+    <div class="lecteur-etat" id="etat">
+      <div class="loader"></div>
+      <p id="etat-texte">Ouverture du document…</p>
+      <div class="progress" id="barre"><div></div></div>
+    </div>
+    <div class="lecteur-pages" id="feuilles"></div>
+  </main>
+
+  <div class="lecteur-pied">
+    <button class="btn btn-block btn-lg lecteur-dl" id="telecharger" disabled>
+      <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
+      <span id="dl-texte">Télécharger</span>
+    </button>
+  </div>
+
+  <script type="module" src="js/lire.js"></script>
+</body>
+</html>
