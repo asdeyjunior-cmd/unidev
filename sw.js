@@ -1,6 +1,6 @@
 // Service worker unidev : ouverture rapide, icônes et images en cache, page hors connexion.
 // Changer VERSION à chaque mise en ligne force la mise à jour du cache.
-const VERSION = "unidev-v62";
+const VERSION = "unidev-v63";
 const SHELL = [
   "./", "index.html", "publier.html", "connexion.html", "credits.html", "acheter.html", "apropos.html", "emploi.html", "offline.html",
   "css/style.css?v=44", "manifest.webmanifest",

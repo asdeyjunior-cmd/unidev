@@ -1,8 +1,8 @@
-import { listPublishedPage, listPublished, getSearchIndex, getDocsByIds, getFileInfo, getCredits, listUnlocked, unlockDocument } from "./firebase.js";
+import { listPublishedPage, listPublished, getSearchIndex, getDocsByIds, getFileInfo, getCredits, listUnlocked, unlockDocument, filieresPretes } from "./firebase.js";
 import { thumb } from "./cloudinary.js";
 import { ouvrirDemandeFiliere } from "./demande-filiere.js";
 import { initLayout, docCard, fillSelect, toast, esc, modal, setNavCredits, fileModal } from "./ui.js";
-import { canonFiliere } from "./filieres.js";
+import { canonFiliere, toutesLesFilieres } from "./filieres.js";
 import { CATEGORIES, paymentConfig, CREDITS_PAR_PUBLICATION } from "./config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -58,8 +58,8 @@ function render() {
         const free = me && (unlocked.has(d.id) || d.auteurId === me.uid);
         return docCard(d, `<button class="btn btn-sm btn-dl ${free ? "" : "btn-ink"}" data-dl="${d.id}"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span>Télécharger</span>${free ? "" : `<span class="dl-cout"> · 1 crédit</span>`}</button>`, { prix: free ? "Débloqué" : "1 crédit" });
       }).join("")
-    : done
-      ? `<div class="empty">${filtersActive() ? "Aucun document ne correspond à ta recherche." : "Aucun document pour le moment."}<br><a href="publier.html">Publie le premier !</a>${filtersActive() ? `<br><a href="#" data-demande-filiere>Ta filière n'est pas sur unidev ? Dis-le nous</a>` : ""}</div>`
+    : done || (indexComplet && filtersActive())
+      ? `<div class="empty">${filtersActive() ? (els.filiere.value && !els.q.value.trim() ? `Pas encore de documents en ${esc(els.filiere.value)}.` : "Aucun document ne correspond à ta recherche.") : "Aucun document pour le moment."}<br><a href="publier.html">Publie le premier !</a>${filtersActive() ? `<br><a href="#" data-demande-filiere>Ta filière n'est pas sur unidev ? Dis-le nous</a>` : ""}</div>`
       : "";
   $("more").innerHTML = loading ? `<div class="loader loader-sm"></div>` : "";
 }
@@ -68,12 +68,26 @@ function updateFilieres(items) {
   items.forEach((d) => { if (d.filiere) d.filiere = canonFiliere(d.filiere); }); // aussi pour le cache de la dernière visite
   const before = filieres.size;
   items.forEach((d) => d.filiere && filieres.add(d.filiere));
-  if (filieres.size === before) return;
+  if (filieres.size !== before) remplirFilieres();
+}
+/* Choix « Filière » : TOUTES les filières tout de suite (sans attendre les documents, lents à venir sur téléphone),
+   celles qui ont déjà des documents en premier, puis « Ma filière n'est pas là… » */
+function remplirFilieres() {
+  const fr = (a, b) => a.localeCompare(b, "fr");
+  const avec = [...filieres].filter((f) => f !== "Autre").sort(fr);
+  const autres = toutesLesFilieres().filter((f) => !filieres.has(f) && f !== "Autre").sort(fr);
+  const opts = (l) => l.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
   const current = els.filiere.value;
-  fillSelect(els.filiere, [...filieres].sort((a, b) => a.localeCompare(b, "fr")), "Filière");
-  optionDemande();
+  els.filiere.innerHTML = `<option value="">Filière</option>`
+    + (avec.length ? `<optgroup label="Avec des documents">${opts(avec)}</optgroup>` : "")
+    + (autres.length ? `<optgroup label="${avec.length ? "Autres filières (bientôt)" : "Filières"}">${opts(autres)}</optgroup>` : "")
+    + (filieres.has("Autre") ? `<option value="Autre">Autre</option>` : "")
+    + `<option value="__demande__">Ma filière n'est pas là…</option>`;
+  if (current && ![...els.filiere.options].some((o) => o.value === current)) els.filiere.add(new Option(current, current), els.filiere.options[1]);
   els.filiere.value = current;
 }
+remplirFilieres();
+filieresPretes.then(remplirFilieres).catch(() => {});
 
 /* Cache de la dernière visite : les 8 premiers documents s'affichent tout de suite */
 const CACHE_KEY = () => `unidev-accueil-${els.sort.value}`;
@@ -133,7 +147,7 @@ async function loadPage() {
   firstLoad = false;
   render();
   // Avec un filtre ou une recherche, on continue tant qu'il y a moins de 8 résultats visibles
-  if (!done && filtersActive() && visibleDocs().length < PAGE) loadPage();
+  if (!done && filtersActive() && !indexComplet && visibleDocs().length < PAGE) loadPage();
   // Si la page n'est pas encore remplie, on charge la suite
   // Le bas de la liste est encore visible (écran large, page courte) : on charge la suite tout de suite
   else if (!done && procheDuBas()) loadPage();
@@ -232,15 +246,17 @@ document.addEventListener("click", (e) => {
   ouvrirDemandeFiliere();
 });
 
+// Un filtre cherche dans TOUS les documents (index), pas seulement ceux déjà affichés
 [els.type, els.niveau, els.filiere].forEach((el) => el.addEventListener("change", () => {
   render();
-  if (!done && filtersActive() && visibleDocs().length < PAGE) loadPage();
+  if (filtersActive()) appliquerRecherche({ defiler: false });
 }));
 
 /* ---------- Recherche avec suggestions (comme une boutique en ligne) ---------- */
 const sug = $("suggest");
 const clearBtn = $("q-clear");
 let pool = null;          // documents publiés chargés une fois pour les suggestions
+let indexComplet = false; // l'index contient TOUS les documents publiés : inutile de parcourir la base page par page
 let sugItems = [];        // éléments affichés (pour le clavier)
 let sugIndex = -1;
 let sugTimer = null;
@@ -254,11 +270,11 @@ function getPool() {
   if (pool) return pool;
   try {
     const memo = JSON.parse(sessionStorage.getItem(POOL_KEY) || "null");
-    if (memo && Date.now() - memo.t < 10 * 60 * 1000) return (pool = Promise.resolve(memo.docs));
+    if (memo && Date.now() - memo.t < 10 * 60 * 1000) { indexComplet = memo.docs.length > 150; return (pool = Promise.resolve(memo.docs)); }
   } catch {}
   // Index de recherche (1 lecture) ; s'il n'existe pas encore, on lit les 150 derniers documents
   pool = getSearchIndex()
-    .then((idx) => (idx.length ? idx : listPublished(150)))
+    .then((idx) => { indexComplet = idx.length > 0; return idx.length ? idx : listPublished(150); })
     .then((list) => { try { sessionStorage.setItem(POOL_KEY, JSON.stringify({ t: Date.now(), docs: list })); } catch {} return list; })
     .catch((e) => { console.error(e); pool = null; return []; });
   return pool;
@@ -344,9 +360,9 @@ async function completer(liste) {
   return liste.filter((d) => !d.partiel || parId.has(d.id)).map((d) => parId.get(d.id) || d);
 }
 
-async function appliquerRecherche() {
+async function appliquerRecherche({ defiler = true } = {}) {
   fermerSuggestions();
-  els.q.blur();
+  if (defiler) els.q.blur();
   const q = norm(els.q.value.trim());
   const trouves = (await getPool()).filter((d) => (!q || correspond(d, q))
     && (!els.type.value || d.type === els.type.value)
@@ -359,8 +375,8 @@ async function appliquerRecherche() {
     updateFilieres(extra);
   }
   render();
-  if (!done && filtersActive() && visibleDocs().length < PAGE) loadPage();
-  els.list.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (!done && filtersActive() && !indexComplet && visibleDocs().length < PAGE) loadPage();
+  if (defiler) els.list.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function choisir(i) {
