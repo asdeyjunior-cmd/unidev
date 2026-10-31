@@ -1239,3 +1239,4 @@ body:has(.cr-page) .wrap { max-width: 1660px; }
   .chips .choix { padding: 8px 9px; }
 }
 @media (min-width: 900px) { .topbar:has(.filters) .logo { display: flex; flex: none; } }
+.choix-opt[hidden], .choix-vide[hidden] { display: none; }

@@ -237,7 +237,7 @@ els.filiere.addEventListener("change", (e) => {
   if (els.filiere.value !== DEMANDE) { filiereAvant = els.filiere.value; return; }
   e.stopImmediatePropagation();
   els.filiere.value = els.filiere.dataset.avant ?? filiereAvant;
-  ouvrirDemandeFiliere();
+  ouvrirDemandeFiliere(els.filiere.dataset.recherche || ""); // reprend ce que l'étudiant a cherché
 });
 document.addEventListener("click", (e) => {
   const a = e.target.closest("[data-demande-filiere]");

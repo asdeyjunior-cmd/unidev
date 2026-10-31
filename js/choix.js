@@ -97,6 +97,7 @@ export function habiller(select, { tous = "", icone = "" } = {}) {
       if (v === undefined) return;
       if (v !== select.value || v.startsWith("__")) {
         select.dataset.avant = select.value; // valeur d'avant (une option spéciale peut vouloir y revenir)
+        select.dataset.recherche = champ?.value.trim() || ""; // texte tapé dans « Rechercher… »
         select.value = v;
         select.dispatchEvent(new Event("change", { bubbles: true }));
       }
