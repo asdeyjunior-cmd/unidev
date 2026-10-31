@@ -1214,3 +1214,28 @@ body:has(.cr-page) .wrap { max-width: 1660px; }
   .choix-liste { padding: 6px 10px 12px; }
   .choix-opt { padding: 13px 12px; font-size: 1rem; }
 }
+
+/* ---------- Barre de recherche + filtres : un seul ensemble, aux couleurs du site ---------- */
+.searchbar {
+  background: #fff; border: 1.5px solid var(--line); box-shadow: 0 2px 10px rgba(15,61,46,.05);
+  transition: border-color .15s, box-shadow .15s;
+}
+.searchbar svg { color: var(--accent); }
+.searchbar input::placeholder { color: #7f9a8d; }
+.searchbar:hover { border-color: #bfe0cc; }
+.searchbar:focus-within { outline: none; background: #fff; border-color: var(--accent); box-shadow: 0 0 0 4px rgba(31,157,85,.14); }
+.chips { display: flex; gap: 8px; }
+.chips .choix { flex: 1 1 auto; width: auto; }
+@media (min-width: 900px) {
+  /* Grand écran : recherche et filtres sur la même ligne */
+  .filters { flex-direction: row; align-items: center; gap: 12px; }
+  .filters .search-wrap { flex: 1; min-width: 0; }
+  .chips { flex: none; }
+  .chips .choix { flex: none; padding: 0 16px; height: 46px; min-width: 112px; max-width: 220px; }
+  .searchbar { height: 46px; }
+}
+@media (max-width: 600px) {
+  .chips { gap: 6px; }
+  .chips .choix { padding: 8px 9px; }
+}
+@media (min-width: 900px) { .topbar:has(.filters) .logo { display: flex; flex: none; } }

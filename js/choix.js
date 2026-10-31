@@ -8,13 +8,19 @@ const PLUS = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12
 const TRI = '<svg class="choix-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M3.5 16.5 7 20l3.5-3.5M17 20V4M13.5 7.5 17 4l3.5 3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 let ouvert = null; // menu affiché
+// Sur téléphone, le clavier qui s'ouvre (recherche dans la liste) change la HAUTEUR de l'écran :
+// on ne ferme le menu que si la LARGEUR change (rotation, fenêtre redimensionnée sur PC)
+let largeur = 0;
+const siLargeurChange = () => { if (Math.abs(innerWidth - largeur) > 40) fermer(); };
 
 function fermer() {
   if (!ouvert) return;
   ouvert.fond.remove();
   ouvert.bouton.setAttribute("aria-expanded", "false");
   document.removeEventListener("keydown", ouvert.clavier);
-  window.removeEventListener("resize", fermer);
+  window.removeEventListener("resize", siLargeurChange);
+  ouvert.vv?.removeEventListener("resize", ouvert.auDessusDuClavier);
+  ouvert.vv?.removeEventListener("scroll", ouvert.auDessusDuClavier);
   ouvert = null;
 }
 
@@ -121,9 +127,21 @@ export function habiller(select, { tous = "", icone = "" } = {}) {
       }
     };
     document.addEventListener("keydown", clavier);
-    window.addEventListener("resize", fermer);
+    largeur = innerWidth;
+    window.addEventListener("resize", siLargeurChange);
+    // Téléphone : le panneau reste AU-DESSUS du clavier quand on tape dans « Rechercher… »
+    const vv = window.visualViewport;
+    const auDessusDuClavier = () => {
+      if (!vv || matchMedia("(min-width: 601px)").matches) return;
+      const bas = Math.max(0, innerHeight - (vv.height + vv.offsetTop));
+      menu.style.bottom = `${bas}px`;
+      menu.style.maxHeight = `${Math.round(vv.height * (bas > 0 ? 0.92 : 0.75))}px`;
+    };
+    vv?.addEventListener("resize", auDessusDuClavier);
+    vv?.addEventListener("scroll", auDessusDuClavier);
+    auDessusDuClavier();
     bouton.setAttribute("aria-expanded", "true");
-    ouvert = { fond, bouton, clavier };
+    ouvert = { fond, bouton, clavier, vv, auDessusDuClavier };
     // Affiche l'option choisie ; le clavier n'apparaît pas tout seul sur téléphone
     fond.querySelector(".choix-opt.sel")?.scrollIntoView({ block: "center" });
     if (champ && matchMedia("(min-width: 601px)").matches) champ.focus();
