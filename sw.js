@@ -1,11 +1,11 @@
 // Service worker unidev : ouverture rapide, icônes et images en cache, page hors connexion.
 // Changer VERSION à chaque mise en ligne force la mise à jour du cache.
-const VERSION = "unidev-v61";
+const VERSION = "unidev-v62";
 const SHELL = [
   "./", "index.html", "publier.html", "connexion.html", "credits.html", "acheter.html", "apropos.html", "emploi.html", "offline.html",
   "css/style.css?v=44", "manifest.webmanifest",
   "js/config.js", "js/nav.js", "js/firebase.js", "js/cloudinary.js", "js/ui.js", "js/filieres.js",
-  "js/catalogue.js", "js/publier.js", "js/credits.js", "js/acheter.js", "js/photos-pdf.js", "js/emploi.js",
+  "js/catalogue.js", "js/publier.js", "js/credits.js", "js/acheter.js", "js/photos-pdf.js", "js/emploi.js", "js/demande-filiere.js",
   "icons/icon-192.png", "icons/icon-512.png", "icons/favicon-32.png", "icons/apple-touch-icon.png",
 ];
 const RUNTIME = `${VERSION}-runtime`;

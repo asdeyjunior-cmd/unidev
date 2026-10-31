@@ -1,5 +1,6 @@
 import { listPublishedPage, listPublished, getSearchIndex, getDocsByIds, getFileInfo, getCredits, listUnlocked, unlockDocument } from "./firebase.js";
 import { thumb } from "./cloudinary.js";
+import { ouvrirDemandeFiliere } from "./demande-filiere.js";
 import { initLayout, docCard, fillSelect, toast, esc, modal, setNavCredits, fileModal } from "./ui.js";
 import { canonFiliere } from "./filieres.js";
 import { CATEGORIES, paymentConfig, CREDITS_PAR_PUBLICATION } from "./config.js";
@@ -58,7 +59,7 @@ function render() {
         return docCard(d, `<button class="btn btn-sm btn-dl ${free ? "" : "btn-ink"}" data-dl="${d.id}"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span>Télécharger</span>${free ? "" : `<span class="dl-cout"> · 1 crédit</span>`}</button>`, { prix: free ? "Débloqué" : "1 crédit" });
       }).join("")
     : done
-      ? `<div class="empty">${filtersActive() ? "Aucun document ne correspond à ta recherche." : "Aucun document pour le moment."}<br><a href="publier.html">Publie le premier !</a></div>`
+      ? `<div class="empty">${filtersActive() ? "Aucun document ne correspond à ta recherche." : "Aucun document pour le moment."}<br><a href="publier.html">Publie le premier !</a>${filtersActive() ? `<br><a href="#" data-demande-filiere>Ta filière n'est pas sur unidev ? Dis-le nous</a>` : ""}</div>`
       : "";
   $("more").innerHTML = loading ? `<div class="loader loader-sm"></div>` : "";
 }
@@ -70,6 +71,7 @@ function updateFilieres(items) {
   if (filieres.size === before) return;
   const current = els.filiere.value;
   fillSelect(els.filiere, [...filieres].sort((a, b) => a.localeCompare(b, "fr")), "Filière");
+  optionDemande();
   els.filiere.value = current;
 }
 
@@ -207,6 +209,27 @@ els.list.addEventListener("click", async (e) => {
   } finally {
     btn.disabled = false;
   }
+});
+
+/* « Ma filière n'est pas là » : dernière ligne du choix de filière */
+const DEMANDE = "__demande__";
+let filiereAvant = "";
+function optionDemande() { // appelée aussi avant cette ligne (cache de la dernière visite) : pas de constante ici
+  if (![...els.filiere.options].some((o) => o.value === "__demande__")) els.filiere.add(new Option("Ma filière n'est pas là…", "__demande__"));
+}
+optionDemande();
+els.filiere.addEventListener("focus", () => { filiereAvant = els.filiere.value; });
+els.filiere.addEventListener("change", (e) => {
+  if (els.filiere.value !== DEMANDE) { filiereAvant = els.filiere.value; return; }
+  e.stopImmediatePropagation();
+  els.filiere.value = filiereAvant;
+  ouvrirDemandeFiliere();
+});
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("[data-demande-filiere]");
+  if (!a) return;
+  e.preventDefault();
+  ouvrirDemandeFiliere();
 });
 
 [els.type, els.niveau, els.filiere].forEach((el) => el.addEventListener("change", () => {

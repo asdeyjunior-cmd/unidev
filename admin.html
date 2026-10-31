@@ -19,7 +19,7 @@
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
-  <link rel="stylesheet" href="css/style.css?v=44" />
+  <link rel="stylesheet" href="css/style.css?v=45" />
   <script type="speculationrules">
     { "prefetch": [{ "source": "document", "where": { "href_matches": "/*.html" }, "eagerness": "moderate" }] }
   </script>
@@ -59,6 +59,7 @@
           <button data-s="doc:publie">Publiés</button>
           <button data-s="doc:rejete">Refusés</button>
           <button data-s="pay:confirme">Paiements confirmés</button>
+          <button data-s="fil:demandes">Filières demandées <span id="n-fil"></span></button>
         </div>
         <p style="margin:-6px 0 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center"><button class="btn btn-sm btn-ghost-ink" id="notif-btn">Activer les notifications</button><button class="btn btn-sm btn-ghost-ink" id="rebuild">Mettre à jour l'index de recherche</button><button class="btn btn-sm btn-ghost-ink" id="harmo">Corriger les filières</button><button class="btn btn-sm btn-ghost-ink" id="doublons">Supprimer les doublons</button>
           <span class="muted" id="rebuild-etat"></span></p>
@@ -82,7 +83,9 @@
     import {
       listByStatus, setStatus, removeDocument, publishDocument, getFileInfo,
       listPaiements, confirmPaiement, rejectPaiement, login, logout, checkAdmin, rebuildIndex, watchEnAttente, harmoniserFilieres, trouverDoublons, supprimerDocuments,
+      listDemandes, ajouterFiliereOfficielle, supprimerDemandes, filieresPretes,
     } from "./js/firebase.js";
+    import { toutesLesFilieres } from "./js/filieres.js";
     import { initLayout, docCard, toast, esc, modal, formatDate, fileModal } from "./js/ui.js";
 
     const $ = (id) => document.getElementById(id);
@@ -139,6 +142,7 @@
       $("login-zone").classList.add("hidden");
       $("zone").classList.remove("hidden");
       load(); suivre();
+      listDemandes().then((g) => { const n = g.reduce((a, x) => a + x.demandes.length, 0); $("n-fil").textContent = n ? `(${n})` : ""; }).catch(() => {});
     });
 
     /* ---------- Notifications : suivi en direct de ce qui attend ---------- */
@@ -252,9 +256,41 @@
       $("n-pay").textContent = p.length ? `(${p.length})` : "";
     }
 
+    /* ---------- Filières demandées ---------- */
+    let groupes = [];
+    function filCard(g, i) {
+      const connue = toutesLesFilieres().includes(g.filiere);
+      const n = g.demandes.length;
+      const detail = (cle) => [...new Set(g.demandes.map((d) => d[cle]).filter(Boolean))];
+      const niveaux = detail("niveau"), ecoles = detail("universite"), contacts = detail("contact");
+      return `
+        <article class="card">
+          <div class="card-top"><span class="badge">${n} demande${n > 1 ? "s" : ""}</span><span class="ext">${formatDate(g.demandes[0].createdAt)}</span></div>
+          <h3>${esc(g.filiere)}</h3>
+          <p class="subject">${connue ? "Déjà dans la liste : il manque des documents" : "Nouvelle filière"}</p>
+          ${niveaux.length ? `<p class="meta">Niveaux : ${esc(niveaux.join(", "))}</p>` : ""}
+          ${ecoles.length ? `<p class="meta">Écoles : ${esc(ecoles.join(", "))}</p>` : ""}
+          ${contacts.length ? `<p class="meta">Contacts : <strong>${esc(contacts.join(" · "))}</strong></p>` : ""}
+          <div class="card-foot"><div class="card-actions">
+            ${connue ? "" : btn("fil-ajouter", i, "Ajouter à la liste", "btn-ok")}
+            ${btn("fil-suppr", i, "Traité", "btn-ghost")}
+          </div></div>
+        </article>`;
+    }
+
     async function load() {
       const [kind, statut] = current.split(":");
       $("list").innerHTML = `<div class="loader"></div>`;
+      if (kind === "fil") {
+        try {
+          await filieresPretes.catch(() => {});
+          groupes = await listDemandes();
+          const n = groupes.reduce((a, x) => a + x.demandes.length, 0);
+          $("n-fil").textContent = n ? `(${n})` : "";
+          $("list").innerHTML = groupes.length ? groupes.map(filCard).join("") : `<div class="empty">Aucune filière demandée pour le moment.</div>`;
+        } catch (e) { toast(e.message, "err"); }
+        return;
+      }
       try {
         if (kind === "pay") await chargerRefs().catch(() => {});
         items = kind === "doc" ? await listByStatus(statut) : await listPaiements(statut);
@@ -327,6 +363,23 @@
     $("list").addEventListener("click", async (e) => {
       const { act, id } = e.target.dataset;
       if (!act) return;
+      if (act.startsWith("fil-")) {
+        const g = groupes[Number(id)];
+        if (!g) return;
+        e.target.disabled = true;
+        try {
+          if (act === "fil-ajouter") {
+            await ajouterFiliereOfficielle(g.filiere);
+            toast(`« ${g.filiere} » ajoutée : elle est maintenant proposée sur le site.`);
+          } else {
+            if (!confirm(`Marquer comme traitées les ${g.demandes.length} demande(s) pour « ${g.filiere} » ?`)) { e.target.disabled = false; return; }
+            await supprimerDemandes(g.demandes.map((d) => d.id));
+            toast("Demandes retirées.");
+          }
+          load();
+        } catch (err) { toast(err.message, "err"); e.target.disabled = false; }
+        return;
+      }
       if (confirmMsg[act] && !confirm(confirmMsg[act])) return;
       const item = items.find((x) => x.id === id);
       e.target.disabled = true;

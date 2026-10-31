@@ -391,6 +391,37 @@ export async function removeDocument(id) {
   await batch.commit();
 }
 
+/* ---------- Filières demandées par les étudiants ---------- */
+const demandesCol = collection(db, "demandes");
+export async function demanderFiliere({ filiere, niveau = "", universite = "", contact = "" }) {
+  await addDoc(demandesCol, { filiere, niveau, universite, contact, uid: auth.currentUser?.uid || "", createdAt: serverTimestamp() });
+  prevenirAdmin("Filière demandée", [filiere, niveau, universite].filter(Boolean).join(" · "), "admin.html");
+}
+/** Admin : demandes regroupées par filière (la plus demandée en premier) */
+export async function listDemandes() {
+  const snap = await getDocs(query(demandesCol, orderBy("createdAt", "desc"), limit(500)));
+  const groupes = new Map();
+  snap.docs.forEach((s) => {
+    const d = { id: s.id, ...s.data() };
+    const f = canonFiliere(d.filiere) || d.filiere;
+    if (!groupes.has(f)) groupes.set(f, { filiere: f, demandes: [] });
+    groupes.get(f).demandes.push(d);
+  });
+  return [...groupes.values()].sort((a, b) => b.demandes.length - a.demandes.length);
+}
+/** Admin : ajoute la filière à la liste officielle (proposée partout sur le site) */
+export async function ajouterFiliereOfficielle(f) {
+  await setDoc(filieresRef, { liste: arrayUnion(f) }, { merge: true });
+  ajouterFilieres([f]);
+}
+export async function supprimerDemandes(ids) {
+  for (let i = 0; i < ids.length; i += 400) {
+    const batch = writeBatch(db);
+    ids.slice(i, i + 400).forEach((id) => batch.delete(doc(db, "demandes", id)));
+    await batch.commit();
+  }
+}
+
 /* ---------- Doublons ---------- */
 const cleTitre = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
 /**

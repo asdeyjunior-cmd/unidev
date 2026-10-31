@@ -140,6 +140,18 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    /* ---------- Filières demandées (« ma filière n'est pas là ») ---------- */
+    match /demandes/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['filiere', 'niveau', 'universite', 'contact', 'uid', 'createdAt'])
+        && request.resource.data.filiere is string
+        && request.resource.data.filiere.size() >= 2 && request.resource.data.filiere.size() <= 80
+        && texte('niveau', 30) && texte('universite', 100) && texte('contact', 120)
+        && (request.resource.data.get('uid', '') == '' || (signedIn() && request.resource.data.uid == request.auth.uid))
+        && request.resource.data.createdAt == request.time;
+      allow read, delete: if isAdmin();
+      allow update: if false;
+    }
+
     /* ---------- Paiements ---------- */
     match /paiements/{id} {
       allow read: if signedIn() && (resource.data.uid == request.auth.uid || isAdmin());
