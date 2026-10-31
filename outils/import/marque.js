@@ -175,12 +175,88 @@ async function modeles() {
     try {
       const r = await sharp(path.join(dossier, f)).flatten({ background: "#ffffff" }).grayscale().raw().toBuffer({ resolveWithObject: true });
       const s = await signatureVisuelle({ data: r.data, w: r.info.width, h: r.info.height });
-      if (s) MODELES.push({ nom: f, ...s });
+      if (!s) continue;
+      // Image du modèle recadrée (pour le chercher À L'INTÉRIEUR d'une page scannée)
+      const { data, info } = r; let x0 = info.width, y0 = info.height, x1 = -1, y1 = -1;
+      for (let y = 0; y < info.height; y++) for (let x = 0; x < info.width; x++) if (data[y * info.width + x] < 200) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      const gris = await sharp(data, { raw: { width: info.width, height: info.height, channels: 1 } })
+        .extract({ left: x0, top: y0, width: x1 - x0 + 1, height: y1 - y0 + 1 }).png().toBuffer();
+      MODELES.push({ nom: f, ...s, gris });
     } catch {}
   }
   return MODELES;
 }
 const meilleur = (sig, mods) => Math.max(0, ...mods.map((m) => ressemblance(sig, m)));
+
+/**
+ * Cherche le logo À L'INTÉRIEUR d'une grande image (page scannée) : en haut et en bas de l'image,
+ * à plusieurs tailles. Renvoie { score, x, y, w, h } en fractions de l'image (0 à 1), ou null.
+ */
+export const SEUIL_SCAN = 0.66; // logo Fomesoutra dans une page scannée : 0,79 à 0,96 ; autres pages : 0,50 au plus
+/** Image en gris + tables cumulées (moyenne et variance d'un rectangle en 4 opérations) */
+async function preparer(px, L) {
+  const H = Math.max(1, Math.round((px.h * L) / px.w));
+  const img = Float32Array.from(await sharp(Buffer.from(px.data), { raw: { width: px.w, height: px.h, channels: 1 } })
+    .resize(L, H, { fit: "fill" }).toColourspace("b-w").raw().toBuffer());
+  const W1 = L + 1, S = new Float64Array(W1 * (H + 1)), Q = new Float64Array(W1 * (H + 1));
+  for (let y = 0; y < H; y++) { let a = 0, b = 0; for (let x = 0; x < L; x++) { const v = img[y * L + x]; a += v; b += v * v; S[(y + 1) * W1 + x + 1] = S[y * W1 + x + 1] + a; Q[(y + 1) * W1 + x + 1] = Q[y * W1 + x + 1] + b; } }
+  const somme = (T, x, y, w, h) => T[(y + h) * W1 + x + w] - T[y * W1 + x + w] - T[(y + h) * W1 + x] + T[y * W1 + x];
+  return { img, L, H, S, Q, somme };
+}
+async function modeleA(m, tw, th) {
+  const t = Float32Array.from(await sharp(m.gris).resize(tw, th, { fit: "fill" }).toColourspace("b-w").raw().toBuffer());
+  const n = tw * th; let moy = 0; for (const v of t) moy += v; moy /= n;
+  let nt = 0; for (let i = 0; i < n; i++) { t[i] -= moy; nt += t[i] * t[i]; }
+  nt = Math.sqrt(nt); if (nt < 1) return null;
+  for (let i = 0; i < n; i++) t[i] /= nt;
+  return t;
+}
+function correlation(P, t, tw, th, x, y) {
+  const n = tw * th, sm = P.somme(P.S, x, y, tw, th), sq = P.somme(P.Q, x, y, tw, th);
+  const v = sq - (sm * sm) / n;
+  if (v < n * 25) return 0; // zone presque unie : pas un logo
+  let dot = 0;
+  for (let j = 0; j < th; j++) { const o = (y + j) * P.L + x, ot = j * tw; for (let i = 0; i < tw; i++) dot += t[ot + i] * P.img[o + i]; }
+  return dot / Math.sqrt(v);
+}
+/**
+ * Cherche le logo À L'INTÉRIEUR d'une grande image (page scannée), en haut et en bas, à plusieurs tailles :
+ * recherche rapide en petit, puis vérification fine en grand autour des meilleurs endroits.
+ * Renvoie { score, x, y, w, h } en fractions de l'image (0 à 1), ou null.
+ */
+async function chercherDansScan(px, mods) {
+  const P = await preparer(px, 300);
+  const bandes = [[0, Math.round(P.H * 0.24)], [Math.round(P.H * 0.84), P.H]];
+  const candidats = [];
+  for (const m of mods) {
+    if (!m.gris) continue;
+    for (const frac of [0.18, 0.23, 0.28, 0.34, 0.41, 0.5]) {
+      const tw = Math.round(P.L * frac), th = Math.max(6, Math.round(tw / m.ratio));
+      const t = await modeleA(m, tw, th); if (!t) continue;
+      for (const [y0, y1] of bandes) for (let y = y0; y + th <= y1; y += 2) for (let x = 0; x + tw <= P.L; x += 2) {
+        const score = correlation(P, t, tw, th, x, y);
+        if (score > 0.45) candidats.push({ score, m, x: x / P.L, y: y / P.H, w: tw / P.L, h: th / P.H });
+      }
+    }
+  }
+  if (!candidats.length) return null;
+  candidats.sort((a, b) => b.score - a.score);
+  // Vérification fine (image 2,5 fois plus grande) sur les 4 meilleurs endroits
+  const G = await preparer(px, Math.min(750, Math.max(300, px.w)));
+  let best = null;
+  for (const c of candidats.slice(0, 4)) {
+    for (const k of [0.9, 0.95, 1, 1.05, 1.1]) {
+      const tw = Math.round(c.w * G.L * k), th = Math.max(8, Math.round(tw / c.m.ratio));
+      const t = await modeleA(c.m, tw, th); if (!t) continue;
+      const cx = Math.round(c.x * G.L - (tw - c.w * G.L) / 2), cy = Math.round(c.y * G.H - (th - c.h * G.H) / 2);
+      for (let y = Math.max(0, cy - 8); y <= Math.min(G.H - th, cy + 8); y++) for (let x = Math.max(0, cx - 8); x <= Math.min(G.L - tw, cx + 8); x++) {
+        const score = correlation(G, t, tw, th, x, y);
+        if (!best || score > best.score) best = { score, x: x / G.L, y: y / G.H, w: tw / G.L, h: th / G.H };
+      }
+    }
+  }
+  return best;
+}
 
 /** Assemble plusieurs images voisines (logo découpé en tranches) en une seule image en gris */
 async function assembler(morceaux) {
@@ -230,6 +306,19 @@ async function trouverLogos(doc) {
     const cands = [];
     for (const im of imgs) {
       const b = cadre(im.ctm);
+      if ((b.w > W * 0.85 || b.h > H * 0.2) && b.w > W * 0.5 && b.h > H * 0.4 && (p === 0 || p === pages.length - 1)) {
+        // Page scannée : le logo peut être DANS l'image (1re et dernière page seulement)
+        const l = await lire(im.obj);
+        if (!l.px) continue;
+        const r = await chercherDansScan(l.px, mods);
+        if (process.env.DEBUG_LOGO) console.log(`   p${p + 1} page scannée : ressemblance ${r ? r.score.toFixed(2) : "-"}`);
+        if (r && r.score >= SEUIL_SCAN) {
+          const x = b.x + r.x * b.w, w = r.w * b.w, h = r.h * b.h, y = b.y + b.h - (r.y + r.h) * b.h;
+          const marge = Math.min(w, h) * 0.12;
+          trouves.push({ page: p, x: x - marge, y: y - marge, w: w + 2 * marge, h: h + 2 * marge, logo: true, fond: await couleurFond(im.obj, r) });
+        }
+        continue;
+      }
       if (b.w < 8 || b.h < 3 || b.w > W * 0.85 || b.h > H * 0.2) continue; // pas une page scannée ni une grande figure
       if (b.y > H * 0.3 && b.y + b.h < H * 0.7) continue; // un logo de site est en haut ou en bas de page
       const l = await lire(im.obj);
@@ -258,13 +347,28 @@ async function trouverLogos(doc) {
   return trouves;
 }
 
+/** Couleur du papier autour du logo (page scannée jaunie) : pour recouvrir sans faire une tache blanche */
+async function couleurFond(obj, r) {
+  try {
+    const filtres = nomFiltre(obj.dict);
+    if (!(filtres.length === 1 && filtres[0] === "/DCTDecode")) return null;
+    const im = sharp(Buffer.from(obj.contents));
+    const { width: w, height: h } = await im.metadata();
+    const left = Math.max(0, Math.round(r.x * w)), top = Math.max(0, Math.round((r.y + r.h) * h)), width = Math.max(1, Math.min(w - left, Math.round(r.w * w)));
+    const height = Math.max(1, Math.min(h - top, Math.round(0.02 * h)));
+    const st = await sharp(Buffer.from(obj.contents)).extract({ left, top, width, height }).stats();
+    const [R, G, B] = st.channels.map((c) => c.median ?? c.mean);
+    return [R / 255, G / 255, B / 255];
+  } catch { return null; }
+}
+
 /** Compatibilité : n'est plus utilisé (l'ancienne reconnaissance « même image dans plusieurs documents » se trompait) */
 export async function empreintesImages() { return []; }
 
 /** Dessine le logo unidev dans le cadre (carré vert « u » + « unidev » + adresse si la place le permet) */
-function dessinerLogo(page, b, gras) {
+function dessinerLogo(page, b, gras, { adresse = true } = {}) {
   const vert = rgb(0.12, 0.62, 0.33), fonce = rgb(0.06, 0.24, 0.18);
-  const avecAdresse = b.h >= 26;
+  const avecAdresse = adresse && b.h >= 26;
   const cote = Math.min(avecAdresse ? b.h * 0.55 : b.h * 0.85, b.w * 0.22, 40);
   let taille = cote * 0.95;
   const largeur = (t) => cote + cote * 0.3 + gras.widthOfTextAtSize("unidev", t);
@@ -297,7 +401,7 @@ function fusionner(zones, marge = 8) {
         const a = liste[i], b = liste[j];
         if (!proches(a, b, a.mot || b.mot ? 0 : marge)) continue;
         const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y);
-        liste[i] = { page: a.page, x, y, w: Math.max(a.x + a.w, b.x + b.w) - x, h: Math.max(a.y + a.h, b.y + b.h) - y, logo: a.logo || b.logo, mot: a.mot && b.mot };
+        liste[i] = { page: a.page, x, y, w: Math.max(a.x + a.w, b.x + b.w) - x, h: Math.max(a.y + a.h, b.y + b.h) - y, logo: a.logo || b.logo, mot: a.mot && b.mot, fond: a.fond || b.fond };
         liste.splice(j, 1); change = true; break;
       }
     }
@@ -454,8 +558,9 @@ export async function remplacerSignature(buffer, motifs, options = {}) {
     if (z.w < 4 || z.h < 3) continue;
     isoler(page);
     page.pushOperators(pushGraphicsState(), setTextRenderingMode(TextRenderingMode.Fill));
-    page.drawRectangle({ x: z.x - 1, y: z.y - 1, width: z.w + 2, height: z.h + 2, color: rgb(1, 1, 1) });
-    if (!z.mot && (z.logo || z.h >= 18) && z.w >= 50) dessinerLogo(page, z, police);
+    // Fond : couleur du papier pour une page scannée, blanc sinon
+    page.drawRectangle({ x: z.x - 1, y: z.y - 1, width: z.w + 2, height: z.h + 2, color: z.fond ? rgb(...z.fond) : rgb(1, 1, 1) });
+    if (!z.mot && (z.logo || z.h >= 18) && z.w >= 50) dessinerLogo(page, z, police, { adresse: !z.fond });
     else {
       let taille = Math.max(5, Math.min(z.h * 0.75, 14));
       while (taille > 3 && police.widthOfTextAtSize(TEXTE, taille) > (z.mot ? z.w : Math.max(z.w, 60))) taille -= 0.5;

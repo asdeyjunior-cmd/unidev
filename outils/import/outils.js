@@ -33,7 +33,14 @@ export function normaliserType(v) {
 
 /** Nom de fichier → titre lisible */
 export function titreDepuisFichier(nom) {
-  return nom.replace(/\.[^.]+$/, "").replace(/[_]+/g, " ").replace(/\s+-\s+|\s*-{2,}\s*/g, " — ").replace(/\s{2,}/g, " ").trim();
+  let t = nom.replace(/\.[^.]+$/, "");
+  // Code ajouté par certains sites devant le nom (ex. « 5d1254cf6corrige-etude-de-cas… »)
+  const code = t.match(/^[0-9a-f]{9}(?=[a-z])/i);
+  if (code && (code[0].match(/\d/g) || []).length >= 3) t = t.slice(9);
+  // Nom « en-tirets » sans espace : les tirets deviennent des espaces
+  if (!/\s/.test(t) && (t.match(/-/g) || []).length >= 3) t = t.replace(/-+/g, " ");
+  t = t.replace(/[_]+/g, " ").replace(/\s+-\s+|\s*-{2,}\s*/g, " — ").replace(/\s{2,}/g, " ").trim();
+  return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
 /**
