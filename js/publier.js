@@ -36,7 +36,23 @@ initLayout("publier", async (state) => {
   };
   remplirFilieres();
   filieresPretes.then(() => remplirFilieres());
-  getSearchIndex().then((docs) => remplirFilieres(docs.map((d) => d.filiere).filter(Boolean))).catch(() => {});
+  getSearchIndex().then((docs) => { remplirFilieres(docs.map((d) => d.filiere).filter(Boolean)); remplirSuites(docs); }).catch(() => {});
+});
+
+/* ---------- « C'est la suite de… » : le document précédent, choisi dans la liste ---------- */
+const suites = new Map(); // titre affiché -> id
+function remplirSuites(docs) {
+  for (const d of docs) if (d.titre && !suites.has(d.titre)) suites.set(d.titre, d.id);
+  $("suites").innerHTML = [...suites.keys()].sort((a, b) => a.localeCompare(b, "fr")).map((t) => `<option value="${esc(t)}">`).join("");
+}
+function suiteChoisie() {
+  const v = $("suite").value.trim();
+  if (!v) return { ok: true, id: "" };
+  return suites.has(v) ? { ok: true, id: suites.get(v) } : { ok: false };
+}
+$("suite").addEventListener("input", () => {
+  const r = suiteChoisie();
+  $("suite-info").textContent = !$("suite").value.trim() ? "" : r.ok ? "Ton document sera affiché juste après celui-ci." : "Choisis le document dans la liste proposée.";
 });
 
 async function loadMine() {
@@ -44,6 +60,7 @@ async function loadMine() {
   $("mine").innerHTML = `<div class="loader"></div>`;
   try {
     const docs = await listMine(me.uid);
+    remplirSuites(docs);
     $("mine").innerHTML = docs.length
       ? docs.map((d) => docCard(d, `<span class="status status-${d.statut}">${STATUS[d.statut] || d.statut}</span>`)).join("")
       : `<div class="empty">Tu n'as encore rien publié.</div>`;
@@ -147,6 +164,8 @@ $("form").onsubmit = async (e) => {
   e.preventDefault();
   if (!file && !photos.length) return toast("Choisis un fichier ou prends tes pages en photo.", "err");
   if (!cover) return toast("Ajoute l'image du document.", "err");
+  const suite = suiteChoisie();
+  if (!suite.ok) return toast("« Suite de » : choisis le document précédent dans la liste, ou laisse vide.", "err");
 
   const btn = $("submit");
   const bar = $("progress");
@@ -174,6 +193,7 @@ $("form").onsubmit = async (e) => {
       annee: $("annee").value.trim(),
       universite: $("universite").value.trim(),
       description: $("description").value.trim(),
+      ...(suite.id ? { suiteDe: suite.id } : {}),
       format: file.name.split(".").pop().toLowerCase(),
       taille: up.bytes || file.size,
       nomFichier: file.name,
@@ -182,7 +202,7 @@ $("form").onsubmit = async (e) => {
       auteurNom: profile?.nom || me.email,
     }, { fileUrl: up.url, publicId: up.publicId, ...(up.parts ? { parts: up.parts } : {}) });
     toast(`Document envoyé. Tu gagneras ${CREDITS_PAR_PUBLICATION} crédit dès sa validation.`);
-    $("form").reset(); file = null; cover = null; coverAuto = false; photos = []; afficherPhotos();
+    $("form").reset(); $("suite-info").textContent = ""; file = null; cover = null; coverAuto = false; photos = []; afficherPhotos();
     $("cover-aide").textContent = "Photo ou capture de la première page. JPG, PNG ou WEBP, 10 Mo max.";
     $("cover-preview").innerHTML = "<span>Aucune image</span>";
     $("cover-btn").textContent = "Choisir une image";

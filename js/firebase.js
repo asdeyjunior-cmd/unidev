@@ -335,12 +335,13 @@ export async function unlockDocument(uid, docId) {
    Un seul document Firestore (index/catalogue) contient un résumé de tous les documents publiés.
    La recherche lit ce document (1 lecture) au lieu de relire toute la base. */
 const indexRef = doc(db, "index", "catalogue");
-export const indexEntry = (d) => [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", d.imageUrl || "", d.format || "", d.universite || ""];
+// 9e case (facultative) : id du document dont celui-ci est la suite
+export const indexEntry = (d) => [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", d.imageUrl || "", d.format || "", d.universite || "", ...(d.suiteDe ? [d.suiteDe] : [])];
 export async function getSearchIndex() {
   const snap = await getDoc(indexRef);
   const map = snap.data()?.docs || {};
   return Object.entries(map).map(([id, e]) => ({
-    id, titre: e[0], matiere: e[1], filiere: canonFiliere(e[2]), type: e[3], niveau: e[4], imageUrl: e[5], format: e[6], universite: e[7], partiel: true,
+    id, titre: e[0], matiere: e[1], filiere: canonFiliere(e[2]), type: e[3], niveau: e[4], imageUrl: e[5], format: e[6], universite: e[7], suiteDe: e[8] || "", partiel: true,
   }));
 }
 export async function getDocsByIds(ids) {

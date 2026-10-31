@@ -86,6 +86,12 @@
         </div>
         <datalist id="filieres"></datalist>
         <div class="field">
+          <label for="suite">C'est la suite d'un autre document ? <span class="muted">(facultatif)</span></label>
+          <input id="suite" list="suites" maxlength="140" autocomplete="off" placeholder="Tape le titre du document précédent (partie 1, tome 1…)" />
+          <datalist id="suites"></datalist>
+          <p class="muted" id="suite-info" style="margin-top:4px"></p>
+        </div>
+        <div class="field">
           <label for="description">Description</label>
           <textarea id="description" maxlength="600" placeholder="Contenu, chapitres couverts, professeur…"></textarea>
         </div>

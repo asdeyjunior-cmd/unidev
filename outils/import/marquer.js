@@ -92,7 +92,7 @@ for (let i = 0; i < lot.length; i += 50) {
       const batch = db.batch();
       batch.update(s.ref, maj);
       batch.set(s.ref.collection("prive").doc("fichier"), { ...nouveau, auteurId: fichier.auteurId || d.auteurId });
-      if (d.statut === "publie" && maj.imageUrl) batch.set(db.doc("index/catalogue"), { docs: { [s.id]: [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", maj.imageUrl, d.format || "", d.universite || ""] } }, { merge: true });
+      if (d.statut === "publie" && maj.imageUrl) batch.set(db.doc("index/catalogue"), { docs: { [s.id]: [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", maj.imageUrl, d.format || "", d.universite || "", ...(d.suiteDe ? [d.suiteDe] : [])] } }, { merge: true });
       await batch.commit();
       noter(s.id);
       ok++;

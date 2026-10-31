@@ -86,10 +86,11 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.resource.data.keys().hasOnly(['titre', 'matiere', 'filiere', 'type', 'niveau', 'annee', 'universite',
              'description', 'format', 'taille', 'nomFichier', 'imageUrl', 'auteurId', 'auteurNom',
-             'statut', 'telechargements', 'creditAccorde', 'createdAt'])
+             'statut', 'telechargements', 'creditAccorde', 'createdAt', 'suiteDe'])
         && texte('matiere', 80) && texte('filiere', 80) && texte('type', 30) && texte('niveau', 30)
         && texte('annee', 20) && texte('universite', 100) && texte('description', 600)
         && texte('format', 10) && texte('nomFichier', 200) && texte('auteurNom', 120)
+        && texte('suiteDe', 40)
         && request.resource.data.auteurId == request.auth.uid
         && request.resource.data.statut == 'en_attente'
         && request.resource.data.telechargements == 0

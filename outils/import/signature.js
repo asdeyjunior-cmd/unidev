@@ -151,7 +151,7 @@ for (const [i, s] of concernes.entries()) {
     const batch = db.batch();
     batch.update(s.ref, maj);
     batch.set(s.ref.collection("prive").doc("fichier"), { ...nouveau, auteurId: fichier.auteurId || d.auteurId });
-    if (d.statut === "publie") batch.set(db.doc("index/catalogue"), { docs: { [s.id]: [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", maj.imageUrl || d.imageUrl || "", d.format || "", d.universite || ""] } }, { merge: true });
+    if (d.statut === "publie") batch.set(db.doc("index/catalogue"), { docs: { [s.id]: [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", maj.imageUrl || d.imageUrl || "", d.format || "", d.universite || "", ...(d.suiteDe ? [d.suiteDe] : [])] } }, { merge: true });
     await batch.commit();
     ok++;
     console.log(`   ${change ? `remplacée : ${r.logos ? `${r.logos} logo(s), ` : ""}${r.lignes} ligne(s), ${r.liens} lien(s)` : "rétabli depuis l'original (aucune signature à remplacer)"}${src.original ? " · depuis le fichier d'origine" : ""}`);

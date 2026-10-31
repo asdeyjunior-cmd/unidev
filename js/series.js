@@ -45,25 +45,62 @@ export function documentsPublies() {
   return (catalogue = getSearchIndex().catch(() => []));
 }
 
+/* Deux façons de former une série :
+   1. l'étudiant a indiqué « c'est la suite de… » en publiant (lien sûr) ;
+   2. sinon, automatiquement : titres qui se suivent (« … 1 », « … 2 ») ET même matière, même filière, même type. */
+const pareil = (a, b) => {
+  const n = (v) => sansAccent(v).replace(/[^a-z0-9]+/g, " ").trim();
+  const x = n(a), y = n(b);
+  return !x || !y || x === "autre" || y === "autre" || x === y; // une info manquante ne bloque pas
+};
+const memesInfos = (a, b) => pareil(a.matiere, b.matiere) && pareil(a.filiere, b.filiere) && pareil(a.type, b.type);
+
+/** Série par liens « suite de » : on remonte au 1er document puis on suit les suites */
+function serieParLiens(d, tous) {
+  const parId = new Map(tous.map((x) => [x.id, x]));
+  if (!parId.has(d.id)) parId.set(d.id, d);
+  const suivants = new Map(); // id -> documents qui en sont la suite
+  for (const x of parId.values()) if (x.suiteDe && parId.has(x.suiteDe)) {
+    if (!suivants.has(x.suiteDe)) suivants.set(x.suiteDe, []);
+    suivants.get(x.suiteDe).push(x);
+  }
+  let debut = d; const vus = new Set([d.id]);
+  while (debut.suiteDe && parId.has(debut.suiteDe) && !vus.has(debut.suiteDe)) { debut = parId.get(debut.suiteDe); vus.add(debut.id); }
+  const chaine = [debut]; const pris = new Set([debut.id]);
+  for (let x = debut; ;) {
+    const s = (suivants.get(x.id) || []).find((y) => !pris.has(y.id));
+    if (!s) break;
+    chaine.push(s); pris.add(s.id); x = s;
+  }
+  if (chaine.length < 2 || !pris.has(d.id)) return null;
+  return chaine.map((x, i) => ({ ...x, cle: { rang: i + 1 } }));
+}
+
 /** Les documents de la même série que d, dans l'ordre (null s'il n'y en a pas d'autre) */
 export async function serieDe(d) {
-  // Un titre sans numéro (« Droit des affaires ») est le n°1 de sa série (« Droit des affaires suite »)
-  const cle = cleSerie(d.titre) || { base: normal(d.titre), rang: 1 };
-  if (cle.base.length < 6) return null;
-  const liste = (await documentsPublies())
-    .map((x) => {
-      const c = cleSerie(x.titre);
-      if (c && c.base === cle.base) return { ...x, cle: c };
-      if (normal(x.titre) === cle.base) return { ...x, cle: { base: cle.base, rang: 1 } };
-      return null;
-    })
-    .filter(Boolean);
-  if (!liste.some((x) => x.id === d.id)) liste.push({ ...d, cle });
-  if (liste.length < 2) return null;
-  // Un seul document par numéro (le premier trouvé), du plus petit au plus grand
-  const parRang = new Map();
-  for (const x of liste.sort((a, b) => a.cle.rang - b.cle.rang)) if (!parRang.has(x.cle.rang) || x.id === d.id) parRang.set(x.cle.rang, x);
-  const docs = [...parRang.values()];
+  const tous = await documentsPublies();
+  let docs = serieParLiens(d, tous);
+  if (!docs) {
+    // Un titre sans numéro (« Droit des affaires ») est le n°1 de sa série (« Droit des affaires suite »)
+    const cle = cleSerie(d.titre) || { base: normal(d.titre), rang: 1 };
+    if (cle.base.length < 6) return null;
+    const liste = tous
+      .map((x) => {
+        if (x.id !== d.id && !memesInfos(x, d)) return null;
+        const c = cleSerie(x.titre);
+        if (c && c.base === cle.base) return { ...x, cle: c };
+        if (normal(x.titre) === cle.base) return { ...x, cle: { base: cle.base, rang: 1 } };
+        return null;
+      })
+      .filter(Boolean);
+    if (!liste.some((x) => x.id === d.id)) liste.push({ ...d, cle });
+    if (liste.length < 2) return null;
+    // Un seul document par numéro, du plus petit au plus grand
+    const parRang = new Map();
+    for (const x of liste.sort((a, b) => a.cle.rang - b.cle.rang)) if (!parRang.has(x.cle.rang) || x.id === d.id) parRang.set(x.cle.rang, x);
+    docs = [...parRang.values()];
+    if (docs.length < 2) return null;
+  }
   const i = docs.findIndex((x) => x.id === d.id);
   return { docs, index: i, precedent: docs[i - 1] || null, suivant: docs[i + 1] || null };
 }
