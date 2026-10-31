@@ -120,13 +120,34 @@ function watchSlow() {
   }, 10000);
 }
 
+/* « À la une » : un ordre différent chaque semaine (change le lundi), le même pour tout le monde pendant la semaine */
+const semaine = () => Math.floor((Date.now() / 864e5 + 3) / 7); // n° de semaine, du lundi au dimanche
+function melange(id, n) { // nombre « au hasard » mais fixe pour un document et une semaine
+  let h = 2166136261;
+  for (const c of `${id}:${n}`) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+let ordreSemaine = null, rangSemaine = 0;
+async function pageDeLaSemaine() {
+  if (!ordreSemaine) {
+    const liste = await getPool();
+    if (!indexComplet) return listPublishedPage("recent", cursor, PAGE); // pas d'index : les plus récents
+    const n = semaine();
+    ordreSemaine = liste.map((d) => [melange(d.id, n), d]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
+  }
+  const tranche = ordreSemaine.slice(rangSemaine, rangSemaine + PAGE);
+  rangSemaine += tranche.length;
+  const items = await completer(tranche); // fiches complètes : autant de lectures qu'avant
+  return { items, cursor: rangSemaine, done: rangSemaine >= ordreSemaine.length };
+}
+
 async function loadPage() {
   if (loading || done) return;
   loading = true;
   render();
   watchSlow();
   try {
-    const page = await listPublishedPage(els.sort.value, cursor, PAGE);
+    const page = els.sort.value === "semaine" ? await pageDeLaSemaine() : await listPublishedPage(els.sort.value, cursor, PAGE);
     if (fromCache) { docs = []; fromCache = false; } // les données fraîches remplacent le cache
     const deja = new Set(docs.map((x) => x.id));
     docs.push(...page.items.filter((x) => !deja.has(x.id)));
@@ -155,6 +176,7 @@ async function loadPage() {
 
 function resetAndLoad() {
   docs = []; cursor = null; done = false; firstLoad = true; fromCache = false;
+  ordreSemaine = null; rangSemaine = 0;
   els.list.innerHTML = `<div class="first-load"><div class="loader"></div><p class="muted">Chargement des documents…</p></div>`;
   showCache();
   loadPage();
