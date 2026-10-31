@@ -16,6 +16,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import "dotenv/config";
+import { tamponUnidev, sansModification } from "./marque.js";
 import {
   TYPES, NIVEAUX, EXTENSIONS, TAILLE_MORCEAU, MAX_IMAGE_PDF, MAX_FICHIER,
   infosDepuisChemin, lireCsv, normaliserNiveau, normaliserType, licenceAutorisee,
@@ -118,6 +119,12 @@ async function publier(buffer, nomFichier, infos, imageChemin = null) {
   if (estDoublon(infos)) throw erreurDoublon();
   infos = { ...infos, filiere: canonFiliere(infos.filiere) || "Autre" };
   const ext = path.extname(nomFichier).slice(1).toLowerCase();
+  // Tampon unidev en bas de chaque page (sauf licence « pas de modification »)
+  let tampon = false;
+  if (ext === "pdf" && !sansModification(infos.description)) {
+    try { const t = await tamponUnidev(buffer); buffer = t.buffer; tampon = !!(t.pages || t.deja); }
+    catch (e) { console.warn(`   (tampon unidev impossible : ${e.message})`); }
+  }
   let fichier = null;
   let imageUrl = null;
 
@@ -175,6 +182,7 @@ async function publier(buffer, nomFichier, infos, imageChemin = null) {
     statut: "publie",
     telechargements: 0,
     creditAccorde: true,
+    ...(tampon ? { tampon: true } : {}),
     createdAt: FieldValue.serverTimestamp(),
   });
   if (infos.filiere && infos.filiere !== "Autre" && !filiereConnue(infos.filiere)) {

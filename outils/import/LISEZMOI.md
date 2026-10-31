@@ -213,3 +213,10 @@ L'outil « Remplacer la signature » reconnaît le logo d'un site en le **compar
 (ex. `fomesoutra.png`). Seules les images qui lui ressemblent sont remplacées, une seule fois par endroit :
 les logos d'écoles, les titres et les autres images ne sont jamais touchés.
 Pour un autre site, ajoute simplement une capture nette de son logo (PNG, fond blanc) dans ce dossier.
+
+## Logo unidev sur tous les documents (`marquer.js`)
+Chaque PDF reçoit en bas à droite de chaque page une petite pastille « [u] unidev · unidev-2026.web.app », cliquable.
+- Les nouveaux imports sont tamponnés automatiquement.
+- Les documents déjà publiés (y compris ceux des étudiants) : GitHub > Actions > « Tamponner les documents » ;
+  cela tourne aussi chaque nuit, 300 documents à la fois, jusqu'à ce que tout soit fait.
+- Jamais tamponnés : les fichiers qui ne sont pas des PDF, les PDF protégés, et les licences CC BY-ND (« pas de modification »).

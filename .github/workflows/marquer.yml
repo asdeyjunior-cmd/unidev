@@ -1,0 +1,47 @@
+# Pose le logo unidev (en bas à droite de chaque page) sur les PDF publiés, petit à petit.
+# Tourne chaque nuit (300 documents au plus) ; peut aussi être lancé à la main.
+name: Tamponner les documents (logo unidev)
+
+on:
+  workflow_dispatch:
+    inputs:
+      max:
+        description: "Nombre maximum de documents cette fois"
+        default: "300"
+  schedule:
+    - cron: "47 3 * * *"   # chaque nuit vers 3 h 47 (heure d'Abidjan)
+
+concurrency: { group: unidev-marquer, cancel-in-progress: false }
+
+jobs:
+  marquer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    defaults: { run: { working-directory: outils/import } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Liste des documents déjà tamponnés
+        uses: actions/cache@v4
+        with:
+          path: outils/import/marque-faits.json
+          key: marque-faits-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: marque-faits-
+      - name: Tampon
+        env:
+          CLE: ${{ secrets.FIREBASE_CLE_JSON }}
+          CK: ${{ secrets.CLOUDINARY_API_KEY }}
+          CS: ${{ secrets.CLOUDINARY_API_SECRET }}
+          MAX: ${{ inputs.max || '300' }}
+          NODE_OPTIONS: --max-old-space-size=5120
+        run: |
+          npm install --no-audit --no-fund
+          printf '%s' "$CLE" > cle-firebase.json
+          printf 'CLOUDINARY_CLOUD_NAME=iugeyztf\nCLOUDINARY_API_KEY=%s\nCLOUDINARY_API_SECRET=%s\nFIREBASE_CLE=./cle-firebase.json\n' "$CK" "$CS" > .env
+          set -o pipefail
+          node marquer.js --max "$MAX" 2>&1 | tee resultat.txt
+      - name: Résumé
+        if: always()
+        run: |
+          { echo "### Tampon unidev"; echo '```'; tail -n 6 resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true

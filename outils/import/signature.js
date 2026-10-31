@@ -18,7 +18,7 @@ import "dotenv/config";
 import admin from "firebase-admin";
 import { v2 as cloudinary } from "cloudinary";
 import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF } from "./outils.js";
-import { remplacerSignature } from "./marque.js";
+import { remplacerSignature, tamponUnidev, sansModification } from "./marque.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -119,7 +119,10 @@ for (const [i, s] of concernes.entries()) {
       await s.ref.update({ signatureRemplacee: true });
       continue;
     }
-    const pdf = change ? r.buffer : avant;
+    let pdf = change ? r.buffer : avant;
+    // Tampon unidev en bas de chaque page (repart de l'original : il faut le remettre)
+    let tampon = false;
+    if (!sansModification(d.description)) { try { const t = await tamponUnidev(pdf); pdf = t.buffer; tampon = !!(t.pages || t.deja); } catch {} }
 
     let nouveau = null, imageUrl = null;
     if (pdf.length <= MAX_IMAGE_PDF) {
@@ -141,7 +144,7 @@ for (const [i, s] of concernes.entries()) {
     }
     const fichier = (await s.ref.collection("prive").doc("fichier").get()).data() || {};
     const ancienneImageApercu = String(d.imageUrl || "").includes("/image/upload/") && String(d.imageUrl).includes("pg_1");
-    const maj = { taille: pdf.length, signatureRemplacee: true, ...(imageUrl && ancienneImageApercu ? { imageUrl } : {}) };
+    const maj = { taille: pdf.length, signatureRemplacee: true, ...(tampon ? { tampon: true } : {}), ...(imageUrl && ancienneImageApercu ? { imageUrl } : {}) };
     const batch = db.batch();
     batch.update(s.ref, maj);
     batch.set(s.ref.collection("prive").doc("fichier"), { ...nouveau, auteurId: fichier.auteurId || d.auteurId });

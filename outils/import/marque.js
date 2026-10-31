@@ -13,7 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
-import { PDFDocument, PDFName, PDFString, PDFArray, PDFDict, PDFRawStream, PDFRef, decodePDFRawStream, rgb, StandardFonts, setTextRenderingMode, TextRenderingMode, pushGraphicsState, popGraphicsState } from "pdf-lib";
+import { PDFDocument, PDFName, PDFString, PDFArray, PDFDict, PDFRawStream, PDFRef, decodePDFRawStream, rgb, StandardFonts, setTextRenderingMode, TextRenderingMode, pushGraphicsState, popGraphicsState, concatTransformationMatrix } from "pdf-lib";
 
 const SITE = "https://unidev-2026.web.app";
 const TEXTE = "unidev-2026.web.app";
@@ -467,3 +467,79 @@ export async function remplacerSignature(buffer, motifs, options = {}) {
   const sortie = Buffer.from(await doc.save());
   return { buffer: sortie, lignes, liens, ignores, logos: logosTrouves.length + tampons };
 }
+
+/* ======================================================================
+ * Tampon unidev sur TOUS les documents : petite pastille en bas à droite de chaque page
+ * ([u] unidev · unidev-2026.web.app), cliquable vers le site. Posée une seule fois par fichier.
+ * ==================================================================== */
+const MARQUEUR = "UnidevTampon";
+
+/** Matrice qui place l'origine en bas à gauche de la page TELLE QU'ON LA VOIT (pages tournées comprises) */
+function repereVisible(page) {
+  const b = page.getCropBox();
+  const rot = ((page.getRotation().angle % 360) + 360) % 360;
+  if (rot === 90) return { m: [0, 1, -1, 0, b.x + b.width, b.y], W: b.height, H: b.width };
+  if (rot === 180) return { m: [-1, 0, 0, -1, b.x + b.width, b.y + b.height], W: b.width, H: b.height };
+  if (rot === 270) return { m: [0, -1, 1, 0, b.x, b.y + b.height], W: b.height, H: b.width };
+  return { m: [1, 0, 0, 1, b.x, b.y], W: b.width, H: b.height };
+}
+const appliquer = (m, x, y) => [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
+
+export async function tamponUnidev(buffer) {
+  const doc = await PDFDocument.load(buffer, { ignoreEncryption: true, updateMetadata: false });
+  if (doc.isEncrypted) return { buffer, pages: 0, impossible: "PDF protégé" };
+  const info = doc.getInfoDict();
+  if (info.get(PDFName.of(MARQUEUR))) return { buffer, pages: 0, deja: true };
+  const ctx = doc.context;
+  const gras = await doc.embedFont(StandardFonts.HelveticaBold);
+  const normal = await doc.embedFont(StandardFonts.Helvetica);
+  const vert = rgb(0.12, 0.62, 0.33), fonce = rgb(0.06, 0.24, 0.18);
+  const pages = doc.getPages();
+  for (const page of pages) {
+    // Le contenu d'origine est enfermé entre q … Q : notre dessin s'affiche toujours au bon endroit
+    const debut = ctx.register(ctx.stream("q\n")), fin = ctx.register(ctx.stream("\nQ\n"));
+    const actuel = page.node.get(PDFName.of("Contents"));
+    const resolu = actuel ? ctx.lookup(actuel) : null;
+    const liste = ctx.obj([]);
+    liste.push(debut);
+    if (resolu instanceof PDFArray) for (let i = 0; i < resolu.size(); i++) liste.push(resolu.get(i));
+    else if (actuel) liste.push(actuel);
+    liste.push(fin);
+    page.node.set(PDFName.of("Contents"), liste);
+
+    const { m, W, H } = repereVisible(page);
+    // Taille proportionnée à la page (A4 ≈ 595 pt de large)
+    const k = Math.max(0.7, Math.min(1.6, Math.min(W, H) / 595));
+    const t = 7 * k, cote = 10 * k, pad = 4 * k;
+    const mot1 = "unidev", mot2 = "unidev-2026.web.app";
+    const l1 = gras.widthOfTextAtSize(mot1, t * 1.1), l2 = normal.widthOfTextAtSize(mot2, t);
+    const largeur = pad + cote + 4 * k + l1 + 5 * k + l2 + pad, hauteur = cote + 2 * pad - 2 * k;
+    const x = W - largeur - 12 * k, y = 8 * k;
+
+    page.pushOperators(pushGraphicsState(), concatTransformationMatrix(...m), setTextRenderingMode(TextRenderingMode.Fill));
+    page.drawRectangle({ x, y, width: largeur, height: hauteur, color: rgb(1, 1, 1), opacity: 0.92, borderColor: rgb(0.82, 0.91, 0.86), borderWidth: 0.6 * k });
+    const yc = y + (hauteur - cote) / 2;
+    page.drawRectangle({ x: x + pad, y: yc, width: cote, height: cote, color: vert });
+    page.drawText("u", { x: x + pad + (cote - gras.widthOfTextAtSize("u", cote * 0.85)) / 2, y: yc + cote * 0.2, size: cote * 0.85, font: gras, color: rgb(1, 1, 1) });
+    page.drawText(mot1, { x: x + pad + cote + 4 * k, y: yc + cote * 0.22, size: t * 1.1, font: gras, color: fonce });
+    page.drawText(mot2, { x: x + pad + cote + 4 * k + l1 + 5 * k, y: yc + cote * 0.24, size: t, font: normal, color: vert });
+    page.pushOperators(popGraphicsState());
+
+    // Lien cliquable vers unidev
+    const coins = [[x, y], [x + largeur, y], [x, y + hauteur], [x + largeur, y + hauteur]].map(([a, b]) => appliquer(m, a, b));
+    const xs = coins.map((c) => c[0]), ys = coins.map((c) => c[1]);
+    const lien = ctx.register(ctx.obj({
+      Type: "Annot", Subtype: "Link", Border: [0, 0, 0],
+      Rect: [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)],
+      A: { Type: "Action", S: "URI", URI: PDFString.of(SITE) },
+    }));
+    const annots = page.node.lookup(PDFName.of("Annots"));
+    if (annots instanceof PDFArray) annots.push(lien);
+    else page.node.set(PDFName.of("Annots"), ctx.obj([lien]));
+  }
+  info.set(PDFName.of(MARQUEUR), PDFString.of("1"));
+  return { buffer: Buffer.from(await doc.save()), pages: pages.length };
+}
+
+/** Vrai si la licence interdit toute modification (CC BY-ND) : on ne tamponne pas ces documents */
+export const sansModification = (description = "") => /\bBY[- ]?ND\b|NoDeriv|pas de modification/i.test(String(description));
