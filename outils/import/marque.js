@@ -679,3 +679,34 @@ export async function tamponUnidev(buffer) {
 
 /** Vrai si la licence interdit toute modification (CC BY-ND) : on ne tamponne pas ces documents */
 export const sansModification = (description = "") => /\bBY[- ]?ND\b|NoDeriv|pas de modification/i.test(String(description));
+
+/**
+ * Retire tout ce que unidev a dessiné sur un PDF (anciens remplacements ratés, tampon) pour retrouver le document
+ * tel qu'il était : nos dessins sont toujours ajoutés APRÈS le contenu d'origine, enfermé entre « q » et « Q ».
+ * Sert quand le fichier d'origine n'est plus téléchargeable : on répare à partir du fichier abîmé.
+ * Renvoie { buffer, pages } (pages = nombre de pages nettoyées ; buffer inchangé si rien à retirer).
+ */
+export async function annulerAnciennesMarques(buffer) {
+  const doc = await PDFDocument.load(buffer, { ignoreEncryption: true, updateMetadata: false });
+  const ctx = doc.context;
+  const texte = (r) => texteDuFlux(ctx, r).trim();
+  let pages = 0;
+  for (const page of doc.getPages()) {
+    const c = page.node.get(PDFName.of("Contents"));
+    const arr = c ? ctx.lookup(c) : null;
+    if (!(arr instanceof PDFArray)) continue;
+    const refs = arr.asArray();
+    let n = 0;
+    while (n < refs.length && texte(refs[n]) === "q") n++;
+    if (!n) continue;
+    let fin = -1;
+    for (let j = n; j < refs.length; j++) if (texte(refs[j]) === "Q") { fin = j; break; }
+    if (fin <= n) continue;
+    page.node.set(PDFName.of("Contents"), ctx.obj(refs.slice(n, fin)));
+    pages++;
+  }
+  if (!pages) return { buffer, pages: 0 };
+  // Le marqueur du tampon est retiré : le tampon sera reposé proprement
+  doc.getInfoDict().delete(PDFName.of(MARQUEUR));
+  return { buffer: Buffer.from(await doc.save()), pages };
+}

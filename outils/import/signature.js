@@ -18,7 +18,7 @@ import "dotenv/config";
 import admin from "firebase-admin";
 import { v2 as cloudinary } from "cloudinary";
 import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF, titreAReparer } from "./outils.js";
-import { remplacerSignature, tamponUnidev, sansModification } from "./marque.js";
+import { remplacerSignature, tamponUnidev, sansModification, annulerAnciennesMarques } from "./marque.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -72,7 +72,7 @@ for (const [i, s] of concernes.entries()) {
   const d = s.data();
   process.stdout.write(`\r   lecture ${i + 1}/${concernes.length}…`);
   try {
-    let buffer, original = false;
+    let buffer, original = false, nettoye = false;
     if (originaux.has(s.id)) {
       try { buffer = await telecharger(originaux.get(s.id), { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36" }, { pdf: true }); original = true; } catch {}
     }
@@ -81,15 +81,18 @@ for (const [i, s] of concernes.entries()) {
       if (!fichier?.fileUrl) continue;
       const morceaux = fichier.parts?.length ? fichier.parts.map((p) => p.url) : [fichier.fileUrl];
       buffer = Buffer.concat(await Promise.all(morceaux.map((u) => telecharger(u))));
+      // Pas d'original : on retire nos anciens dessins (remplacements ratés, tampon) pour retrouver le document d'avant
+      try { const a = await annulerAnciennesMarques(buffer); if (a.pages) { buffer = a.buffer; nettoye = true; } } catch {}
     }
     const chemin = path.join(TMP, `${s.id}.pdf`);
     fs.writeFileSync(chemin, buffer);
-    sources.set(s.id, { chemin, original });
+    sources.set(s.id, { chemin, original: original || nettoye, nettoye });
   } catch (e) { console.log(`\n   ${d.titre} : lecture impossible (${e.message})`); }
 }
 console.log("");
-const sansOriginal = [...sources.values()].filter((x) => !x.original).length;
-if (sansOriginal) console.log(`Attention : ${sansOriginal} document(s) sans fichier d'origine : s'ils ont été abîmés par l'ancienne version, ils ne pourront pas être réparés.\n`);
+const nettoyes = [...sources.values()].filter((x) => x.nettoye).length;
+const origines = [...sources.values()].filter((x) => x.original && !x.nettoye).length;
+console.log(`${origines} document(s) repris depuis Fomesoutra, ${nettoyes} réparé(s) en retirant les anciennes marques, ${sources.size - origines - nettoyes} sans ancienne marque.\n`);
 // Les anciennes « empreintes de logo » se trompaient (elles prenaient des en-têtes d'écoles pour le logo) : on les efface.
 if (!ESSAI) await db.doc("parametres/logos").delete().catch(() => {});
 
@@ -154,7 +157,7 @@ for (const [i, s] of concernes.entries()) {
     if (d.statut === "publie") batch.set(db.doc("index/catalogue"), { docs: { [s.id]: [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", maj.imageUrl || d.imageUrl || "", d.format || "", d.universite || "", ...(d.suiteDe ? [d.suiteDe] : [])] } }, { merge: true });
     await batch.commit();
     ok++;
-    console.log(`   ${change ? `remplacée : ${r.logos ? `${r.logos} logo(s), ` : ""}${r.lignes} ligne(s), ${r.liens} lien(s)` : "rétabli depuis l'original (aucune signature à remplacer)"}${src.original ? " · depuis le fichier d'origine" : ""}`);
+    console.log(`   ${change ? `remplacée : ${r.logos ? `${r.logos} logo(s), ` : ""}${r.lignes} ligne(s), ${r.liens} lien(s)` : "rétabli depuis l'original (aucune signature à remplacer)"}${src.nettoye ? " · anciennes marques retirées" : src.original ? " · depuis le fichier d'origine" : ""}`);
   } catch (e) {
     erreurs++;
     console.log(`   ERREUR : ${e.message}`);

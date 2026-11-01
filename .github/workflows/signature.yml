@@ -44,4 +44,4 @@ jobs:
         if: always()
         working-directory: outils/import
         run: |
-          { echo "### Remplacement"; echo '```'; tail -n 30 resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+          { echo "### Remplacement"; echo '```'; grep -E "document\(s\)|Logo|Terminé|ERREUR" resultat.txt | head -n 8; echo "…"; tail -n 3 resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
