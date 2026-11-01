@@ -695,14 +695,21 @@ export async function annulerAnciennesMarques(buffer) {
     const c = page.node.get(PDFName.of("Contents"));
     const arr = c ? ctx.lookup(c) : null;
     if (!(arr instanceof PDFArray)) continue;
-    const refs = arr.asArray();
+    let refs = arr.asArray(), touche = false;
+    // a) versions récentes : [q] … contenu d'origine … [Q] puis nos dessins
     let n = 0;
     while (n < refs.length && texte(refs[n]) === "q") n++;
-    if (!n) continue;
-    let fin = -1;
-    for (let j = n; j < refs.length; j++) if (texte(refs[j]) === "Q") { fin = j; break; }
-    if (fin <= n) continue;
-    page.node.set(PDFName.of("Contents"), ctx.obj(refs.slice(n, fin)));
+    if (n) {
+      let fin = -1;
+      for (let j = n; j < refs.length; j++) if (texte(refs[j]) === "Q") { fin = j; break; }
+      if (fin > n) { refs = refs.slice(n, fin); touche = true; }
+    }
+    // b) toutes premières versions (sans q/Q) : nos dessins sont les derniers blocs, écrits avec la police
+    //    « Helvetica-…-1234567890 » de l'outil ou contenant le mot « unidev » ; jamais d'image dedans
+    const notreDessin = (t) => !/\sDo\b/.test(t) && (/\/Helvetica(?:-Bold)?-\d{6,}\s/.test(t) || /<756e69646576/i.test(t));
+    while (refs.length > 1 && notreDessin(texteDuFlux(ctx, refs[refs.length - 1]))) { refs = refs.slice(0, -1); touche = true; }
+    if (!touche) continue;
+    page.node.set(PDFName.of("Contents"), ctx.obj(refs));
     pages++;
   }
   if (!pages) return { buffer, pages: 0 };

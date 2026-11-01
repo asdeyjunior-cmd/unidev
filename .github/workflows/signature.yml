@@ -16,6 +16,8 @@ on:
         type: boolean
         default: false
 
+concurrency: { group: unidev-signature, cancel-in-progress: false }
+
 jobs:
   signature:
     runs-on: ubuntu-latest
