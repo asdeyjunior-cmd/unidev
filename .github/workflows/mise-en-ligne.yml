@@ -26,17 +26,28 @@ jobs:
           key: pages-cache-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: pages-cache-
       - name: Pages Google des documents
+        id: pages
         working-directory: outils/import
         env: { CLE: "${{ secrets.FIREBASE_CLE_JSON }}" }
         run: |
           npm install --no-audit --no-fund
           printf '%s' "$CLE" > cle-firebase.json
-          node pages.js
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+          set -o pipefail
+          node pages.js 2>&1 | tee resultat.txt
+      # Mise en ligne seulement si les pages Google sont prêtes (sinon elles seraient effacées du site)
+      - name: Mise en ligne
+        if: steps.pages.outcome == 'success'
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_UNIDEV_2026 }}
           projectId: unidev-2026
           channelId: live
       - name: Prévenir Bing
+        if: steps.pages.outcome == 'success'
+        continue-on-error: true
         run: node outils/import/indexnow.js
+      - name: Résumé
+        if: always()
+        run: |
+          { echo "### Mise en ligne"; echo '```'; tail -n 8 outils/import/resultat.txt 2>/dev/null || echo "Pas de résultat"; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true

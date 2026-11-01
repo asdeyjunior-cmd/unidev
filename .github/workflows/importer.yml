@@ -90,11 +90,12 @@ jobs:
           key: pages-cache-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: pages-cache-
       - name: Pages Google des documents
+        id: pages
         if: always()
         continue-on-error: true
         run: node pages.js
       - name: Mise en ligne
-        if: always()
+        if: always() && steps.pages.outcome == 'success'
         continue-on-error: true
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:

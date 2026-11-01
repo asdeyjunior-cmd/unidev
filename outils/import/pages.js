@@ -105,18 +105,31 @@ const resumer = (s) => {
   for (const k of CHAMPS) if (d[k] !== undefined && d[k] !== "") o[k] = d[k];
   return o;
 };
-const index = (await db.doc("index/catalogue").get()).data()?.docs;
+// Quota Firestore épuisé (ou coupure) : on refait les pages avec la copie gardée, plutôt que d'échouer
+const enPanne = (e) => {
+  if (Object.keys(cache).length) {
+    console.log(`Firestore ne répond pas (${e.code === 8 || /quota|exhausted/i.test(e.message) ? "quota du jour épuisé" : e.message}) : pages refaites avec la copie gardée (${Object.keys(cache).length} documents).`);
+    return true;
+  }
+  console.error(`Firestore ne répond pas (${e.code === 8 || /quota|exhausted/i.test(e.message) ? "quota du jour épuisé : réessaie après 7 h" : e.message}) et aucune copie n'est gardée : mise en ligne annulée pour ne pas effacer les pages Google.`);
+  process.exit(2);
+};
+let index = null, horsLigne = false;
+try { index = (await db.doc("index/catalogue").get()).data()?.docs; } catch (e) { horsLigne = enPanne(e); }
 let ids;
-if (index && Object.keys(index).length) {
+if (horsLigne) { /* on garde le cache tel quel */ }
+else if (index && Object.keys(index).length) {
   ids = Object.keys(index);
   // Fiches à lire : les nouvelles, plus 150 des plus anciennes en cache (pour garder les compteurs à jour)
   const nouvelles = ids.filter((id) => !cache[id]);
   const vieilles = ids.filter((id) => cache[id]).sort((a, b) => cache[a].lu - cache[b].lu).slice(0, 150);
   const aLire = [...nouvelles, ...vieilles];
-  for (let i = 0; i < aLire.length; i += 100) {
-    const snaps = await db.getAll(...aLire.slice(i, i + 100).map((id) => db.collection("documents").doc(id)));
-    for (const s of snaps) if (s.exists && s.data().statut === "publie") cache[s.id] = resumer(s); else delete cache[s.id];
-  }
+  try {
+    for (let i = 0; i < aLire.length; i += 100) {
+      const snaps = await db.getAll(...aLire.slice(i, i + 100).map((id) => db.collection("documents").doc(id)));
+      for (const s of snaps) if (s.exists && s.data().statut === "publie") cache[s.id] = resumer(s); else delete cache[s.id];
+    }
+  } catch (e) { console.log(`Lecture des fiches interrompue (${e.message}) : celles déjà gardées sont utilisées.`); }
   console.log(`${aLire.length} fiche(s) lue(s) dans Firestore (${nouvelles.length} nouvelle(s)), le reste vient du cache.`);
   // L'index fait foi pour les infos visibles (titre, image…) ; un document retiré de l'index n'a plus de page
   const garder = new Set(ids);
@@ -128,9 +141,12 @@ if (index && Object.keys(index).length) {
   }
 } else {
   // Pas d'index : lecture complète (ancienne méthode)
-  const snap = await db.collection("documents").where("statut", "==", "publie").get();
+  let snap;
+  try { snap = await db.collection("documents").where("statut", "==", "publie").get(); } catch (e) { enPanne(e); snap = null; }
+  if (snap) {
   cache = {};
   snap.docs.forEach((s) => { cache[s.id] = resumer(s); });
+  }
 }
 fs.writeFileSync(CACHE, JSON.stringify(cache));
 const docs = Object.entries(cache).map(([id, c]) => {
