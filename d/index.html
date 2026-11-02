@@ -18,7 +18,7 @@
   <link rel="manifest" href="../manifest.webmanifest" />
   <link rel="icon" href="../icons/favicon-32.png" sizes="32x32" />
   <link rel="apple-touch-icon" href="../icons/apple-touch-icon.png" />
-  <link rel="stylesheet" href="../css/style.css?v=43" />
+  <link rel="stylesheet" href="../css/style.css?v=51" />
   
 </head>
 <body>
@@ -27,9 +27,40 @@
     <div class="wrap">
 
       <h1 class="page-title">Tous les documents</h1>
-      <p class="muted">La liste complète arrive bientôt. En attendant, <a href="../index.html">parcours les documents</a>.</p>
+      <!-- Version de secours : la liste se construit dans le navigateur (1 seule lecture).
+           La mise en ligne par GitHub remplace cette page par une version toute prête pour Google. -->
+      <input id="td-q" type="search" placeholder="Filtrer par titre, matière, filière…" style="margin:6px 0 14px" aria-label="Filtrer" />
+      <p class="muted" id="td-etat">Chargement de la liste…</p>
+      <div id="td-liste"></div>
     </div>
   </main>
+  <script type="module">
+    import { getSearchIndex } from "../js/firebase.js";
+    const $ = (id) => document.getElementById(id);
+    const esc = (t) => String(t ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    const norm = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const slug = (t) => norm(t).replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "autre";
+    let docs = [];
+    try {
+      const memo = JSON.parse(sessionStorage.getItem("unidev-recherche") || "null");
+      docs = memo?.docs?.length ? memo.docs : await getSearchIndex();
+    } catch { docs = []; }
+    function afficher() {
+      const q = norm($("td-q").value.trim());
+      const liste = docs.filter((d) => !q || norm([d.titre, d.matiere, d.filiere, d.type, d.niveau].join(" ")).includes(q));
+      const groupes = new Map();
+      for (const d of liste) { const f = d.filiere || "Autre"; if (!groupes.has(f)) groupes.set(f, []); groupes.get(f).push(d); }
+      const noms = [...groupes.keys()].sort((a, b) => (a === "Autre") - (b === "Autre") || a.localeCompare(b, "fr"));
+      $("td-etat").textContent = docs.length ? `${liste.length} document${liste.length > 1 ? "s" : ""}, classés par filière.` : "La liste n'a pas pu se charger. Réessaie dans un instant.";
+      $("td-liste").innerHTML = noms.map((f) => `
+        <h2 class="fd-h2" id="${slug(f)}">${esc(f)} <span class="muted">(${groupes.get(f).length})</span></h2>
+        <ul class="fd-liste">${groupes.get(f).sort((a, b) => a.titre.localeCompare(b.titre, "fr")).map((d) =>
+          `<li><a href="../index.html?doc=${encodeURIComponent(d.id)}">${esc(d.titre)}</a><span>${esc([d.type, d.niveau].filter((x) => x && x !== "Autre").join(" · "))}</span></li>`).join("")}</ul>`).join("");
+      if (location.hash && !q) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    }
+    $("td-q").addEventListener("input", afficher);
+    afficher();
+  </script>
   <footer class="footer"><div class="wrap footer-copy">©UNIDEV ASSOCIATION 2026 · <a href="../apropos.html">À propos</a> · <a href="index.html">Tous les documents</a></div></footer>
   <nav class="bottomnav">
     <a href="../index.html" data-k="docs" class="active"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><span>Documents</span></a>
