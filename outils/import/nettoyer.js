@@ -13,6 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
+import { comptes } from "./stockage.js";
 import admin from "firebase-admin";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -20,14 +21,11 @@ const ICI = path.dirname(fileURLToPath(import.meta.url));
 const ESSAI = process.argv.includes("--essai");
 const AGE_MIN = 48 * 3600 * 1000;
 
-for (const k of ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET"]) {
-  if (!process.env[k]) { console.error(`${k} manque dans le fichier .env`); process.exit(1); }
-}
+if (!comptes().length) { console.error("Aucun compte Cloudinary : mets CLOUDINARY_COMPTES (ou CLOUDINARY_CLOUD_NAME, _API_KEY, _API_SECRET) dans .env"); process.exit(1); }
 const cle = path.resolve(ICI, process.env.FIREBASE_CLE || "./cle-firebase.json");
 if (!fs.existsSync(cle)) { console.error(`Clé Firebase introuvable : ${cle}`); process.exit(1); }
 admin.initializeApp({ credential: admin.credential.cert(JSON.parse(fs.readFileSync(cle, "utf8"))) });
 const db = admin.firestore();
-cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET, secure: true });
 
 /** URL Cloudinary -> { type, id } (id sans extension pour les images, avec extension pour les fichiers « raw ») */
 function depuisUrl(u) {
@@ -88,6 +86,10 @@ async function lister(type) {
 
 let total = 0, octets = 0;
 let echecs = 0;
+// Chaque compte Cloudinary à son tour
+for (const compte of comptes()) {
+cloudinary.config({ ...compte, secure: true });
+if (comptes().length > 1) console.log(`\n=== Compte ${compte.cloud_name} ===`);
 for (const type of ["raw", "image"]) {
   let tous;
   try { tous = await lister(type); } catch (e) { console.log(`Impossible de lister les ${type === "raw" ? "fichiers" : "images"} : ${e.message}`); echecs++; continue; }
@@ -103,6 +105,7 @@ for (const type of ["raw", "image"]) {
       catch (e) { console.log(`   ${e.message}`); echecs++; }
     }
   }
+}
 }
 
 console.log(`\n${ESSAI ? "Seraient supprimés" : "Supprimés"} : ${total} élément(s), ${(octets / 1048576).toFixed(1)} Mo libérés.${ESSAI ? " (mode essai : rien n'a été touché)" : ""}${echecs ? ` ${echecs} étape(s) en échec : relance plus tard.` : ""}`);

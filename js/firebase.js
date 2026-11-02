@@ -304,6 +304,10 @@ export async function getFileUrl(id) {
   return (await getFileInfo(id)).fileUrl;
 }
 /** { fileUrl, parts: [{url, publicId}] | null } — parts existe pour les gros fichiers découpés */
+/** Compte Cloudinary où envoyer les nouveaux fichiers (choisi par l'outil « Choisir le compte Cloudinary ») */
+export async function compteDeStockage() {
+  try { return (await getDoc(doc(db, "parametres", "stockage"))).data()?.compte || null; } catch { return null; }
+}
 /** Fiche d'un document (publié, à soi, ou admin) */
 export async function getDocument(id) {
   const snap = await getDoc(doc(db, "documents", id));

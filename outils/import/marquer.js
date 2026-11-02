@@ -13,6 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
+import { comptes, choisirCompte, basculer, comptePlein } from "./stockage.js";
 import admin from "firebase-admin";
 import { v2 as cloudinary } from "cloudinary";
 import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF } from "./outils.js";
@@ -24,17 +25,24 @@ const opt = (n, d = null) => { const i = args.indexOf(`--${n}`); return i >= 0 ?
 const ESSAI = args.includes("--essai");
 const MAX = Math.max(1, Number(opt("max", "300")) || 300);
 
-for (const k of ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET"]) if (!process.env[k]) { console.error(`${k} manque dans .env`); process.exit(1); }
+if (!comptes().length) { console.error("Aucun compte Cloudinary : mets CLOUDINARY_COMPTES (ou CLOUDINARY_CLOUD_NAME, _API_KEY, _API_SECRET) dans .env"); process.exit(1); }
 const cle = path.resolve(ICI, process.env.FIREBASE_CLE || "./cle-firebase.json");
 if (!fs.existsSync(cle)) { console.error(`Clé Firebase introuvable : ${cle}`); process.exit(1); }
 admin.initializeApp({ credential: admin.credential.cert(JSON.parse(fs.readFileSync(cle, "utf8"))) });
 const db = admin.firestore();
-cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET, secure: true });
+await choisirCompte(cloudinary); // le compte Cloudinary le plus libre
 
-const envoyer = (buffer, options) => avecRelance(() => new Promise((ok, ko) => {
+const envoyerUneFois = (buffer, options) => avecRelance(() => new Promise((ok, ko) => {
   cloudinary.uploader.upload_stream({ use_filename: false, unique_filename: true, overwrite: false, timeout: 600000, ...options },
     (err, res) => (err ? ko(err) : ok(res))).end(buffer);
 }), { nom: "envoi Cloudinary" });
+// Compte plein : on passe au compte suivant et on renvoie
+const envoyer = async (buffer, options) => {
+  for (;;) {
+    try { return await envoyerUneFois(buffer, options); }
+    catch (e) { if (comptePlein(e) && basculer(cloudinary)) continue; throw e; }
+  }
+};
 
 /* ---------- Ce qui reste à faire ---------- */
 const FAITS = path.join(ICI, "marque-faits.json");

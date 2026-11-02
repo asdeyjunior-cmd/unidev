@@ -48,6 +48,7 @@ jobs:
           CLE: ${{ secrets.FIREBASE_CLE_JSON }}
           CK: ${{ secrets.CLOUDINARY_API_KEY }}
           CS: ${{ secrets.CLOUDINARY_API_SECRET }}
+          CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
         run: |
           printf '%s' "$CLE" > cle-firebase.json
           printf 'CLOUDINARY_CLOUD_NAME=iugeyztf\nCLOUDINARY_API_KEY=%s\nCLOUDINARY_API_SECRET=%s\nFIREBASE_CLE=./cle-firebase.json\nAUTEUR_NOM=unidev\n' "$CK" "$CS" > .env

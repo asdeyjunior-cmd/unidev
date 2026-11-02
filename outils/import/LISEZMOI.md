@@ -226,3 +226,13 @@ Les séries (« … 1 », « … 2 », « Partie 3 », « suite »…) sont reco
 Pour les documents déjà publiés dont le titre est resté au format « nom de fichier »
 (« 612a0b117cf71sujet-corrige-etude-de-cas »), lance une fois GitHub > Actions > « Corriger les titres »
 (case « Essai » pour voir d'abord ce qui changera). 1 seule lecture Firestore.
+
+## Plusieurs comptes Cloudinary
+Les nouveaux fichiers vont sur le compte le plus libre ; quand un compte est plein, l'envoi passe au suivant.
+1. Dans chaque nouveau compte Cloudinary : Settings > Upload > créer deux presets **non signés** nommés
+   exactement `unidev_unsigned` et `unidev_images`.
+2. `js/config.js` (liste `comptes`) et `firestore.rules` (`comptesCloudinary`) : remplacer COMPTE_2… par les vrais noms
+   (cloud name, en haut du tableau de bord Cloudinary), puis `firebase deploy --only firestore`.
+3. GitHub > Settings > Secrets > Actions > nouveau secret `CLOUDINARY_COMPTES`, un compte par ligne :
+   `nom:API_key:API_secret` (le compte actuel en premier).
+4. Actions > « Choisir le compte Cloudinary » > Run workflow (ensuite il tourne seul toutes les 6 heures).

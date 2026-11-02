@@ -1,0 +1,28 @@
+# Toutes les 6 heures : le site envoie les fichiers des étudiants sur le compte Cloudinary le plus libre.
+name: Choisir le compte Cloudinary
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "11 */6 * * *"
+
+jobs:
+  stockage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults: { run: { working-directory: outils/import } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Choix du compte
+        env:
+          CLE: ${{ secrets.FIREBASE_CLE_JSON }}
+          CK: ${{ secrets.CLOUDINARY_API_KEY }}
+          CS: ${{ secrets.CLOUDINARY_API_SECRET }}
+          CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
+        run: |
+          npm install --no-audit --no-fund
+          printf '%s' "$CLE" > cle-firebase.json
+          printf 'CLOUDINARY_CLOUD_NAME=iugeyztf\nCLOUDINARY_API_KEY=%s\nCLOUDINARY_API_SECRET=%s\nFIREBASE_CLE=./cle-firebase.json\n' "$CK" "$CS" > .env
+          node choisir-compte.js

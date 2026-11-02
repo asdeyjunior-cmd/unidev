@@ -8,8 +8,10 @@ service cloud.firestore {
     function creditsBienvenue() { return 2; } // = CREDITS_BIENVENUE dans js/config.js
 
     // Seuls les fichiers de TON compte Cloudinary sont acceptés
-    function cloudinaryRaw() { return 'https://res\\.cloudinary\\.com/iugeyztf/raw/upload/.+'; }
-    function cloudinaryImage() { return 'https://res\\.cloudinary\\.com/iugeyztf/image/upload/.+'; }
+    // Comptes Cloudinary autorisés : les mêmes noms que dans js/config.js (comptes)
+    function comptesCloudinary() { return '(iugeyztf|COMPTE_2|COMPTE_3|COMPTE_4|COMPTE_5)'; }
+    function cloudinaryRaw() { return 'https://res\\.cloudinary\\.com/' + comptesCloudinary() + '/raw/upload/.+'; }
+    function cloudinaryImage() { return 'https://res\\.cloudinary\\.com/' + comptesCloudinary() + '/image/upload/.+'; }
     function texte(champ, max) {
       return !(champ in request.resource.data)
         || (request.resource.data[champ] is string && request.resource.data[champ].size() <= max);

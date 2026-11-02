@@ -32,6 +32,7 @@ jobs:
           CLE: ${{ secrets.FIREBASE_CLE_JSON }}
           CK: ${{ secrets.CLOUDINARY_API_KEY }}
           CS: ${{ secrets.CLOUDINARY_API_SECRET }}
+          CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
           SITE: ${{ inputs.site }}
           REMP: ${{ inputs.remplacer }}
           REF: ${{ inputs.refaire && '--refaire' || '' }}

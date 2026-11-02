@@ -17,6 +17,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import "dotenv/config";
 import { tamponUnidev, sansModification } from "./marque.js";
+import { comptes, choisirCompte, basculer, comptePlein } from "./stockage.js";
 import {
   TYPES, NIVEAUX, EXTENSIONS, TAILLE_MORCEAU, MAX_IMAGE_PDF, MAX_FICHIER,
   infosDepuisChemin, lireCsv, normaliserNiveau, normaliserType, licenceAutorisee,
@@ -52,18 +53,13 @@ const noter = (cle, valeur) => { journal[cle] = valeur; fs.writeFileSync(JOURNAL
 let cloudinary, db, FieldValue, ADMIN_UID;
 let LOGOS = new Set(); // logos de sites partenaires reconnus par signature.js (parametres/logos)
 async function connecter() {
-  const manque = ["CLOUDINARY_CLOUD_NAME", "CLOUDINARY_API_KEY", "CLOUDINARY_API_SECRET", "FIREBASE_CLE"].filter((k) => !process.env[k]);
-  if (manque.length) throw new Error(`Variables manquantes dans .env : ${manque.join(", ")}`);
+  if (!process.env.FIREBASE_CLE) throw new Error("Variable manquante dans .env : FIREBASE_CLE");
+  if (!comptes().length) throw new Error("Aucun compte Cloudinary : mets CLOUDINARY_COMPTES (ou CLOUDINARY_CLOUD_NAME, _API_KEY, _API_SECRET) dans .env");
   const cle = path.resolve(process.env.FIREBASE_CLE);
   if (!fs.existsSync(cle)) throw new Error(`Clé Firebase introuvable : ${cle}`);
 
   ({ v2: cloudinary } = await import("cloudinary"));
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-    secure: true,
-  });
+  await choisirCompte(cloudinary); // le compte Cloudinary le plus libre
 
   const admin = (await import("firebase-admin")).default;
   admin.initializeApp({ credential: admin.credential.cert(JSON.parse(fs.readFileSync(cle, "utf8"))) });
@@ -83,10 +79,17 @@ async function connecter() {
 }
 
 // Envoi vers Cloudinary : délai généreux (10 min) et nouvel essai si la connexion coupe
-const envoyer = (buffer, options) => avecRelance(() => new Promise((ok, ko) => {
+const envoyerUneFois = (buffer, options) => avecRelance(() => new Promise((ok, ko) => {
   cloudinary.uploader.upload_stream({ use_filename: false, unique_filename: true, overwrite: false, timeout: 600000, ...options },
     (err, res) => (err ? ko(err) : ok(res))).end(buffer);
 }), { nom: "envoi Cloudinary" });
+// Compte plein : on passe au compte suivant et on renvoie
+const envoyer = async (buffer, options) => {
+  for (;;) {
+    try { return await envoyerUneFois(buffer, options); }
+    catch (e) { if (comptePlein(e) && basculer(cloudinary)) continue; throw e; }
+  }
+};
 
 async function couvertureGenerique(infos) {
   const sharp = (await import("sharp")).default;

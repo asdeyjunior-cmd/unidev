@@ -20,6 +20,7 @@ jobs:
           CLE: ${{ secrets.FIREBASE_CLE_JSON }}
           CK: ${{ secrets.CLOUDINARY_API_KEY }}
           CS: ${{ secrets.CLOUDINARY_API_SECRET }}
+          CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
         run: |
           npm install --no-audit --no-fund
           export NODE_OPTIONS=--max-old-space-size=5120

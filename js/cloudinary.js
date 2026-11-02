@@ -8,8 +8,33 @@ const CHUNK = 6 * 1024 * 1024; // morceaux de 6 Mo (envoi fiable sur connexion m
  * - image de couverture : resource_type "image"
  * onProgress(pourcentage) est appelé pendant l'envoi.
  */
+/* ---------- Plusieurs comptes Cloudinary ----------
+   Le compte le plus libre est indiqué chaque jour par l'outil « Choisir le compte Cloudinary » (parametres/stockage).
+   Si un compte est plein, l'envoi repart tout seul sur le suivant. */
+const COMPTES = (cloudinaryConfig.comptes || [cloudinaryConfig.cloudName]).filter((c) => c && !/^COMPTE_/.test(c));
+let comptePrefere = null;
+async function ordreDesComptes() {
+  if (!comptePrefere) {
+    try { const { compteDeStockage } = await import("./firebase.js"); comptePrefere = await compteDeStockage(); } catch {}
+    if (!COMPTES.includes(comptePrefere)) comptePrefere = COMPTES[0];
+  }
+  return [comptePrefere, ...COMPTES.filter((c) => c !== comptePrefere)];
+}
+const comptePlein = (e) => /limit|quota|exceed|storage|credits|suspend|disabled/i.test(e?.message || "");
+
 export async function uploadFile(file, onProgress = () => {}, kind = "raw") {
-  const { cloudName, uploadPreset, folder, imagePreset, imageFolder } = cloudinaryConfig;
+  const ordre = await ordreDesComptes();
+  for (let i = 0; ; i++) {
+    try { return await uploadSurCompte(ordre[i], file, onProgress, kind); }
+    catch (e) {
+      if (comptePlein(e) && i + 1 < ordre.length) { comptePrefere = ordre[i + 1]; continue; }
+      throw e;
+    }
+  }
+}
+
+async function uploadSurCompte(cloudName, file, onProgress, kind) {
+  const { uploadPreset, folder, imagePreset, imageFolder } = cloudinaryConfig;
   const isImage = kind === "image";
   const url = `https://api.cloudinary.com/v1_1/${cloudName}/${isImage ? "image" : "raw"}/upload`;
   const uploadId = `unidev-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -80,7 +105,7 @@ export async function uploadDocument(file, onProgress = () => {}) {
 
 /** Vrai seulement pour un fichier de TON compte Cloudinary (protège contre un lien piégé) */
 export function lienSur(url, genre = "raw") {
-  return typeof url === "string" && url.startsWith(`https://res.cloudinary.com/${cloudinaryConfig.cloudName}/${genre}/upload/`);
+  return typeof url === "string" && COMPTES.some((c) => url.startsWith(`https://res.cloudinary.com/${c}/${genre}/upload/`));
 }
 
 /** Télécharge les morceaux et les recolle en un seul fichier (Blob) */
