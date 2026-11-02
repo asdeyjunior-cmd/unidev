@@ -9,7 +9,7 @@ service cloud.firestore {
 
     // Seuls les fichiers de TON compte Cloudinary sont acceptés
     // Comptes Cloudinary autorisés : les mêmes noms que dans js/config.js (comptes)
-    function comptesCloudinary() { return '(iugeyztf|COMPTE_2|COMPTE_3|COMPTE_4|COMPTE_5)'; }
+    function comptesCloudinary() { return '(iugeyztf|qxh2bmzt|jbqiyzzu|gxmx1dsh|nis5hqzo)'; }
     function cloudinaryRaw() { return 'https://res\\.cloudinary\\.com/' + comptesCloudinary() + '/raw/upload/.+'; }
     function cloudinaryImage() { return 'https://res\\.cloudinary\\.com/' + comptesCloudinary() + '/image/upload/.+'; }
     function texte(champ, max) {

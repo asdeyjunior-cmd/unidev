@@ -15,7 +15,7 @@ export const cloudinaryConfig = {
   cloudName: "iugeyztf",
   // Comptes Cloudinary utilisés (le 1er = le compte principal). Chaque compte doit avoir les DEUX presets
   // non signés ci-dessous (mêmes noms). Mets les mêmes noms dans firestore.rules (cloudinaryRaw / cloudinaryImage).
-  comptes: ["iugeyztf", "COMPTE_2", "COMPTE_3", "COMPTE_4", "COMPTE_5"],
+  comptes: ["iugeyztf", "qxh2bmzt", "jbqiyzzu", "gxmx1dsh", "nis5hqzo"],
   uploadPreset: "unidev_unsigned",
   folder: "unidev/documents",
   imagePreset: "unidev_images",   // preset non signé réservé aux images de couverture
