@@ -127,7 +127,8 @@ export function docCard(d, actions = "", { prix = "" } = {}) {
         <span class="badge b-fil">${esc(d.filiere || d.type || "Document")}</span>
         <span class="ext">${esc((d.format || "").toUpperCase())}</span>
       </div>
-      <h3>${esc(d.titre)}</h3>
+      <h3 data-voir="${d.id}">${esc(d.titre)}</h3>
+      <button type="button" class="card-serie" data-voir="${d.id}" data-serie="${d.id}" hidden></button>
       <p class="subject">${esc(d.matiere || "")}<span class="sub-type">${d.type ? " · " + esc(d.type) : ""}</span></p>
       <div class="card-rows">
         <p class="row-ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/><path d="M22 9v6"/></svg><span>${[d.niveau, d.annee].filter(Boolean).map(esc).join(" · ") || "—"}</span></p>

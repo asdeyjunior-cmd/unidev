@@ -104,3 +104,18 @@ export async function serieDe(d) {
   const i = docs.findIndex((x) => x.id === d.id);
   return { docs, index: i, precedent: docs[i - 1] || null, suivant: docs[i + 1] || null };
 }
+
+/** Sur les cartes de la liste : petite étiquette « Série · 2/4 » (ouvre la fiche avec les autres parties) */
+const deja = new Map(); // id -> texte ou ""
+export async function annoterSeries(zone, fiches = new Map()) {
+  for (const b of zone.querySelectorAll("[data-serie]")) {
+    const id = b.dataset.serie;
+    if (!deja.has(id)) {
+      const d = fiches.get(id) || (await documentsPublies()).find((x) => x.id === id);
+      const s = d ? await serieDe(d).catch(() => null) : null;
+      deja.set(id, s ? `Série · ${s.index + 1}/${s.docs.length}` : "");
+    }
+    const t = deja.get(id);
+    if (t) { b.textContent = t; b.hidden = false; }
+  }
+}

@@ -1285,3 +1285,14 @@ body.lecteur-page { padding-bottom: 0; background: #eef4f0; min-height: 100dvh; 
 .serie-suite b { color: var(--accent); font-size: 1.4rem; line-height: 1; }
 .lecteur-serie[hidden] { display: none; }
 .lecteur-serie .serie { margin: 0 0 14px; }
+
+/* ---------- Fiche « Voir plus » accessible partout + étiquette de série ---------- */
+.card h3[data-voir] { cursor: pointer; }
+.voir-plus { display: inline-block; margin: 2px 12px 0; padding: 0; border: 0; background: none; color: var(--accent-dark); font: 600 .8rem Inter, sans-serif; cursor: pointer; text-align: left; }
+.voir-plus:hover { text-decoration: underline; }
+.card-serie { align-self: flex-start; margin: 4px 12px 0; padding: 3px 10px; border: 0; border-radius: 999px; background: var(--tint); color: var(--accent-dark); font: 700 .74rem Inter, sans-serif; cursor: pointer; }
+.card-serie[hidden] { display: none; }
+@media (max-width: 600px) { .voir-plus, .card-serie { margin-left: 10px; margin-right: 10px; } }
+.modal-box .card-cat { display: block; color: var(--accent-dark); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
+.modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+.modal-actions .btn { flex: 1; }
