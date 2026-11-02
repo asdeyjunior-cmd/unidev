@@ -457,11 +457,12 @@ export async function* documentsDuSite({ url, profondeur = 3, max = 50, deja = (
       const enPhrase = (t) => t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
       rendus++;
       yield {
-        cle, titre, nomFichier: nomFichier.replace(/[\\/:*?"<>|]/g, " "), buffer, licence: `autorisation de ${depart.hostname}`, source: page,
+        // Nom de fichier public = le titre (le nom d'origine peut trahir la provenance)
+        cle, titre, nomFichier: `${titre}.${format}`.replace(/[\\/:*?"<>|]/g, " "), buffer, licence: `autorisation de ${depart.hostname}`, source: page,
         infos: {
           titre, matiere: deviner(titre).matiere || (dossierProche ? enPhrase(dossierProche) : "") || devine.matiere || devine.filiere || "Divers", filiere: devine.filiere || "Autre", type: devine.type || "Autre",
           niveau: devine.niveau || "Autre", annee: (titre.match(/\b(20\d\d|19\d\d)\b/) || [])[1] || "", universite: "",
-          description: `Document partagé avec l'autorisation de ${depart.hostname.replace(/^www\./, "")}. Source : ${page}`,
+          description: "", // provenance gardée seulement dans import-journal.json (privé), jamais sur le site
         },
       };
       await pause(1000);

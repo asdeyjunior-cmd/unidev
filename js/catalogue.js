@@ -2,7 +2,6 @@ import { listPublishedPage, listPublished, getSearchIndex, getDocsByIds, getFile
 import { thumb } from "./cloudinary.js";
 import { ouvrirDemandeFiliere } from "./demande-filiere.js";
 import { habiller } from "./choix.js";
-import { annoterSeries } from "./series.js";
 import { initLayout, docCard, fillSelect, toast, esc, modal, setNavCredits, fileModal } from "./ui.js";
 import { canonFiliere, toutesLesFilieres } from "./filieres.js";
 import { CATEGORIES, paymentConfig, CREDITS_PAR_PUBLICATION } from "./config.js";
@@ -69,8 +68,6 @@ function render() {
       ? `<div class="empty">${filtersActive() ? (els.filiere.value && !els.q.value.trim() ? `Pas encore de documents en ${esc(els.filiere.value)}.` : "Aucun document ne correspond à ta recherche.") : "Aucun document pour le moment."}<br><a href="publier.html">Publie le premier !</a>${filtersActive() ? `<br><a href="#" data-demande-filiere>Ta filière n'est pas sur unidev ? Dis-le nous</a>` : ""}</div>`
       : "";
   $("more").innerHTML = loading ? `<div class="loader loader-sm"></div>` : "";
-  // Étiquette « Série · 2/4 » sur les cartes concernées (sans lecture Firestore en plus)
-  if (out.length) annoterSeries(els.list, new Map(docs.map((d) => [d.id, d]))).catch(() => {});
 }
 
 function updateFilieres(items) {

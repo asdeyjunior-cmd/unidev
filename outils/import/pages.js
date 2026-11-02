@@ -149,8 +149,10 @@ else if (index && Object.keys(index).length) {
   }
 }
 fs.writeFileSync(CACHE, JSON.stringify(cache));
+// Provenance des documents de sites partenaires jamais publiée (« autorisation de … », « Source : … »)
+const sansProvenance = (t) => !/autorisation de/i.test(t || "") ? t : String(t).replace(/Document partagé avec l'autorisation de \S+/gi, "").replace(/\s*Source\s*:\s*\S+/gi, "").replace(/\s{2,}/g, " ").trim();
 const docs = Object.entries(cache).map(([id, c]) => {
-  const d = { id, ...c };
+  const d = { id, ...c, description: sansProvenance(c.description) };
   d.filiere = canonFiliere(d.filiere) || "Autre";
   d.page = `${slug(d.titre)}-${d.id.slice(0, 8).toLowerCase()}.html`;
   d.date = c.cree ? new Date(c.cree) : null;

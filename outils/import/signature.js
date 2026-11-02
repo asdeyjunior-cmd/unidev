@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
 import { v2 as cloudinary } from "cloudinary";
-import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF, titreAReparer } from "./outils.js";
+import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF, titreAReparer, sansCodeDevant } from "./outils.js";
 import { remplacerSignature, tamponUnidev, sansModification, annulerAnciennesMarques } from "./marque.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
@@ -48,7 +48,7 @@ const envoyer = (buffer, options) => avecRelance(() => new Promise((ok, ko) => {
 // --tous : TOUS les PDF du site (documents de Fomesoutra arrivés par d'autres chemins, anciennes marques ratées partout).
 // Sans risque : seul le vrai logo Fomesoutra (reconnu à son aspect), les mots de sa signature et NOS anciens dessins sont touchés.
 const TOUS = args.includes("--tous");
-const VERSION = "réparation v3 (1er novembre)";
+const VERSION = "réparation v4 (2 novembre)";
 const snap = await db.collection("documents").get();
 const concernes = snap.docs.filter((s) => {
   const d = s.data();
@@ -78,6 +78,9 @@ if (ESSAI) {
 // Les anciennes « empreintes de logo » se trompaient (elles prenaient des en-têtes d'écoles pour le logo) : on les efface.
 await db.doc("parametres/logos").delete().catch(() => {});
 
+const re = new RegExp(motifs.map((m) => m.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "[\\s._-]*")).join("|"), "i");
+const sansProvenance = (t) => String(t || "").replace(/Document partagé avec l'autorisation de \S+/gi, "").replace(/\s*Source\s*:\s*\S+/gi, "").replace(/\s{2,}/g, " ").trim();
+
 /* ---------- Un document à la fois : récupérer, réparer, renvoyer ---------- */
 const UA = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36" };
 let ok = 0, inchanges = 0, erreurs = 0, depuisOrigine = 0, repares = 0;
@@ -100,10 +103,14 @@ for (const [i, s] of concernes.entries()) {
     // 2. Signature et logo Fomesoutra -> unidev
     const r = await remplacerSignature(avant, motifs);
     const change = r.lignes || r.liens || r.logos;
+    // Provenance jamais visible sur le site : description et nom de fichier nettoyés
+    const champsPublics = {};
+    if (/autorisation de/i.test(d.description || "")) champsPublics.description = sansProvenance(d.description);
+    if (d.nomFichier && (re.test(d.nomFichier) || sansCodeDevant(d.nomFichier) !== d.nomFichier)) champsPublics.nomFichier = `${titreAReparer(d.titre) || d.titre}.pdf`.replace(/[\\/:*?"<>|]/g, " ");
     if (!change && !original && !nettoye) {
       inchanges++;
-      if (!d.signatureRemplacee) await s.ref.update({ signatureRemplacee: true });
-      continue; // rien à faire sur ce document
+      if (!d.signatureRemplacee || Object.keys(champsPublics).length) await s.ref.update({ signatureRemplacee: true, ...champsPublics });
+      continue; // rien à faire sur le fichier
     }
     console.log(`[${i + 1}/${concernes.length}] ${d.titre}`);
     let pdf = change ? r.buffer : avant;
@@ -134,7 +141,7 @@ for (const [i, s] of concernes.entries()) {
     const apercuDuFichier = !d.imageUrl || (String(d.imageUrl).includes("/image/upload/") && String(d.imageUrl).includes("pg_1"));
     const titrePropre = titreAReparer(d.titre);
     if (titrePropre) d.titre = titrePropre;
-    const maj = { taille: pdf.length, signatureRemplacee: true, titre: d.titre, ...(tampon ? { tampon: true } : {}), ...(imageUrl && apercuDuFichier ? { imageUrl } : {}) };
+    const maj = { ...champsPublics, taille: pdf.length, signatureRemplacee: true, titre: d.titre, ...(tampon ? { tampon: true } : {}), ...(imageUrl && apercuDuFichier ? { imageUrl } : {}) };
     const batch = db.batch();
     batch.update(s.ref, maj);
     batch.set(s.ref.collection("prive").doc("fichier"), { ...nouveau, auteurId: fichier.auteurId || d.auteurId });

@@ -558,6 +558,23 @@ export async function remplacerSignature(buffer, motifs, options = {}) {
     }
   }
 
+  // Propriétés cachées du PDF (titre, auteur, logiciel, mots-clés, métadonnées XMP) qui citent le site partenaire
+  let proprietes = 0;
+  try {
+    const info = doc.getInfoDict();
+    for (const k of ["Title", "Author", "Subject", "Keywords", "Creator", "Producer"]) {
+      const v = info.lookup(PDFName.of(k));
+      const t = v?.decodeText?.() ?? v?.asString?.() ?? "";
+      if (t && re.test(t)) { info.delete(PDFName.of(k)); proprietes++; }
+    }
+    const meta = doc.catalog.lookup(PDFName.of("Metadata"));
+    if (meta instanceof PDFRawStream) {
+      let xmp = ""; try { xmp = Buffer.from(decodePDFRawStream(meta).decode()).toString("utf8"); } catch { xmp = Buffer.from(meta.contents).toString("latin1"); }
+      if (re.test(xmp)) { doc.catalog.delete(PDFName.of("Metadata")); proprietes++; }
+    }
+  } catch {}
+  liens += proprietes;
+
   if (!zones.length && !liens && !tampons) return { buffer, lignes: 0, liens: 0, ignores, logos: 0 };
 
   // 4. UN SEUL remplacement par endroit : les zones qui se touchent (morceaux d'un même en-tête, logo + adresse…)

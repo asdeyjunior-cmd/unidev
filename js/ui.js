@@ -128,7 +128,6 @@ export function docCard(d, actions = "", { prix = "" } = {}) {
         <span class="ext">${esc((d.format || "").toUpperCase())}</span>
       </div>
       <h3 data-voir="${d.id}">${esc(d.titre)}</h3>
-      <button type="button" class="card-serie" data-voir="${d.id}" data-serie="${d.id}" hidden></button>
       <p class="subject">${esc(d.matiere || "")}<span class="sub-type">${d.type ? " · " + esc(d.type) : ""}</span></p>
       <div class="card-rows">
         <p class="row-ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/><path d="M22 9v6"/></svg><span>${[d.niveau, d.annee].filter(Boolean).map(esc).join(" · ") || "—"}</span></p>
@@ -136,7 +135,7 @@ export function docCard(d, actions = "", { prix = "" } = {}) {
       </div>
       <p class="meta">${meta}</p>
       ${d.universite ? `<p class="meta">${esc(d.universite)}</p>` : ""}
-      ${d.description ? `<p class="desc">${esc(d.description)}</p>` : ""}
+      ${descriptionPublique(d.description) ? `<p class="desc">${esc(descriptionPublique(d.description))}</p>` : ""}
       <button type="button" class="voir-plus" data-voir="${d.id}">Voir plus</button>
       ${prix ? `<p class="card-prix">${esc(prix)}</p>` : ""}
       <p class="card-pills">${d.niveau ? `<span class="pill-ok">${esc(d.niveau)}</span>` : ""}${d.type ? `<span class="pill-alt">${esc(d.type)}</span>` : ""}</p>
@@ -236,6 +235,14 @@ const TYPES_MIME = { pdf: "application/pdf", doc: "application/msword", docx: "a
  * Affiche la fenêtre qui permet d'ouvrir ou de télécharger le document.
  * info = { fileUrl, parts } (getFileInfo) ; d = fiche du document (titre, nomFichier, format)
  */
+/** Description sans la provenance des documents de sites partenaires (« autorisation de … », « Source : … »).
+ *  Les auteurs et licences des documents libres (HAL, Wikiversité…) restent affichés : la loi l'exige. */
+export function descriptionPublique(t) {
+  const d = String(t || "");
+  if (!/autorisation de/i.test(d)) return d;
+  return d.replace(/Document partagé avec l'autorisation de \S+/gi, "").replace(/\s*Source\s*:\s*\S+/gi, "").replace(/\s{2,}/g, " ").trim();
+}
+
 /** Enregistre un fichier sur l'appareil (dossier Téléchargements du téléphone) */
 export function enregistrer(blob, nom) {
   const url = URL.createObjectURL(blob);
@@ -250,7 +257,7 @@ export function enregistrer(blob, nom) {
 export const typeMime = (ext) => TYPES_MIME[String(ext || "").toLowerCase()] || "application/octet-stream";
 export const nomFichier = (d) => {
   const ext = (d.format || "pdf").toLowerCase();
-  const base = d.nomFichier || d.titre || "document";
+  const base = d.titre || "document"; // le titre, pas le nom de fichier d'origine (qui peut trahir la provenance)
   return new RegExp(`\\.${ext}$`, "i").test(base) ? base : `${base}.${ext}`;
 };
 
@@ -369,7 +376,7 @@ document.addEventListener("click", (e) => {
     ${d.imageUrl ? `<img class="fiche-img" src="${esc(thumb(d.imageUrl, 800, 450))}" alt="" />` : ""}
     <p class="card-cat" style="margin:12px 0 2px">${esc(d.filiere || d.type || "")}</p>
     <h3>${esc(d.titre)}</h3>
-    ${d.description ? `<p class="fiche-desc">${esc(d.description)}</p>` : ""}
+    ${descriptionPublique(d.description) ? `<p class="fiche-desc">${esc(descriptionPublique(d.description))}</p>` : ""}
     <div class="fiche">
       ${ligne("Matière", d.matiere)}${ligne("Type", d.type)}${ligne("Niveau", d.niveau)}${ligne("Année", d.annee)}
       ${ligne("Université / école", d.universite)}${ligne("Format", (d.format || "").toUpperCase())}
