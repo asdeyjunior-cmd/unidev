@@ -65,7 +65,7 @@ function render() {
         const free = me && (unlocked.has(d.id) || d.auteurId === me.uid);
         return docCard(d, `<button class="btn btn-sm btn-dl ${free ? "" : "btn-ink"}" data-dl="${d.id}"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span>Télécharger</span>${free ? "" : `<span class="dl-cout"> · 1 crédit</span>`}</button>`, { prix: free ? "Débloqué" : "1 crédit" });
       }).join("")
-    : done || (indexComplet && filtersActive())
+    : done || (filtersActive() && (indexComplet || pagesFiltre >= 5))
       ? `<div class="empty">${filtersActive() ? (els.filiere.value && !els.q.value.trim() ? `Pas encore de documents en ${esc(els.filiere.value)}.` : "Aucun document ne correspond à ta recherche.") : "Aucun document pour le moment."}<br><a href="publier.html">Publie le premier !</a>${filtersActive() ? `<br><a href="#" data-demande-filiere>Ta filière n'est pas sur unidev ? Dis-le nous</a>` : ""}</div>`
       : "";
   $("more").innerHTML = loading ? `<div class="loader loader-sm"></div>` : "";
@@ -144,7 +144,22 @@ async function pageDeLaSemaine() {
   return { items, cursor: rangSemaine, done: rangSemaine >= ordreSemaine.length };
 }
 
+let resteRecherche = [], pagesFiltre = 0; // résultats d'un filtre pas encore affichés (catalogue complet en mémoire)
 async function loadPage() {
+  // Filtre ou recherche avec le catalogue complet : on affiche la suite des résultats trouvés,
+  // sans jamais parcourir toute la base (sinon chargement sans fin + milliers de lectures)
+  if (filtersActive() && indexComplet) {
+    if (loading || !resteRecherche.length) return;
+    loading = true; render();
+    try {
+      const deja = new Set(docs.map((x) => x.id));
+      const extra = await completer(resteRecherche.splice(0, PAGE).filter((x) => !deja.has(x.id)));
+      docs.push(...extra);
+    } catch (e) { console.error(e); }
+    loading = false; render();
+    return;
+  }
+  if (filtersActive() && pagesFiltre >= 5) return; // catalogue indisponible : on n'insiste pas
   if (loading || done) return;
   loading = true;
   render();
@@ -171,7 +186,8 @@ async function loadPage() {
   firstLoad = false;
   render();
   // Avec un filtre ou une recherche, on continue tant qu'il y a moins de 8 résultats visibles
-  if (!done && filtersActive() && !indexComplet && visibleDocs().length < PAGE) loadPage();
+  // (5 pages au plus : on ne parcourt jamais toute la base pour un filtre)
+  if (!done && filtersActive() && !indexComplet && visibleDocs().length < PAGE && ++pagesFiltre < 5) loadPage();
   // Si la page n'est pas encore remplie, on charge la suite
   // Le bas de la liste est encore visible (écran large, page courte) : on charge la suite tout de suite
   else if (!done && procheDuBas()) loadPage();
@@ -393,14 +409,18 @@ async function appliquerRecherche({ defiler = true } = {}) {
     && (!els.type.value || d.type === els.type.value)
     && (!els.niveau.value || d.niveau === els.niveau.value)
     && (!els.filiere.value || d.filiere === els.filiere.value));
+  resteRecherche = []; pagesFiltre = 0;
   if (filtersActive()) {
     const deja = new Set(docs.map((x) => x.id));
-    const extra = await completer(trouves.filter((x) => !deja.has(x.id)));
+    const nouveaux = trouves.filter((x) => !deja.has(x.id));
+    // Premiers résultats tout de suite ; la suite se charge en descendant
+    const extra = await completer(nouveaux.slice(0, PAGE * 2));
+    resteRecherche = nouveaux.slice(PAGE * 2);
     docs.push(...extra);
     updateFilieres(extra);
   }
   render();
-  if (!done && filtersActive() && !indexComplet && visibleDocs().length < PAGE) loadPage();
+  if (!done && filtersActive() && !indexComplet && visibleDocs().length < PAGE && ++pagesFiltre < 5) loadPage();
   if (defiler) els.list.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
