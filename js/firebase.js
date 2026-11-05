@@ -283,7 +283,7 @@ export async function listPublishedPage(sort = "recent", cursor = null, size = 8
   };
 }
 export async function listByStatus(statut) {
-  return mapSnap(await getDocs(query(docsCol, where("statut", "==", statut), limit(500))));
+  return mapSnap(await getDocs(query(docsCol, where("statut", "==", statut), limit(statut === "publie" ? 60 : 150))));
 }
 export async function listMine(uid) {
   return mapSnap(await getDocs(query(docsCol, where("auteurId", "==", uid), limit(200))));
@@ -320,9 +320,23 @@ export async function getFileInfo(id) {
 }
 
 /** Ids des documents déjà débloqués par l'utilisateur */
+// Documents débloqués : gardés 30 minutes dans l'onglet (sinon 1 lecture par document débloqué à chaque page)
+const cleAchats = (uid) => `unidev-achats-${uid}`;
 export async function listUnlocked(uid) {
+  try {
+    const m = JSON.parse(sessionStorage.getItem(cleAchats(uid)) || "null");
+    if (m && Date.now() - m.t < 30 * 60 * 1000) return new Set(m.ids);
+  } catch {}
   const snap = await getDocs(collection(db, "users", uid, "achats"));
-  return new Set(snap.docs.map((d) => d.id));
+  const ids = snap.docs.map((d) => d.id);
+  try { sessionStorage.setItem(cleAchats(uid), JSON.stringify({ t: Date.now(), ids })); } catch {}
+  return new Set(ids);
+}
+function retenirAchat(uid, docId) {
+  try {
+    const m = JSON.parse(sessionStorage.getItem(cleAchats(uid)) || "null");
+    if (m) { m.ids = [...new Set([...m.ids, docId])]; sessionStorage.setItem(cleAchats(uid), JSON.stringify(m)); }
+  } catch {}
 }
 
 /** Dépense 1 crédit pour débloquer définitivement un document */
@@ -332,6 +346,7 @@ export async function unlockDocument(uid, docId) {
   batch.update(doc(db, "users", uid), { credits: increment(-1), dernierAchat: docId });
   batch.update(doc(db, "documents", docId), { telechargements: increment(1) });
   await batch.commit();
+  retenirAchat(uid, docId);
 }
 
 /** Admin : publie le document et crédite l'auteur (une seule fois) */
@@ -409,7 +424,7 @@ export async function demanderFiliere({ filiere, niveau = "", universite = "", c
 }
 /** Admin : demandes regroupées par filière (la plus demandée en premier) */
 export async function listDemandes() {
-  const snap = await getDocs(query(demandesCol, orderBy("createdAt", "desc"), limit(500)));
+  const snap = await getDocs(query(demandesCol, orderBy("createdAt", "desc"), limit(150)));
   const groupes = new Map();
   snap.docs.forEach((s) => {
     const d = { id: s.id, ...s.data() };
@@ -505,9 +520,9 @@ export async function confirmPaiement(p) {
 export function watchEnAttente(cb) {
   const etat = { pay: null, doc: null };
   const envoyer = () => { if (etat.pay && etat.doc) cb(etat); };
-  const u1 = onSnapshot(query(paiementsCol, where("statut", "==", "en_attente"), limit(300)),
+  const u1 = onSnapshot(query(paiementsCol, where("statut", "==", "en_attente"), limit(100)),
     (s) => { etat.pay = mapSnap(s); envoyer(); }, () => {});
-  const u2 = onSnapshot(query(docsCol, where("statut", "==", "en_attente"), limit(300)),
+  const u2 = onSnapshot(query(docsCol, where("statut", "==", "en_attente"), limit(100)),
     (s) => { etat.doc = mapSnap(s); envoyer(); }, () => {});
   return () => { u1(); u2(); };
 }

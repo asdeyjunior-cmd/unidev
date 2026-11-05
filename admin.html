@@ -142,7 +142,6 @@
       $("login-zone").classList.add("hidden");
       $("zone").classList.remove("hidden");
       load(); suivre();
-      listDemandes().then((g) => { const n = g.reduce((a, x) => a + x.demandes.length, 0); $("n-fil").textContent = n ? `(${n})` : ""; }).catch(() => {});
     });
 
     /* ---------- Notifications : suivi en direct de ce qui attend ---------- */
@@ -250,11 +249,8 @@
         </article>`;
     }
 
-    async function counts() {
-      const [d, p] = await Promise.all([listByStatus("en_attente"), listPaiements("en_attente")]).catch(() => [[], []]);
-      $("n-doc").textContent = d.length ? `(${d.length})` : "";
-      $("n-pay").textContent = p.length ? `(${p.length})` : "";
-    }
+    // Les compteurs sont tenus à jour par le suivi en direct (watchEnAttente) : pas de lecture en plus
+    function counts() {}
 
     /* ---------- Filières demandées ---------- */
     let groupes = [];
@@ -319,6 +315,7 @@
     };
 
     $("rebuild").onclick = async (e) => {
+      if (!confirm("Reconstruire l'index lit TOUS les documents publiés (1 lecture par document, sur ton quota du jour). L'index se met déjà à jour tout seul à chaque publication. Continuer ?")) return;
       e.target.disabled = true;
       $("rebuild-etat").textContent = "Mise à jour…";
       try { const n = await rebuildIndex(); $("rebuild-etat").textContent = `${n} document(s) indexé(s).`; }
@@ -327,7 +324,7 @@
     };
 
     $("harmo").onclick = async (e) => {
-      if (!confirm("Corriger l'orthographe des filières de tous les documents (majuscules, accents, fautes) ?")) return;
+      if (!confirm("Corriger les filières lit TOUS les documents (1 lecture par document, sur ton quota du jour). Continuer ?")) return;
       e.target.disabled = true;
       $("rebuild-etat").textContent = "Correction des filières…";
       try { const n = await harmoniserFilieres(); $("rebuild-etat").textContent = `${n} document(s) corrigé(s), index mis à jour.`; load(); }

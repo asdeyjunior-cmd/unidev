@@ -137,7 +137,7 @@ async function pageDeLaSemaine() {
   }
   const tranche = ordreSemaine.slice(rangSemaine, rangSemaine + PAGE);
   rangSemaine += tranche.length;
-  const items = await completer(tranche); // fiches complètes : autant de lectures qu'avant
+  const items = tranche; // fiches résumées de l'index : AUCUNE lecture Firestore pour parcourir la liste
   return { items, cursor: rangSemaine, done: rangSemaine >= ordreSemaine.length };
 }
 
@@ -150,7 +150,7 @@ async function loadPage() {
     loading = true; render();
     try {
       const deja = new Set(docs.map((x) => x.id));
-      const extra = await completer(resteRecherche.splice(0, PAGE).filter((x) => !deja.has(x.id)));
+      const extra = resteRecherche.splice(0, PAGE).filter((x) => !deja.has(x.id)); // résumés : aucune lecture
       docs.push(...extra);
     } catch (e) { console.error(e); }
     loading = false; render();
@@ -411,7 +411,7 @@ async function appliquerRecherche({ defiler = true } = {}) {
     const deja = new Set(docs.map((x) => x.id));
     const nouveaux = trouves.filter((x) => !deja.has(x.id));
     // Premiers résultats tout de suite ; la suite se charge en descendant
-    const extra = await completer(nouveaux.slice(0, PAGE * 2));
+    const extra = nouveaux.slice(0, PAGE * 2); // résumés de l'index : aucune lecture
     resteRecherche = nouveaux.slice(PAGE * 2);
     docs.push(...extra);
     updateFilieres(extra);

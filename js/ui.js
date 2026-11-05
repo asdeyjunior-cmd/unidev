@@ -1,4 +1,4 @@
-import { watchUser, logout, cachedProfile } from "./firebase.js";
+import { watchUser, logout, cachedProfile, getDocsByIds } from "./firebase.js";
 import { thumb, assembleParts, lienSur, recupererFichier } from "./cloudinary.js";
 import { serieDe } from "./series.js";
 
@@ -131,7 +131,7 @@ export function docCard(d, actions = "", { prix = "" } = {}) {
       <p class="subject">${esc(d.matiere || "")}<span class="sub-type">${d.type ? " · " + esc(d.type) : ""}</span></p>
       <div class="card-rows">
         <p class="row-ic"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/><path d="M22 9v6"/></svg><span>${[d.niveau, d.annee].filter(Boolean).map(esc).join(" · ") || "—"}</span></p>
-        <p class="row-ic row-split"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>${formatSize(d.taille)}</span><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>${d.telechargements || 0} téléchargement${(d.telechargements || 0) > 1 ? "s" : ""}</span></p>
+        ${d.taille === undefined ? "" : `<p class="row-ic row-split"><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/></svg>${formatSize(d.taille)}</span><span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>${d.telechargements || 0} téléchargement${(d.telechargements || 0) > 1 ? "s" : ""}</span></p>`}
       </div>
       <p class="meta">${meta}</p>
       ${d.universite ? `<p class="meta">${esc(d.universite)}</p>` : ""}
@@ -140,7 +140,7 @@ export function docCard(d, actions = "", { prix = "" } = {}) {
       ${prix ? `<p class="card-prix">${esc(prix)}</p>` : ""}
       <p class="card-pills">${d.niveau ? `<span class="pill-ok">${esc(d.niveau)}</span>` : ""}${d.type ? `<span class="pill-alt">${esc(d.type)}</span>` : ""}</p>
       <div class="card-foot">
-        <span class="muted">${formatSize(d.taille)} · ${d.telechargements || 0} téléch.</span>
+        <span class="muted">${d.taille === undefined ? esc((d.format || "").toUpperCase()) : `${formatSize(d.taille)} · ${d.telechargements || 0} téléch.`}</span>
         ${actions}
       </div>
     </article>`;
@@ -365,11 +365,13 @@ try {
 } catch {}
 
 /* ---------- « Voir plus » : fiche détaillée d'un document ---------- */
-document.addEventListener("click", (e) => {
+document.addEventListener("click", async (e) => {
   const b = e.target.closest?.("[data-voir]");
   if (!b) return;
-  const d = fichesCartes.get(b.dataset.voir);
+  let d = fichesCartes.get(b.dataset.voir);
   if (!d) return;
+  // Carte faite à partir du résumé de l'index : la fiche complète (taille, téléchargements, description) est lue à la demande
+  if (d.partiel) { try { const [c] = await getDocsByIds([d.id]); if (c) { d = c; fichesCartes.set(c.id, c); } } catch {} }
   const ligne = (k, v) => (v ? `<div class="fiche-l"><span>${k}</span><b>${esc(v)}</b></div>` : "");
   const btn = document.querySelector(`[data-dl="${CSS.escape(d.id)}"]`);
   const m = modal(`
