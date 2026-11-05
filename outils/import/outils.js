@@ -34,6 +34,9 @@ export function normaliserType(v) {
 /** Nom de fichier → titre lisible */
 /** Retire le code ajouté devant le nom par certains sites (ex. « 612a0b117cf71sujet… », « 5d1254cf6corrige… ») */
 export function sansCodeDevant(t) {
+  // Reste d'un code collé devant un mot connu (« B77eepreuve commune… » -> « epreuve commune… »)
+  const court = String(t || "").match(/^([0-9a-f]*\d[0-9a-f]*?\d[0-9a-f]*?)(epreuve|épreuve|sujet|corrig|examen|cours|devoir|td|tp|bts|exercice|correction|memoire|mémoire|rapport|composition|technique|introduction|chapitre|module|fiche)/i);
+  if (court && court[1].length <= 7) return String(t).slice(court[1].length);
   const m = String(t || "").match(/^[0-9a-f]+/i);
   if (!m || m[0].length < 8) return t;
   const run = m[0];

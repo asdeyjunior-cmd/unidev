@@ -210,6 +210,7 @@ for (const d of docs) { if (!parFiliere.has(d.filiere)) parFiliere.set(d.filiere
 const filieres = [...parFiliere.keys()].sort((a, b) => (a === "Autre") - (b === "Autre") || a.localeCompare(b, "fr"));
 const corpsIndex = `
       <h1 class="page-title">Tous les documents</h1>
+      <a class="btn btn-block td-retour" href="../index.html" style="margin:0 0 16px">Voir les documents avec leurs images</a>
       <p class="muted" style="margin-bottom:18px">${docs.length} cours, TD, TP, examens, corrigés et mémoires classés par filière.</p>
       <nav class="fd-filieres">${filieres.map((f) => `<a href="#${esc(slug(f))}">${esc(f)} <span>${parFiliere.get(f).length}</span></a>`).join("")}</nav>
       ${filieres.map((f) => `<section class="fd-section" id="${esc(slug(f))}">
