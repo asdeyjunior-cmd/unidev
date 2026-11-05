@@ -7726,5 +7726,125 @@
   },
   "site:https://www.fomesoutra.com/cours/superieur/cours-systeme-informatique-et-genie-logiciel-sigl-esatic/reseaux/15028-cours-rsx-sigl2-chap-1-2/file": {
     "doublon": true
+  },
+  "wiki:fr.wikiversity.org:Notions de base en génie civil": {
+    "id": "jnO5to8hUTSGhlOk9R6m",
+    "source": "https://fr.wikiversity.org/wiki/Notions_de_base_en_g%C3%A9nie_civil",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-05T21:06:09.152Z"
+  },
+  "zenodo:2547690": {
+    "id": "FPo4iR1h33Y99dKkFm8o",
+    "source": "https://doi.org/10.5281/zenodo.2547690",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:06:11.697Z"
+  },
+  "zenodo:15554997": {
+    "id": "SVAmnYbJVuWbPMd6KTjY",
+    "source": "https://doi.org/10.5281/zenodo.15554997",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:06:23.127Z"
+  },
+  "zenodo:14059420": {
+    "id": "6TpVt6o8QWnhzxwyl2tC",
+    "source": "https://doi.org/10.5281/zenodo.14059420",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:06:30.293Z"
+  },
+  "zenodo:6641600": {
+    "id": "hRCXNPNTCX708OVzEyJt",
+    "source": "https://doi.org/10.5281/zenodo.6641600",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:06:31.847Z"
+  },
+  "zenodo:14534934": {
+    "id": "9uzbC13VqfoMDOZguE9a",
+    "source": "https://doi.org/10.5281/zenodo.14534934",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:06:39.958Z"
+  },
+  "zenodo:19005020": {
+    "id": "16NGcFGzrNLgldSjvJTe",
+    "source": "https://doi.org/10.5281/zenodo.19005020",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:06:45.562Z"
+  },
+  "zenodo:20786733": {
+    "id": "odY6RPphFYR9Ox6GaWq8",
+    "source": "https://doi.org/10.5281/zenodo.20786733",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:06:51.249Z"
+  },
+  "zenodo:19385526": {
+    "id": "UggMcPDgCnJj6cP1U2zE",
+    "source": "https://doi.org/10.5281/zenodo.19385526",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:06:54.142Z"
+  },
+  "zenodo:23620537": {
+    "id": "SdfBIxJlnEnrZjNHUWpN",
+    "source": "https://doi.org/10.5281/zenodo.23620537",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:06:58.875Z"
+  },
+  "zenodo:23382856": {
+    "id": "OeBpi8OdI8KHJnoUHcS7",
+    "source": "https://doi.org/10.5281/zenodo.23382856",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:07:02.899Z"
+  },
+  "zenodo:23382293": {
+    "id": "BPsqFAUS6rTA9rxqG9IP",
+    "source": "https://doi.org/10.5281/zenodo.23382293",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:07:06.454Z"
+  },
+  "zenodo:14925678": {
+    "id": "J3lHlDuc3Itb9GddTfFs",
+    "source": "https://doi.org/10.5281/zenodo.14925678",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:07:10.301Z"
+  },
+  "zenodo:7751885": {
+    "id": "brNIhmAAHGdfp2tAbOJP",
+    "source": "https://doi.org/10.5281/zenodo.7751885",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:07:13.071Z"
+  },
+  "zenodo:20506956": {
+    "id": "zEZjXf87T7VIgPcfSNVk",
+    "source": "https://doi.org/10.5281/zenodo.20506956",
+    "licence": "CC BY-SA",
+    "date": "2026-11-05T21:07:15.512Z"
+  },
+  "zenodo:5449397": {
+    "id": "u0rf4Mom0gYgtZCUvXsA",
+    "source": "https://doi.org/10.5281/zenodo.5449397",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:07:18.722Z"
+  },
+  "zenodo:17038785": {
+    "id": "sukI2ZLKe7VtI8PgbtT4",
+    "source": "https://doi.org/10.5281/zenodo.17038785",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:07:20.501Z"
+  },
+  "zenodo:6641883": {
+    "id": "kiLcUg4Dovc9nTgmPTVA",
+    "source": "https://doi.org/10.5281/zenodo.6641883",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:07:23.993Z"
+  },
+  "zenodo:7218119": {
+    "id": "Qywsm3TZv6Eupi0eo3K1",
+    "source": "https://doi.org/10.5281/zenodo.7218119",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:07:26.271Z"
+  },
+  "zenodo:19251327": {
+    "id": "GkMhSrFCl2FdOC3rAIOR",
+    "source": "https://doi.org/10.5281/zenodo.19251327",
+    "licence": "CC BY",
+    "date": "2026-11-05T21:07:30.736Z"
   }
 }
