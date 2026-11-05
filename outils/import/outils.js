@@ -287,3 +287,13 @@ export function titreAReparer(titre) {
   const propre = titreDepuisFichier(t);
   return propre && propre !== t && propre.length >= 3 ? propre : null;
 }
+
+/** Mots à chercher pour une filière : son nom puis ses matières (ex. Finance-Comptabilité -> Comptabilité générale, Fiscalité…) */
+export function motsPourFiliere(filiere) {
+  const cle = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  const f = cle(filiere);
+  const matieres = MOTS_FILIERES.filter(([, fil]) => cle(fil) === f).map(([, , m]) => m).filter(Boolean);
+  const mots = [String(filiere).replace(/-/g, " "), ...matieres];
+  const vus = new Set();
+  return mots.filter((m) => { const k = cle(m); if (!k || vus.has(k)) return false; vus.add(k); return true; }).slice(0, 10);
+}

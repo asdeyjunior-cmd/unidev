@@ -51,8 +51,9 @@ echo    6 - Des supports de cours libres de Zenodo
 echo    7 - RECHERCHER PARTOUT ^(HAL + Wikiversite + Wikilivres + Zenodo^)
 echo    8 - Des ROMANS du domaine public ^(Wikisource : Hugo, Zola, Balzac, Dumas...^)
 echo    9 - Les documents d'un SITE qui t'a donne son accord ^(ex : Fomesoutra^)
+echo   10 - Remplir une FILIERE ^(cherche ses cours dans toutes les sources libres^)
 echo.
-set /p CHOIX=  Ton choix (1 a 9) :
+set /p CHOIX=  Ton choix (1 a 10) :
 
 if "%CHOIX%"=="2" goto hal
 if "%CHOIX%"=="3" goto ranger
@@ -62,6 +63,7 @@ if "%CHOIX%"=="6" ( set SRC=zenodo& goto source )
 if "%CHOIX%"=="7" ( set SRC=tout& goto source )
 if "%CHOIX%"=="8" ( set SRC=romans& goto source )
 if "%CHOIX%"=="9" goto site
+if "%CHOIX%"=="10" goto filiere
 
 echo.
 echo  Glisse ton dossier de documents dans cette fenetre, puis appuie sur Entree :
@@ -178,3 +180,12 @@ echo.
 call node importer.js site --url "%URL%" --profondeur %PROF% --max %MAX% --remplacer "%REMP%"
 echo.
 pause
+
+:filiere
+echo.
+set /p FIL=  Filiere a remplir (ex : Finance-Comptabilite) : 
+set /p MAXF=  Nombre de documents au total (ex : 50) : 
+if "%MAXF%"=="" set MAXF=50
+node importer.js filiere --filiere "%FIL%" --max %MAXF%
+pause
+exit /b

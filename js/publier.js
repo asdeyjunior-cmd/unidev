@@ -1,7 +1,7 @@
 import { createDocument, listMine, getSearchIndex, filieresPretes } from "./firebase.js";
 import { toutesLesFilieres, canonFiliere } from "./filieres.js";
 import { uploadFile, uploadDocument } from "./cloudinary.js";
-import { photosEnPdf, photoLegere } from "./photos-pdf.js";
+import { photosEnPdf, photoLegere, couvertureAuto, estImage, ACCEPT_IMAGES } from "./photos-pdf.js";
 import { initLayout, docCard, fillSelect, toast, esc } from "./ui.js";
 import { CATEGORIES, MAX_FILE_MB, ALLOWED_EXT, CREDITS_PAR_PUBLICATION, MAX_IMAGE_MB, IMAGE_EXT } from "./config.js";
 
@@ -13,6 +13,7 @@ let file = null;
 let cover = null;
 let photos = [];       // pages prises en photo (transformées en PDF à l'envoi)
 let coverAuto = false; // vrai si l'image de couverture est la 1re photo
+let coverAConvertir = false; // image choisie dans un format quelconque : convertie en JPEG à l'envoi
 
 fillSelect($("type"), CATEGORIES.types, "Choisir…");
 fillSelect($("niveau"), CATEGORIES.niveaux, "Choisir…");
@@ -91,16 +92,16 @@ drop.ondrop = (e) => { e.preventDefault(); drop.classList.remove("over"); pick(e
 /* ---------- Image de couverture ---------- */
 function pickCover(f) {
   if (!f) return;
-  const ext = f.name.split(".").pop().toLowerCase();
-  if (!IMAGE_EXT.includes(ext)) return toast("L'image doit être en JPG, PNG ou WEBP.", "err");
-  if (f.size > MAX_IMAGE_MB * 1048576) return toast(`Image trop lourde (max ${MAX_IMAGE_MB} Mo).`, "err");
-  cover = f; coverAuto = false;
+  if (!estImage(f)) return toast("Choisis une image (photo, capture…).", "err");
+  if (f.size > 25 * 1048576) return toast("Image trop lourde (25 Mo maximum).", "err");
+  cover = f; coverAuto = false; coverAConvertir = true; // tout format : convertie en JPEG léger à l'envoi
   const img = document.createElement("img");
   img.alt = "Aperçu";
   img.src = URL.createObjectURL(f);
   $("cover-preview").replaceChildren(img);
   $("cover-btn").textContent = "Changer l'image";
 }
+$("cover").accept = ACCEPT_IMAGES; $("photos").accept = ACCEPT_IMAGES;
 $("cover-btn").onclick = () => $("cover").click();
 $("cover-preview").onclick = () => $("cover").click();
 $("cover").onchange = (e) => pickCover(e.target.files[0]);
@@ -140,7 +141,7 @@ function afficherPhotos() {
   }
 }
 function ajouterPhotos(liste) {
-  const ok = [...liste].filter((f) => f.type.startsWith("image/"));
+  const ok = [...liste].filter(estImage); // JPG, PNG, HEIC (iPhone), TIFF, GIF, BMP, AVIF, WEBP…
   if (ok.length < liste.length) toast("Seules les images sont acceptées ici.", "err");
   if (photos.length + ok.length > 40) return toast("40 pages maximum.", "err");
   photos.push(...ok);
@@ -163,7 +164,7 @@ $("photos-liste").onclick = (e) => {
 $("form").onsubmit = async (e) => {
   e.preventDefault();
   if (!file && !photos.length) return toast("Choisis un fichier ou prends tes pages en photo.", "err");
-  if (!cover) return toast("Ajoute l'image du document.", "err");
+  // Image facultative : sans image, on prend la 1re page du PDF (ou une couverture verte avec le titre)
   const suite = suiteChoisie();
   if (!suite.ok) return toast("« Suite de » : choisis le document précédent dans la liste, ou laisse vide.", "err");
 
@@ -179,7 +180,9 @@ $("form").onsubmit = async (e) => {
       file = await photosEnPdf(photos, $("titre").value.trim() || "devoir", (p) => setBar(p * 0.1));
       if (file.size > MAX_FILE_MB * 1048576) throw new Error(`PDF trop lourd (max ${MAX_FILE_MB} Mo). Retire quelques pages.`);
     }
-    const image = coverAuto ? await photoLegere(cover) : cover;
+    let image;
+    if (cover) image = coverAuto || coverAConvertir ? await photoLegere(cover) : cover;
+    else { btn.textContent = "Création de l'image…"; image = await couvertureAuto(file, $("titre").value.trim()); }
     const img = await uploadFile(image, (p) => setBar(10 + p * 0.1), "image");
     btn.textContent = "Envoi du fichier…";
     const up = await uploadDocument(file, (p) => setBar(20 + p * 0.8));
@@ -202,8 +205,8 @@ $("form").onsubmit = async (e) => {
       auteurNom: profile?.nom || me.email,
     }, { fileUrl: up.url, publicId: up.publicId, ...(up.parts ? { parts: up.parts } : {}) });
     toast(`Document envoyé. Tu gagneras ${CREDITS_PAR_PUBLICATION} crédit dès sa validation.`);
-    $("form").reset(); $("suite-info").textContent = ""; file = null; cover = null; coverAuto = false; photos = []; afficherPhotos();
-    $("cover-aide").textContent = "Photo ou capture de la première page. JPG, PNG ou WEBP, 10 Mo max.";
+    $("form").reset(); $("suite-info").textContent = ""; file = null; cover = null; coverAuto = false; coverAConvertir = false; photos = []; afficherPhotos();
+    $("cover-aide").textContent = "Facultatif : sans image, la 1re page du document est utilisée.";
     $("cover-preview").innerHTML = "<span>Aucune image</span>";
     $("cover-btn").textContent = "Choisir une image";
     $("drop-label").textContent = "Glisse ton fichier ici ou clique pour choisir";

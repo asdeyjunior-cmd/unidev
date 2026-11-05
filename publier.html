@@ -56,19 +56,19 @@
             <span class="muted">Pas besoin de PDF : le site le crée pour toi.</span>
           </div>
           <div class="photos-liste hidden" id="photos-liste"></div>
-          <input type="file" id="photos" accept="image/*" multiple hidden />
+          <input type="file" id="photos" accept="image/*,.heic,.heif,.tif,.tiff,.jfif,.avif" multiple hidden />
         </div>
 
         <div class="field" style="margin-top:16px">
-          <label>Image du document *</label>
+          <label>Image du document <span class="muted">(facultatif)</span></label>
           <div class="cover-pick" id="cover-pick">
             <div class="cover-preview" id="cover-preview"><span>Aucune image</span></div>
             <div>
-              <p class="muted" style="margin-bottom:10px" id="cover-aide">Photo ou capture de la première page. JPG, PNG ou WEBP, 10 Mo max.</p>
+              <p class="muted" style="margin-bottom:10px" id="cover-aide">Facultatif : sans image, la 1re page du document est utilisée.</p>
               <button type="button" class="btn btn-ghost-ink btn-sm" id="cover-btn">Choisir une image</button>
             </div>
           </div>
-          <input type="file" id="cover" accept="image/jpeg,image/png,image/webp" hidden />
+          <input type="file" id="cover" accept="image/*,.heic,.heif,.tif,.tiff,.jfif,.avif" hidden />
         </div>
         <div class="progress hidden" id="progress"><div></div></div>
 

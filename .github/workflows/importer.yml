@@ -8,14 +8,18 @@ on:
       source:
         description: "Où chercher"
         type: choice
-        default: tout
-        options: [tout, hal, wikiversite, wikilivres, zenodo, romans, site]
+        default: filiere
+        options: [filiere, tout, hal, wikiversite, wikilivres, zenodo, romans, site]
       recherche:
         description: "Thème, titre ou auteur (ex : comptabilité, Zola). Vide = au hasard pour les romans"
         required: false
         default: ""
+      filiere:
+        description: "Seulement pour « filiere » : la filière à remplir (ex : Finance-Comptabilité, Informatique, Marketing)"
+        required: false
+        default: ""
       max:
-        description: "Nombre maximum de documents (par site pour « tout »)"
+        description: "Nombre maximum de documents (au total pour « filiere », par site pour « tout »)"
         default: "20"
       url:
         description: "Seulement pour « site » : adresse de la page de départ (ex : une page de Fomesoutra)"
@@ -59,12 +63,14 @@ jobs:
           MAX: ${{ inputs.max }}
           URL: ${{ inputs.url }}
           PROF: ${{ inputs.profondeur }}
+          FIL: ${{ inputs.filiere }}
           REMP: ${{ inputs.remplacer }}
           NODE_OPTIONS: --max-old-space-size=5120
         run: |
           set -o pipefail
           {
           case "$SOURCE" in
+            filiere)     node importer.js filiere --filiere "$FIL" --max "$MAX" ;;
             wikiversite) node importer.js wiki --projet wikiversite --recherche "$RECHERCHE" --max "$MAX" ;;
             wikilivres)  node importer.js wiki --projet wikilivres --recherche "$RECHERCHE" --max "$MAX" ;;
             site)        node importer.js site --url "$URL" --profondeur "$PROF" --max "$MAX" --remplacer "$REMP" ;;

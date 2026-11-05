@@ -17,6 +17,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import "dotenv/config";
 import { tamponUnidev, sansModification } from "./marque.js";
+import { motsPourFiliere } from "./outils.js";
 import { comptes, choisirCompte, basculer, comptePlein } from "./stockage.js";
 import {
   TYPES, NIVEAUX, EXTENSIONS, TAILLE_MORCEAU, MAX_IMAGE_PDF, MAX_FICHIER,
@@ -51,6 +52,8 @@ const noter = (cle, valeur) => { journal[cle] = valeur; fs.writeFileSync(JOURNAL
 
 /* ---------- Connexions (seulement hors mode essai) ---------- */
 let cloudinary, db, FieldValue, ADMIN_UID;
+// Mode « filiere » : tous les documents trouvés sont rangés dans la filière demandée
+let FILIERE_FORCEE = "";
 let LOGOS = new Set(); // logos de sites partenaires reconnus par signature.js (parametres/logos)
 async function connecter() {
   if (!process.env.FIREBASE_CLE) throw new Error("Variable manquante dans .env : FIREBASE_CLE");
@@ -120,7 +123,7 @@ async function envoyerImage(chemin) {
 /** Envoie un document et crée sa fiche publiée. Renvoie l'ID Firestore. */
 async function publier(buffer, nomFichier, infos, imageChemin = null) {
   if (estDoublon(infos)) throw erreurDoublon();
-  infos = { ...infos, filiere: canonFiliere(infos.filiere) || "Autre" };
+  infos = { ...infos, filiere: canonFiliere(FILIERE_FORCEE || infos.filiere) || "Autre" };
   const ext = path.extname(nomFichier).slice(1).toLowerCase();
   // Tampon unidev en bas de chaque page (sauf licence « pas de modification »)
   let tampon = false;
@@ -277,9 +280,9 @@ async function importerDossier() {
 }
 
 /* ---------- Mode 2 : archive ouverte HAL (documents sous licence libre) ---------- */
-async function importerHal() {
-  const recherche = opt("recherche", "*");
-  const max = Number(opt("max", "200"));
+async function importerHal(rechercheImposee = null, maxImpose = null) {
+  const recherche = rechercheImposee || opt("recherche", "*");
+  const max = maxImpose || Number(opt("max", "200"));
   const types = opt("types", "LECTURE").split(",").map((t) => t.trim().toUpperCase()).filter(Boolean);
   const typeSite = { LECTURE: "Cours", MEM: "Mémoire", THESE: "Mémoire", COURSE: "Cours" };
   const champs = "halId_s,title_s,licence_s,fileMain_s,authFullName_s,producedDateY_i,keyword_s,domain_s,abstract_s,docType_s,structName_s";
@@ -338,13 +341,14 @@ async function importerHal() {
     start += docs.length;
   }
   console.log(`\nTerminé : ${ok} importé(s), ${sautes} déjà présent(s), ${refusees} écarté(s) (licence non libre ou sans fichier), ${erreurs} erreur(s).${ESSAI ? " (mode essai : rien n'a été envoyé)" : ""}`);
+  return ok;
 }
 
 /* ---------- Modes 3 et 4 : Wikiversité / Wikilivres et Zenodo ---------- */
-async function importerSource(nom, generateur, max) {
+async function importerSource(nom, generateur, max, rechercheAffichee = null) {
   let ok = 0, erreurs = 0, doublons = 0;
   const ecartes = {};
-  console.log(`${nom} : ${mode === "site" ? `page de départ ${opt("url")}` : `recherche « ${opt("recherche", "cours")} »`} · ${max} documents au maximum\n`);
+  console.log(`${nom} : ${mode === "site" ? `page de départ ${opt("url")}` : `recherche « ${rechercheAffichee || opt("recherche", "cours")} »`} · ${max} documents au maximum\n`);
   const it = generateur({ deja: (cle) => !!journal[cle], onEcarte: (raison) => (ecartes[raison] = (ecartes[raison] || 0) + 1) });
   try {
   for await (const d of it) {
@@ -365,6 +369,7 @@ async function importerSource(nom, generateur, max) {
   } catch (e) { console.log(`\nArrêt du parcours (${e.message}) : les documents déjà importés sont gardés.`); }
   const ec = Object.entries(ecartes).map(([k, v]) => `${v} ${k}`).join(", ");
   console.log(`\nTerminé : ${ok} ${ESSAI ? "trouvé(s)" : "importé(s)"}, ${doublons} doublon(s) sauté(s), ${erreurs} erreur(s).${ec ? ` Écartés : ${ec}.` : ""}${ESSAI ? " (mode essai : rien n'a été envoyé)" : ""}`);
+  return ok;
 }
 
 /* ---------- Lancement ---------- */
@@ -374,6 +379,33 @@ try {
   if (!ESSAI) await connecter();
   if (mode === "dossier") await importerDossier();
   else if (mode === "hal") await importerHal();
+  else if (mode === "filiere") {
+    // Une filière -> on cherche son nom et ses matières dans toutes les sources libres, jusqu'au nombre demandé
+    const { coursWiki, coursZenodo } = await import("./sources.js");
+    const filiere = canonFiliere(opt("filiere", "")) || opt("filiere", "");
+    if (!filiere) throw new Error('Indique la filière : --filiere "Finance-Comptabilité"');
+    FILIERE_FORCEE = filiere;
+    const total = Number(opt("max", "50"));
+    const mots = motsPourFiliere(filiere);
+    console.log(`Filière « ${filiere} » : recherche de ${mots.join(", ")}\n${total} documents au maximum, toutes sources confondues.\n`);
+    let faits = 0;
+    const reste = () => Math.max(0, total - faits);
+    for (const mot of mots) {
+      if (!reste()) break;
+      const sources = [
+        ["HAL", () => importerHal(mot, reste())],
+        ["Wikiversité", () => importerSource("Wikiversité", (o) => coursWiki({ projet: "wikiversite", recherche: mot, max: reste(), ...o }), reste(), mot)],
+        ["Wikilivres", () => importerSource("Wikilivres", (o) => coursWiki({ projet: "wikilivres", recherche: mot, max: reste(), ...o }), reste(), mot)],
+        ["Zenodo", () => importerSource("Zenodo", (o) => coursZenodo({ recherche: mot, max: reste(), types: ["lesson", "presentation"], essai: ESSAI, ...o }), reste(), mot)],
+      ];
+      for (const [nom, lancer] of sources) {
+        if (!reste()) break;
+        console.log(`\n========== ${nom} · « ${mot} » ==========`);
+        try { faits += (await lancer()) || 0; } catch (e) { console.log(`${nom} indisponible : ${e.message}`); }
+      }
+    }
+    console.log(`\n=== Filière « ${filiere} » : ${faits} document(s) ${ESSAI ? "trouvé(s)" : "importé(s)"} au total ===`);
+  }
   else if (mode === "tout") {
     // Recherche partout : chaque source à son tour ; une source en panne n'arrête pas les autres
     const { coursWiki, coursZenodo } = await import("./sources.js");
