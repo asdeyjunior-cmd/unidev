@@ -15,7 +15,7 @@ on:
         required: false
         default: ""
       filiere:
-        description: "Seulement pour « filiere » : la filière à remplir (ex : Finance-Comptabilité, Informatique, Marketing)"
+        description: "Seulement pour « filiere » : la filière à remplir (ex : Finance-Comptabilité). Vide = toutes les filières"
         required: false
         default: ""
       max:

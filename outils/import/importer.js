@@ -17,7 +17,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import "dotenv/config";
 import { tamponUnidev, sansModification } from "./marque.js";
-import { motsPourFiliere } from "./outils.js";
+import { motsPourFiliere, FILIERES } from "./outils.js";
 import { comptes, choisirCompte, basculer, comptePlein } from "./stockage.js";
 import {
   TYPES, NIVEAUX, EXTENSIONS, TAILLE_MORCEAU, MAX_IMAGE_PDF, MAX_FICHIER,
@@ -33,8 +33,9 @@ const opt = (nom, def = null) => { const i = args.indexOf(`--${nom}`); return i 
 const ESSAI = args.includes("--essai");
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
-if (!["dossier", "hal", "wiki", "zenodo", "tout", "romans", "site"].includes(mode)) {
+if (!["dossier", "hal", "wiki", "zenodo", "tout", "filiere", "romans", "site"].includes(mode)) {
   console.log(`Utilisation :
+  node importer.js filiere --filiere "Finance-Comptabilité" [--max 50] [--essai]   (vide = toutes les filières)
   node importer.js dossier <chemin> [--csv infos.csv] [--essai]
   node importer.js hal [--recherche "mots"] [--max 500] [--types LECTURE,MEM] [--essai]
   node importer.js wiki [--projet wikiversite|wikilivres] [--recherche "mots"] [--max 50] [--essai]
@@ -382,29 +383,39 @@ try {
   else if (mode === "filiere") {
     // Une filière -> on cherche son nom et ses matières dans toutes les sources libres, jusqu'au nombre demandé
     const { coursWiki, coursZenodo } = await import("./sources.js");
-    const filiere = canonFiliere(opt("filiere", "")) || opt("filiere", "");
-    if (!filiere) throw new Error('Indique la filière : --filiere "Finance-Comptabilité"');
-    FILIERE_FORCEE = filiere;
-    const total = Number(opt("max", "50"));
-    const mots = motsPourFiliere(filiere);
-    console.log(`Filière « ${filiere} » : recherche de ${mots.join(", ")}\n${total} documents au maximum, toutes sources confondues.\n`);
-    let faits = 0;
-    const reste = () => Math.max(0, total - faits);
-    for (const mot of mots) {
-      if (!reste()) break;
-      const sources = [
-        ["HAL", () => importerHal(mot, reste())],
-        ["Wikiversité", () => importerSource("Wikiversité", (o) => coursWiki({ projet: "wikiversite", recherche: mot, max: reste(), ...o }), reste(), mot)],
-        ["Wikilivres", () => importerSource("Wikilivres", (o) => coursWiki({ projet: "wikilivres", recherche: mot, max: reste(), ...o }), reste(), mot)],
-        ["Zenodo", () => importerSource("Zenodo", (o) => coursZenodo({ recherche: mot, max: reste(), types: ["lesson", "presentation"], essai: ESSAI, ...o }), reste(), mot)],
-      ];
-      for (const [nom, lancer] of sources) {
+    const demandee = String(opt("filiere", "") || "").trim();
+    const total = Math.max(1, Number(opt("max", "50")) || 50);
+    // Filière vide : toutes les filières connues, chacune sa part
+    const liste = demandee ? [canonFiliere(demandee) || demandee] : FILIERES;
+    const part = demandee ? total : Math.max(2, Math.ceil(total / liste.length));
+    if (!demandee) console.log(`Aucune filière indiquée : toutes les filières (${liste.length}), ${part} document(s) chacune.\n`);
+    let grandTotal = 0;
+    for (const filiere of liste) {
+      if (grandTotal >= total) break;
+      FILIERE_FORCEE = filiere;
+      const voulu = Math.min(part, total - grandTotal);
+      const mots = motsPourFiliere(filiere);
+      console.log(`\n##### Filière « ${filiere} » : ${mots.join(", ")} (${voulu} au maximum)`);
+      let faits = 0;
+      const reste = () => Math.max(0, voulu - faits);
+      for (const mot of mots) {
         if (!reste()) break;
-        console.log(`\n========== ${nom} · « ${mot} » ==========`);
-        try { faits += (await lancer()) || 0; } catch (e) { console.log(`${nom} indisponible : ${e.message}`); }
+        const sources = [
+          ["HAL", () => importerHal(mot, reste())],
+          ["Wikiversité", () => importerSource("Wikiversité", (o) => coursWiki({ projet: "wikiversite", recherche: mot, max: reste(), ...o }), reste(), mot)],
+          ["Wikilivres", () => importerSource("Wikilivres", (o) => coursWiki({ projet: "wikilivres", recherche: mot, max: reste(), ...o }), reste(), mot)],
+          ["Zenodo", () => importerSource("Zenodo", (o) => coursZenodo({ recherche: mot, max: reste(), types: ["lesson", "presentation"], essai: ESSAI, ...o }), reste(), mot)],
+        ];
+        for (const [nom, lancer] of sources) {
+          if (!reste()) break;
+          console.log(`\n========== ${nom} · « ${mot} » ==========`);
+          try { faits += (await lancer()) || 0; } catch (e) { console.log(`${nom} indisponible : ${e.message}`); }
+        }
       }
+      grandTotal += faits;
+      console.log(`=== Filière « ${filiere} » : ${faits} document(s) ${ESSAI ? "trouvé(s)" : "importé(s)"} ===`);
     }
-    console.log(`\n=== Filière « ${filiere} » : ${faits} document(s) ${ESSAI ? "trouvé(s)" : "importé(s)"} au total ===`);
+    console.log(`\n=== Terminé : ${grandTotal} document(s) ${ESSAI ? "trouvé(s)" : "importé(s)"} au total ===`);
   }
   else if (mode === "tout") {
     // Recherche partout : chaque source à son tour ; une source en panne n'arrête pas les autres
@@ -446,6 +457,6 @@ try {
   }
   process.exit(0);
 } catch (e) {
-  console.error(`\nErreur : ${e.message}`);
+  console.error(`\nERREUR : ${e.message}`);
   process.exit(1);
 }
