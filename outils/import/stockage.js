@@ -52,7 +52,8 @@ export function basculer(cloudinary) {
   return true;
 }
 
-export const comptePlein = (e) => /storage|quota|limit|exceed|plan|credits/i.test(e?.error?.message || e?.message || "");
+// Compte plein OU inutilisable (clé fausse, compte désactivé…) : on passe au suivant
+export const comptePlein = (e) => /storage|quota|limit|exceed|plan|credits|api_key|api key|signature|unauthori|forbidden|disabled|suspend|not allowed|401|403/i.test(e?.error?.message || e?.message || String(e?.http_code || ""));
 
 /** Réglages d'un compte pour une adresse de fichier (pour supprimer ou lister au bon endroit) */
 export function compteDeUrl(url) {

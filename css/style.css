@@ -1294,3 +1294,9 @@ body.lecteur-page { padding-bottom: 0; background: #eef4f0; min-height: 100dvh; 
 .modal-box .card-cat { display: block; color: var(--accent-dark); font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
 .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
 .modal-actions .btn { flex: 1; }
+
+/* ---------- Chiffres du site (Modération) ---------- */
+.stats-admin { display: flex; flex-wrap: wrap; gap: 10px; margin: 6px 0 4px; }
+.stats-admin .stat { flex: 1 1 120px; background: var(--tint); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; }
+.stats-admin .stat b { font-size: 1.5rem; color: var(--accent-dark); line-height: 1.1; }
+.stats-admin .stat span { color: var(--ink-soft); font-size: .82rem; }

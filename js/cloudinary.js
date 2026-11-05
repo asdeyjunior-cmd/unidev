@@ -27,7 +27,10 @@ export async function uploadFile(file, onProgress = () => {}, kind = "raw") {
   for (let i = 0; ; i++) {
     try { return await uploadSurCompte(ordre[i], file, onProgress, kind); }
     catch (e) {
-      if (comptePlein(e) && i + 1 < ordre.length) { comptePrefere = ordre[i + 1]; continue; }
+      // Compte plein ou mal réglé (preset absent, livraison PDF bloquée…) : on essaie le compte suivant.
+      // Seuls une coupure internet ou un fichier trop lourd arrêtent l'envoi.
+      const pasLeCompte = /Connexion impossible|trop lourd/i.test(e?.message || "");
+      if ((comptePlein(e) || !pasLeCompte) && i + 1 < ordre.length) { comptePrefere = ordre[i + 1]; continue; }
       throw e;
     }
   }

@@ -7,5 +7,8 @@
     { "collectionGroup": "documents", "queryScope": "COLLECTION",
       "fields": [ { "fieldPath": "statut", "order": "ASCENDING" }, { "fieldPath": "titre", "order": "ASCENDING" } ] }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    { "collectionGroup": "index", "fieldPath": "docs", "indexes": [] },
+    { "collectionGroup": "index", "fieldPath": "liste", "indexes": [] }
+  ]
 }

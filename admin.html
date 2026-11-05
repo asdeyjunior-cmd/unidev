@@ -19,7 +19,7 @@
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
-  <link rel="stylesheet" href="css/style.css?v=53" />
+  <link rel="stylesheet" href="css/style.css?v=54" />
   <script type="speculationrules">
     { "prefetch": [{ "source": "document", "where": { "href_matches": "/*.html" }, "eagerness": "moderate" }] }
   </script>
@@ -53,6 +53,7 @@
 
       <div id="zone" class="hidden">
         <h1 class="page-title">Modération</h1>
+        <div class="stats-admin" id="stats-admin"></div>
         <div class="tabs tabs-wrap" style="margin-top:16px">
           <button class="active" data-s="doc:en_attente">Documents à valider <span id="n-doc"></span></button>
           <button data-s="pay:en_attente">Paiements à confirmer <span id="n-pay"></span></button>
@@ -83,7 +84,7 @@
     import {
       listByStatus, setStatus, removeDocument, publishDocument, getFileInfo,
       listPaiements, confirmPaiement, rejectPaiement, login, logout, checkAdmin, rebuildIndex, watchEnAttente, harmoniserFilieres, trouverDoublons, supprimerDocuments,
-      listDemandes, ajouterFiliereOfficielle, supprimerDemandes, filieresPretes,
+      listDemandes, ajouterFiliereOfficielle, supprimerDemandes, filieresPretes, getSearchIndex,
     } from "./js/firebase.js";
     import { toutesLesFilieres } from "./js/filieres.js";
     import { initLayout, docCard, toast, esc, modal, formatDate, fileModal } from "./js/ui.js";
@@ -141,7 +142,7 @@
       if (!res.ok) return showDiagnostic(user, res);
       $("login-zone").classList.add("hidden");
       $("zone").classList.remove("hidden");
-      load(); suivre();
+      load(); suivre(); statistiques();
     });
 
     /* ---------- Notifications : suivi en direct de ce qui attend ---------- */
@@ -176,6 +177,7 @@
       if (arret) arret();
       arret = watchEnAttente(({ pay, doc }) => {
         $("n-doc").textContent = doc.length ? `(${doc.length})` : "";
+        const sa = document.getElementById("stat-attente"); if (sa) sa.textContent = doc.length;
         $("n-pay").textContent = pay.length ? `(${pay.length})` : "";
         const total = pay.length + doc.length;
         document.title = total ? `(${total}) ${titreBase}` : titreBase;
@@ -251,6 +253,18 @@
 
     // Les compteurs sont tenus à jour par le suivi en direct (watchEnAttente) : pas de lecture en plus
     function counts() {}
+
+    /* ---------- Chiffres du site (1 seule lecture : le catalogue) ---------- */
+    async function statistiques() {
+      try {
+        const docs = await getSearchIndex();
+        const filieres = new Set(docs.map((d) => d.filiere).filter((f) => f && f !== "Autre"));
+        const pdf = docs.filter((d) => String(d.format).toLowerCase() === "pdf").length;
+        const bloc = (n, t) => `<div class="stat"><b>${n.toLocaleString("fr-FR")}</b><span>${t}</span></div>`;
+        $("stats-admin").innerHTML = bloc(docs.length, "documents publiés") + bloc(filieres.size, "filières") + bloc(pdf, "PDF")
+          + `<div class="stat"><b id="stat-attente">${$("n-doc").textContent.replace(/[()]/g, "") || 0}</b><span>en attente</span></div>`;
+      } catch (e) { $("stats-admin").innerHTML = `<p class="muted">Chiffres indisponibles (${esc(e.message)})</p>`; }
+    }
 
     /* ---------- Filières demandées ---------- */
     let groupes = [];
