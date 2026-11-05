@@ -221,7 +221,8 @@
       const ok = btn("publier", d.id, "Publier", "btn-ok");
       const no = btn("refuser", d.id, "Refuser", "btn-danger");
       const del = btn("supprimer", d.id, "Supprimer", "btn-danger");
-      return `<div class="card-actions">${{ en_attente: [voir, ok, no], publie: [voir, no, del], rejete: [voir, ok, del] }[statut].join("")}</div>`;
+      const agent = d.propose === "agent" ? `<p class="muted" style="margin:6px 0 0;font-weight:700;color:#1f8f4e">Trouvé par l'agent automatique · vérifie avant de publier</p>` : "";
+      return `${agent}<div class="card-actions">${{ en_attente: [voir, ok, no], publie: [voir, no, del], rejete: [voir, ok, del] }[statut].join("")}</div>`;
     }
 
     // Références déjà vues (tous statuts) : une même référence déclarée deux fois est suspecte

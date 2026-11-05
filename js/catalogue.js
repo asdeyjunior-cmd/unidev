@@ -1,4 +1,4 @@
-import { listPublishedPage, listPublished, getSearchIndex, getDocsByIds, getFileInfo, getCredits, listUnlocked, unlockDocument, filieresPretes } from "./firebase.js";
+import { listPublishedPage, listPublished, getSearchIndex, getDocsByIds, getFileInfo, getCredits, listUnlocked, unlockDocument, filieresPretes, retenirAchat } from "./firebase.js";
 import { thumb } from "./cloudinary.js";
 import { ouvrirDemandeFiliere } from "./demande-filiere.js";
 import { habiller } from "./choix.js";
@@ -12,10 +12,14 @@ let docs = [];
 let me = null;
 let credits = 0;
 let unlocked = new Set();
+let admin = false;
+// Gratuit : déjà débloqué, publié par moi, ou je suis l'admin (les cartes rapides n'ont pas toujours l'auteur)
+const gratuit = (d) => !!me && (admin || unlocked.has(d.id) || d.auteurId === me.uid);
 
 initLayout("docs", async ({ user, profile }) => {
   me = user;
   credits = profile?.credits || 0;
+  admin = !!profile?.isAdmin;
   unlocked = user ? await listUnlocked(user.uid).catch(() => new Set()) : new Set();
   if (docs.length) render();
 });
@@ -61,7 +65,7 @@ function render() {
   const out = visibleDocs();
   els.list.innerHTML = out.length
     ? out.map((d) => {
-        const free = me && (unlocked.has(d.id) || d.auteurId === me.uid);
+        const free = gratuit(d);
         return docCard(d, `<button class="btn btn-sm btn-dl ${free ? "" : "btn-ink"}" data-dl="${d.id}"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span>Télécharger</span>${free ? "" : `<span class="dl-cout"> · 1 crédit</span>`}</button>`, { prix: free ? "Débloqué" : "1 crédit" });
       }).join("")
     : done || (filtersActive() && (indexComplet || pagesFiltre >= 5))
@@ -241,7 +245,15 @@ els.list.addEventListener("click", async (e) => {
 
   try {
     btn.disabled = true;
-    if (unlocked.has(id) || d.auteurId === me.uid) return showFile(d, await getFileInfo(id));
+    if (gratuit(d)) return showFile(d, await getFileInfo(id));
+    // Avant de faire payer : si le fichier s'ouvre déjà (débloqué avant, ou c'est le mien), il est gratuit
+    try {
+      const f = await getFileInfo(id);
+      unlocked.add(id); retenirAchat(me.uid, id); render();
+      return showFile(d, f);
+    } catch (err) {
+      if (err?.code !== "permission-denied") throw err;
+    }
 
     credits = await getCredits(me.uid);
     setNavCredits(credits);

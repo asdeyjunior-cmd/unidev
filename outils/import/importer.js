@@ -31,6 +31,9 @@ const args = process.argv.slice(2);
 const mode = args[0];
 const opt = (nom, def = null) => { const i = args.indexOf(`--${nom}`); return i >= 0 ? args[i + 1] : def; };
 const ESSAI = args.includes("--essai");
+// --attente : les documents sont proposés à l'admin (Modération > Documents à valider) au lieu d'être publiés
+const ATTENTE = args.includes("--attente");
+// --partenaires : cherche aussi sur les sites de sites-partenaires.json (sites qui ont donné leur accord)
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
 if (!["dossier", "hal", "wiki", "zenodo", "tout", "filiere", "romans", "site"].includes(mode)) {
@@ -186,18 +189,20 @@ async function publier(buffer, nomFichier, infos, imageChemin = null) {
     imageUrl,
     auteurId: ADMIN_UID,
     auteurNom: process.env.AUTEUR_NOM || "unidev",
-    statut: "publie",
+    statut: ATTENTE ? "en_attente" : "publie",
     telechargements: 0,
     creditAccorde: true,
+    ...(ATTENTE ? { propose: "agent" } : {}),
     ...(tampon ? { tampon: true } : {}),
     createdAt: FieldValue.serverTimestamp(),
   });
-  if (infos.filiere && infos.filiere !== "Autre" && !filiereConnue(infos.filiere)) {
+  if (!ATTENTE && infos.filiere && infos.filiere !== "Autre" && !filiereConnue(infos.filiere)) {
     batch.set(db.doc("index/filieres"), { liste: FieldValue.arrayUnion(infos.filiere) }, { merge: true });
     ajouterFilieres([infos.filiere]);
   }
   batch.set(ref.collection("prive").doc("fichier"), { ...fichier, auteurId: ADMIN_UID });
-  batch.set(db.doc("index/catalogue"), { docs: { [ref.id]: [
+  // En attente : il entrera dans le catalogue quand l'admin le validera
+  if (!ATTENTE) batch.set(db.doc("index/catalogue"), { docs: { [ref.id]: [
     couper(infos.titre, 140), couper(infos.matiere || infos.filiere || "Divers", 80), couper(infos.filiere || "Autre", 80),
     TYPES.includes(infos.type) ? infos.type : "Autre", NIVEAUX.includes(infos.niveau) ? infos.niveau : "Autre",
     imageUrl, ext, couper(infos.universite || "", 100),
@@ -373,6 +378,16 @@ async function importerSource(nom, generateur, max, rechercheAffichee = null) {
   return ok;
 }
 
+/* ---------- Sites partenaires (fichier sites-partenaires.json) ---------- */
+const sansAcc = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+const MOTS_VIDES = new Set(["cours", "general", "generale", "gestion", "sciences", "science", "techniques", "technique", "introduction", "droit", "etudes"].map(sansAcc));
+function partenaires() {
+  try {
+    const l = JSON.parse(fs.readFileSync(new URL("./sites-partenaires.json", import.meta.url), "utf8")).sites || [];
+    return l.filter((p) => p.accord === true && /^https?:\/\//.test(p.url || ""));
+  } catch { return []; }
+}
+
 /* ---------- Lancement ---------- */
 // Une erreur imprévue dans un document ne doit jamais arrêter tout l'import
 process.on("unhandledRejection", (e) => console.log(`   (erreur ignorée : ${e?.message || e})`));
@@ -395,9 +410,22 @@ try {
       FILIERE_FORCEE = filiere;
       const voulu = Math.min(part, total - grandTotal);
       const mots = motsPourFiliere(filiere);
-      console.log(`\n##### Filière « ${filiere} » : ${mots.join(", ")} (${voulu} au maximum)`);
       let faits = 0;
       const reste = () => Math.max(0, voulu - faits);
+      // 1. Sites partenaires (avec leur accord) : seulement les documents qui parlent de la filière
+      if (args.includes("--partenaires")) {
+        const { documentsDuSite } = await import("./sources.js");
+        const cles = [...mots, ...filiere.split(/[\s-]+/)].map(sansAcc).filter((m) => m.length >= 4 && !MOTS_VIDES.has(m));
+        const filtre = (t) => { const x = sansAcc(t); return cles.some((c) => x.includes(c)); };
+        for (const p of partenaires()) {
+          if (!reste()) break;
+          console.log(`\n========== ${p.nom} · « ${filiere} » ==========`);
+          try {
+            faits += (await importerSource(p.nom, (o) => documentsDuSite({ url: p.url, profondeur: p.profondeur || 3, max: reste(), essai: ESSAI, remplacer: p.remplacer || [], logos: LOGOS, filtre, ...o }), reste(), filiere)) || 0;
+          } catch (e) { console.log(`${p.nom} indisponible : ${e.message}`); }
+        }
+      }
+      console.log(`\n##### Filière « ${filiere} » : ${mots.join(", ")} (${voulu} au maximum)`);
       for (const mot of mots) {
         if (!reste()) break;
         const sources = [

@@ -1,0 +1,27 @@
+{
+  "_explication": "Sites où l'agent va aussi chercher des documents. Mets accord: true SEULEMENT pour un site qui t'a donné son accord écrit. remplacer = mots de sa signature remplacés par unidev dans les PDF.",
+  "sites": [
+    {
+      "nom": "Fomesoutra",
+      "url": "https://www.fomesoutra.com/",
+      "profondeur": 50,
+      "remplacer": ["fomesoutra", "fo me soutra"],
+      "accord": true
+    },
+    {
+      "nom": "aidexame",
+      "url": "https://www.aidexam.com/",
+      "profondeur": 50,
+      "remplacer": [],
+      "accord": true
+    },
+
+    {
+      "nom": "afrikmatk",
+      "url": "https://www.afrimatk.com/BiblioBTS/",
+      "profondeur": 50,
+      "remplacer": [],
+      "accord": true
+    }
+  ]
+}

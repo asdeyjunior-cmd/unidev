@@ -1,0 +1,57 @@
+# Agent automatique : chaque jour, cherche des documents pour les filières demandées par les étudiants
+# et les propose à l'admin (Modération > Documents à valider). Rien n'est publié sans validation.
+# Lancement à la main : Actions > « Agent des filières demandées » > Run workflow.
+name: Agent des filières demandées
+
+on:
+  schedule:
+    - cron: "23 9 * * *"   # 9h23 à Abidjan, après la remise à zéro du quota Firestore
+  workflow_dispatch:
+    inputs:
+      filieres:
+        description: "Nombre de filières traitées par passage"
+        default: "3"
+      max:
+        description: "Documents cherchés par filière (10 au moins)"
+        default: "10"
+
+concurrency: { group: unidev-import, cancel-in-progress: false }
+permissions: { contents: write }
+
+jobs:
+  agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    defaults: { run: { working-directory: outils/import } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Installation
+        run: npm install --no-audit --no-fund
+      - name: Clés (depuis les secrets GitHub)
+        env:
+          CLE: ${{ secrets.FIREBASE_CLE_JSON }}
+          CK: ${{ secrets.CLOUDINARY_API_KEY }}
+          CS: ${{ secrets.CLOUDINARY_API_SECRET }}
+        run: |
+          printf '%s' "$CLE" > cle-firebase.json
+          printf 'CLOUDINARY_CLOUD_NAME=iugeyztf\nCLOUDINARY_API_KEY=%s\nCLOUDINARY_API_SECRET=%s\nFIREBASE_CLE=./cle-firebase.json\nAUTEUR_NOM=unidev\n' "$CK" "$CS" > .env
+      - name: Recherche
+        env:
+          CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
+          NODE_OPTIONS: --max-old-space-size=5120
+        run: |
+          set -o pipefail
+          node agent.js --filieres "${{ inputs.filieres || '3' }}" --max "${{ inputs.max || '10' }}" 2>&1 | tee resultat.txt
+      - name: Résumé
+        if: always()
+        run: |
+          { echo "### Agent des filières demandées"; echo '```'; grep -E "Terminé|Aujourd'hui|#####|ERREUR|indisponible" resultat.txt | tail -n 40; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Garder le journal (pour ne rien proposer deux fois)
+        if: always()
+        run: |
+          git config user.name "unidev-robot"; git config user.email "robot@unidev.invalid"
+          git add import-journal.json 2>/dev/null || true
+          git commit -m "Journal de l'agent" || echo "Rien de nouveau"
+          git pull --rebase && git push || echo "Journal non enregistré (sans gravité)"

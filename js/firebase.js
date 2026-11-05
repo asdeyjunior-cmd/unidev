@@ -327,15 +327,26 @@ export async function listUnlocked(uid) {
     const m = JSON.parse(sessionStorage.getItem(cleAchats(uid)) || "null");
     if (m && Date.now() - m.t < 30 * 60 * 1000) return new Set(m.ids);
   } catch {}
-  const snap = await getDocs(collection(db, "users", uid, "achats"));
-  const ids = snap.docs.map((d) => d.id);
-  try { sessionStorage.setItem(cleAchats(uid), JSON.stringify({ t: Date.now(), ids })); } catch {}
-  return new Set(ids);
+  // Copie durable sur le téléphone : si Firestore ne répond pas (quota du jour épuisé, réseau),
+  // les documents déjà débloqués restent débloqués au lieu de réapparaître « 1 crédit »
+  let garde = [];
+  try { garde = JSON.parse(localStorage.getItem(cleAchats(uid)) || "[]"); } catch {}
+  try {
+    const snap = await getDocs(collection(db, "users", uid, "achats"));
+    const ids = [...new Set([...snap.docs.map((d) => d.id)])];
+    try { sessionStorage.setItem(cleAchats(uid), JSON.stringify({ t: Date.now(), ids })); localStorage.setItem(cleAchats(uid), JSON.stringify(ids)); } catch {}
+    return new Set(ids);
+  } catch (e) {
+    if (garde.length) return new Set(garde);
+    throw e;
+  }
 }
-function retenirAchat(uid, docId) {
+export function retenirAchat(uid, docId) {
   try {
     const m = JSON.parse(sessionStorage.getItem(cleAchats(uid)) || "null");
     if (m) { m.ids = [...new Set([...m.ids, docId])]; sessionStorage.setItem(cleAchats(uid), JSON.stringify(m)); }
+    const g = JSON.parse(localStorage.getItem(cleAchats(uid)) || "[]");
+    localStorage.setItem(cleAchats(uid), JSON.stringify([...new Set([...g, docId])]));
   } catch {}
 }
 

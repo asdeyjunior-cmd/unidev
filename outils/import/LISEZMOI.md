@@ -236,3 +236,12 @@ Les nouveaux fichiers vont sur le compte le plus libre ; quand un compte est ple
 3. GitHub > Settings > Secrets > Actions > nouveau secret `CLOUDINARY_COMPTES`, un compte par ligne :
    `nom:API_key:API_secret` (le compte actuel en premier).
 4. Actions > « Choisir le compte Cloudinary » > Run workflow (ensuite il tourne seul toutes les 6 heures).
+
+## Agent automatique des filières demandées (chaque jour)
+
+GitHub > Actions > « Agent des filières demandées » tourne seul tous les jours à 9h23.
+Il prend les filières demandées par les étudiants (3 par jour, la plus demandée d'abord), cherche au moins
+10 documents pour chacune sur les sites partenaires (`sites-partenaires.json`, seulement ceux avec `"accord": true`)
+puis sur HAL, Wikiversité, Wikilivres et Zenodo, et les met dans **Modération > Documents à valider**.
+Rien n'est publié sans toi. Une filière n'est refaite qu'au bout de 7 jours.
+Ajouter un site partenaire : copie le bloc « Exemple » dans `sites-partenaires.json`, mets son adresse et `"accord": true`.

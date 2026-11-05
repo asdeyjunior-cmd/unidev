@@ -351,7 +351,7 @@ async function lirePage(url) {
  * Parcourt un site à partir d'une page et récupère les documents liés (PDF, Word, PowerPoint…).
  * opts : { url, profondeur (1 = seulement cette page), max, deja, onEcarte, essai }
  */
-export async function* documentsDuSite({ url, profondeur = 3, max = 50, deja = () => false, onEcarte = () => {}, essai = false, remplacer = [], logos = new Set() }) {
+export async function* documentsDuSite({ url, profondeur = 3, max = 50, deja = () => false, onEcarte = () => {}, essai = false, remplacer = [], logos = new Set(), filtre = null }) {
   const depart = new URL(url);
   const memeSite = (u) => { try { const h = new URL(u).hostname.replace(/^www\./, ""); return h === depart.hostname.replace(/^www\./, ""); } catch { return false; } };
   const file = [{ url: depart.href, niveau: 1, dossiers: [] }];
@@ -367,7 +367,7 @@ export async function* documentsDuSite({ url, profondeur = 3, max = 50, deja = (
   const pagesVues = new Set(), docsVus = new Set();
   let rendus = 0, pagesLues = 0;
 
-  while (file.length && rendus < max && pagesLues < 800) {
+  while (file.length && rendus < max && pagesLues < (filtre ? 300 : 800)) {
     const { url: page, niveau, dossiers = [] } = file.shift();
     if (pagesVues.has(page)) continue;
     pagesVues.add(page);
@@ -400,7 +400,8 @@ export async function* documentsDuSite({ url, profondeur = 3, max = 50, deja = (
       if (!estDoc) {
         // Sous-dossier (ex. « ANALYSE NUMERIQUE ») : visité, et son nom sert à classer les documents qu'il contient
         if (niveau < profondeur && memeSite(lien) && dansLeDossier(lien) && !PAS_DES_PAGES.test(new URL(lien).pathname) && !pagesVues.has(lien) && !file.some((x) => x.url === lien))
-          file.push({ url: lien, niveau: niveau + 1, dossiers: titreDossier(texte) ? [...dossiers, texte] : dossiers });
+          // Avec un filtre (recherche par filière) : les dossiers qui parlent de la filière sont visités en premier
+          (filtre && filtre(`${texte} ${lien}`) ? file.unshift.bind(file) : file.push.bind(file))({ url: lien, niveau: niveau + 1, dossiers: titreDossier(texte) ? [...dossiers, texte] : dossiers });
         continue;
       }
       if (!memeSite(lien) && !EXTENSIONS.includes(e)) continue;
@@ -416,6 +417,8 @@ export async function* documentsDuSite({ url, profondeur = 3, max = 50, deja = (
       // Titre = le nom du fichier tel que le site le fournit ; sinon le texte du lien, puis le titre de la page
       let titre = fichierParlant ? titreFichier : (texte && !VIDE.test(texte) && texte.length > 6 ? texte : titrePage) || titreFichier || "Document";
       titre = couper(titre.replace(/\s*\(?\s*(pdf|docx?|pptx?)\s*\)?\s*$/i, ""), 140);
+      // Recherche par filière : seuls les documents qui en parlent (titre, dossier, page) sont téléchargés
+      if (filtre && !filtre(`${titre} ${texte} ${dossiers.join(" ")} ${titrePage} ${decodeURIComponent(lien)}`)) { docsVus.delete(lien); continue; }
 
       let buffer = Buffer.alloc(0), format = e || "pdf", nomFichier = nomUrl || `${titre}.${format}`;
       if (!essai) {
