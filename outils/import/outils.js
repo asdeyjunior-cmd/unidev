@@ -224,12 +224,25 @@ const MOTS_TYPES = [
   ["resume", "Résumé"], ["fiche", "Résumé"], ["synthese", "Résumé"], ["roman", "Roman"], ["romans", "Roman"],
   ["cours", "Cours"], ["chapitre", "Cours"], ["support", "Cours"], ["module", "Cours"], ["introduction", "Cours"],
 ];
+// Du plus précis au plus général (le 1er qui correspond gagne)
 const MOTS_NIVEAUX = [
-  [/\b(l1|licence ?1|1ere annee licence)\b/, "Licence 1"], [/\b(l2|licence ?2)\b/, "Licence 2"], [/\b(l3|licence ?3)\b/, "Licence 3"],
-  [/\b(m1|master ?1)\b/, "Master 1"], [/\b(m2|master ?2)\b/, "Master 2"],
-  [/\b(bts ?1|bts ?premiere|1ere annee bts)\b/, "BTS 1"], [/\b(bts ?2|bts ?deuxieme|2e annee bts)\b/, "BTS 2"],
-  [/\bdoctorat\b/, "Doctorat"],
+  [/\b(l1|licence (1|i|1ere annee|premiere annee)|(1ere|premiere) annee (de )?licence|semestres? (1|2)|s1|s2)\b/, "Licence 1"],
+  [/\b(l2|licence (2|ii|2e annee|2eme annee|deuxieme annee)|(2e|2eme|deuxieme) annee (de )?licence|semestres? (3|4)|s3|s4)\b/, "Licence 2"],
+  [/\b(l3|licence (3|iii|3e annee|3eme annee|troisieme annee|professionnelle|pro)|(3e|3eme|troisieme) annee (de )?licence|semestres? (5|6)|s5|s6|memoire de (fin de )?licence)\b/, "Licence 3"],
+  [/\b(m1|master (1|i|1ere annee|premiere annee)|(1ere|premiere) annee (de )?master|semestres? (7|8))\b/, "Master 1"],
+  [/\b(m2|master (2|ii|2e annee|deuxieme annee)|(2e|2eme|deuxieme) annee (de )?master|memoire de (fin d etudes? de )?master|dea|dess|semestres? (9|10))\b/, "Master 2"],
+  [/\b(bts (1|i|1ere annee|premiere annee)|(1ere|premiere) annee (de )?bts)\b/, "BTS 1"],
+  [/\b(bts (2|ii|2e annee|2eme annee|deuxieme annee)|(2e|2eme|deuxieme) annee (de )?bts)\b/, "BTS 2"],
+  [/\b(doctorat|these de doctorat|phd|doctoral)\b/, "Doctorat"],
+  // Sans numéro : l'examen du BTS se passe en 2e année ; « master » seul = 1re année
+  [/\b(bts|dts|dut|brevet de technicien superieur)\b/, "BTS 2"],
+  [/\b(master|mastere)\b/, "Master 1"],
 ];
+/** Niveau d'après un texte (titre, matière, dossier…). "" si rien ne l'indique. */
+export function niveauDe(texte) {
+  const t = " " + norm(texte) + " ";
+  return MOTS_NIVEAUX.find(([re]) => re.test(t))?.[1] || "";
+}
 
 /** Devine filière, matière, niveau et type d'après un texte (nom de fichier, légende Telegram…). Vide si inconnu. */
 export function deviner(texte) {
@@ -237,8 +250,7 @@ export function deviner(texte) {
   const contient = (mot) => t.includes(" " + mot) || t.includes(mot + " ");
   const f = MOTS_FILIERES.find(([m]) => contient(m));
   const ty = MOTS_TYPES.find(([m]) => new RegExp(`(^|\\s)${m}s?(\\s|\\d|$)`).test(t));
-  const n = MOTS_NIVEAUX.find(([re]) => re.test(t));
-  return { filiere: f?.[1] || "", matiere: f?.[2] || "", type: ty?.[1] || "", niveau: n?.[1] || "" };
+  return { filiere: f?.[1] || "", matiere: f?.[2] || "", type: ty?.[1] || "", niveau: niveauDe(texte) };
 }
 
 /** Nom de dossier valide sous Windows */

@@ -17,7 +17,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import "dotenv/config";
 import { tamponUnidev, sansModification } from "./marque.js";
-import { motsPourFiliere, FILIERES } from "./outils.js";
+import { motsPourFiliere, FILIERES, niveauDe } from "./outils.js";
 import { comptes, choisirCompte, basculer, comptePlein } from "./stockage.js";
 import {
   TYPES, NIVEAUX, EXTENSIONS, TAILLE_MORCEAU, MAX_IMAGE_PDF, MAX_FICHIER,
@@ -126,6 +126,12 @@ async function envoyerImage(chemin) {
 
 /** Envoie un document et crée sa fiche publiée. Renvoie l'ID Firestore. */
 async function publier(buffer, nomFichier, infos, imageChemin = null) {
+  // Toujours un niveau : d'abord ce que disent le titre, la matière et la filière, sinon d'après la source
+  if (!NIVEAUX.includes(infos.niveau) || infos.niveau === "Autre") {
+    const src = String(infos.universite || "");
+    infos.niveau = niveauDe(`${infos.titre} ${infos.matiere} ${infos.filiere} ${nomFichier}`)
+      || (/wiki/i.test(src) ? "Licence 1" : /zenodo/i.test(src) ? "Licence 3" : /hal/i.test(src) ? "Master 1" : "Autre");
+  }
   if (estDoublon(infos)) throw erreurDoublon();
   infos = { ...infos, filiere: canonFiliere(FILIERE_FORCEE || infos.filiere) || "Autre" };
   const ext = path.extname(nomFichier).slice(1).toLowerCase();
@@ -321,7 +327,7 @@ async function importerHal(rechercheImposee = null, maxImpose = null) {
         matiere: couper((d.keyword_s || [])[0] || filiereDepuisDomaines(d.domain_s), 80),
         filiere: filiereDepuisDomaines(d.domain_s),
         type: typeSite[d.docType_s] || "Cours",
-        niveau: d.docType_s === "THESE" ? "Doctorat" : "Autre",
+        niveau: d.docType_s === "THESE" ? "Doctorat" : d.docType_s === "MEM" ? "Master 2" : niveauDe(`${titre} ${(d.keyword_s || []).join(" ")}`) || "Master 1",
         annee: d.producedDateY_i ? String(d.producedDateY_i) : "",
         universite: couper((d.structName_s || [])[0] || "Archive ouverte HAL", 100),
         description: `${resume}${resume ? "\n" : ""}Auteur(s) : ${auteurs || "inconnu"} · Licence : ${licence} · Source : https://hal.science/${d.halId_s}`,
@@ -426,20 +432,40 @@ try {
         }
       }
       console.log(`\n##### Filière « ${filiere} » : ${mots.join(", ")} (${voulu} au maximum)`);
-      for (const mot of mots) {
-        if (!reste()) break;
-        const sources = [
-          ["HAL", () => importerHal(mot, reste())],
-          ["Wikiversité", () => importerSource("Wikiversité", (o) => coursWiki({ projet: "wikiversite", recherche: mot, max: reste(), ...o }), reste(), mot)],
-          ["Wikilivres", () => importerSource("Wikilivres", (o) => coursWiki({ projet: "wikilivres", recherche: mot, max: reste(), ...o }), reste(), mot)],
-          ["Zenodo", () => importerSource("Zenodo", (o) => coursZenodo({ recherche: mot, max: reste(), types: ["lesson", "presentation"], essai: ESSAI, ...o }), reste(), mot)],
-        ];
-        for (const [nom, lancer] of sources) {
+      // Tant qu'il manque des documents, on élargit la recherche (le nombre demandé est un minimum) :
+      // tour 1 = filière et matières ; tour 2 = « cours », « exercices corrigés », « examen », « TD » de chaque matière ;
+      // tour 3 = sites partenaires fouillés plus en profondeur
+      const tours = [mots, mots.flatMap((m) => [`${m} cours`, `${m} exercices corrigés`, `${m} examen`, `${m} TD`])];
+      for (let t = 0; t < tours.length && reste(); t++) {
+        if (t) console.log(`\n----- Il manque ${reste()} document(s) : recherche élargie -----`);
+        for (const mot of tours[t]) {
           if (!reste()) break;
-          console.log(`\n========== ${nom} · « ${mot} » ==========`);
-          try { faits += (await lancer()) || 0; } catch (e) { console.log(`${nom} indisponible : ${e.message}`); }
+          const sources = [
+            ["HAL", () => importerHal(mot, reste())],
+            ["Wikiversité", () => importerSource("Wikiversité", (o) => coursWiki({ projet: "wikiversite", recherche: mot, max: reste(), ...o }), reste(), mot)],
+            ["Wikilivres", () => importerSource("Wikilivres", (o) => coursWiki({ projet: "wikilivres", recherche: mot, max: reste(), ...o }), reste(), mot)],
+            ["Zenodo", () => importerSource("Zenodo", (o) => coursZenodo({ recherche: mot, max: reste(), types: ["lesson", "presentation", "publication"], essai: ESSAI, ...o }), reste(), mot)],
+          ];
+          for (const [nom, lancer] of sources) {
+            if (!reste()) break;
+            console.log(`\n========== ${nom} · « ${mot} » ==========`);
+            try { faits += (await lancer()) || 0; } catch (e) { console.log(`${nom} indisponible : ${e.message}`); }
+          }
         }
       }
+      if (reste() && args.includes("--partenaires")) {
+        console.log(`\n----- Il manque encore ${reste()} document(s) : sites partenaires en profondeur -----`);
+        const { documentsDuSite } = await import("./sources.js");
+        const cles = [...mots, ...filiere.split(/[\s-]+/)].map(sansAcc).filter((m) => m.length >= 4 && !MOTS_VIDES.has(m));
+        const filtre = (x) => { const y = sansAcc(x); return cles.some((c) => y.includes(c)); };
+        for (const p of partenaires()) {
+          if (!reste()) break;
+          try { faits += (await importerSource(p.nom, (o) => documentsDuSite({ url: p.url, profondeur: 4, max: reste(), essai: ESSAI, remplacer: p.remplacer || [], logos: LOGOS, filtre, ...o }), reste(), filiere)) || 0; }
+          catch (e) { console.log(`${p.nom} indisponible : ${e.message}`); }
+        }
+      }
+      if (reste()) console.log(`ATTENTION : seulement ${faits}/${voulu} document(s) trouvé(s) pour « ${filiere} » : tout ce qui existe a été pris, la filière sera retentée.`);
+      try { fs.writeFileSync("resultat-filiere.json", JSON.stringify({ filiere, faits, voulu })); } catch {}
       grandTotal += faits;
       console.log(`=== Filière « ${filiere} » : ${faits} document(s) ${ESSAI ? "trouvé(s)" : "importé(s)"} ===`);
     }

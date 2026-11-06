@@ -26,7 +26,7 @@ const args = process.argv.slice(2);
 const opt = (n, d) => { const i = args.indexOf(`--${n}`); return i >= 0 ? args[i + 1] : d; };
 const ESSAI = args.includes("--essai");
 const NB = Math.max(1, Number(opt("filieres", "3")) || 3);
-const MAX = Math.max(10, Number(opt("max", "10")) || 10); // au moins 10 documents par filière
+const MAX = Math.max(10, Number(opt("max", "10")) || 10); // au moins 10 documents par filière (moins de 10 trouvés = retentée le lendemain)
 const JOURS = 7;
 
 const cle = path.resolve(ICI, process.env.FIREBASE_CLE || "./cle-firebase.json");
@@ -54,7 +54,10 @@ for (const [filiere] of choix) {
   console.log(`\n################ ${filiere} : ${MAX} documents au moins ################`);
   const r = spawnSync(process.execPath, ["importer.js", "filiere", "--filiere", filiere, "--max", String(MAX), "--attente", "--partenaires", ...(ESSAI ? ["--essai"] : [])],
     { cwd: ICI, stdio: "inherit", env: process.env });
-  if (r.status === 0) { ok++; if (!ESSAI) faites[filiere] = new Date().toISOString(); }
+  let faits = 0;
+  try { const res = JSON.parse(fs.readFileSync(path.join(ICI, "resultat-filiere.json"), "utf8")); if (res.filiere === filiere) faits = res.faits; } catch {}
+  if (r.status === 0 && faits >= MAX) { ok++; if (!ESSAI) faites[filiere] = new Date().toISOString(); console.log(`=> ${filiere} : ${faits} document(s) proposé(s)`); }
+  else if (r.status === 0) console.log(`ATTENTION : ${filiere} : ${faits}/${MAX} seulement (pas assez de documents trouvés) : elle sera retentée demain.`);
   else console.log(`ERREUR : la recherche pour « ${filiere} » s'est arrêtée (code ${r.status}).`);
 }
 if (!ESSAI) await suiviRef.set({ faites, dernierPassage: new Date().toISOString() }, { merge: true });

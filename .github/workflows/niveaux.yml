@@ -1,0 +1,33 @@
+# Classe par niveau (BTS 1, Licence 2, Master 1…) les documents déjà publiés qui n'en ont pas, d'après leur titre.
+name: Classer par niveau
+
+on:
+  workflow_dispatch:
+    inputs:
+      essai:
+        description: "Essai seulement (montre les changements sans rien modifier)"
+        type: boolean
+        default: false
+
+jobs:
+  niveaux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults: { run: { working-directory: outils/import } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Niveaux
+        env:
+          CLE: ${{ secrets.FIREBASE_CLE_JSON }}
+          ESSAI: ${{ inputs.essai && '--essai' || '' }}
+        run: |
+          npm install --no-audit --no-fund
+          printf '%s' "$CLE" > cle-firebase.json
+          set -o pipefail
+          node niveaux.js $ESSAI 2>&1 | tee resultat.txt
+      - name: Résumé
+        if: always()
+        run: |
+          { echo "### Classement par niveau"; echo '```'; head -n 30 resultat.txt; echo '…'; tail -n 2 resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true

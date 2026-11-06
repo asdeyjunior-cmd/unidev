@@ -4,24 +4,16 @@
     {
       "nom": "Fomesoutra",
       "url": "https://www.fomesoutra.com/",
-      "profondeur": 50,
+      "profondeur": 3,
       "remplacer": ["fomesoutra", "fo me soutra"],
       "accord": true
     },
     {
-      "nom": "aidexame",
-      "url": "https://www.aidexam.com/",
-      "profondeur": 50,
+      "nom": "Exemple (à remplacer par un autre site partenaire)",
+      "url": "https://exemple.com/documents/",
+      "profondeur": 3,
       "remplacer": [],
-      "accord": true
-    },
-
-    {
-      "nom": "afrikmatk",
-      "url": "https://www.afrimatk.com/BiblioBTS/",
-      "profondeur": 50,
-      "remplacer": [],
-      "accord": true
+      "accord": false
     }
   ]
 }
