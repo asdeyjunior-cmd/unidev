@@ -246,7 +246,8 @@ puis sur HAL, Wikiversité, Wikilivres et Zenodo, et les met dans **Modération 
 Rien n'est publié sans toi. Une filière n'est refaite qu'au bout de 7 jours.
 Ajouter un site partenaire : copie le bloc « Exemple » dans `sites-partenaires.json`, mets son adresse et `"accord": true`.
 
-## Classement par niveau
+## Classement par niveau et par type
 Chaque document importé reçoit un niveau (BTS 1/2, Licence 1/2/3, Master 1/2, Doctorat) d'après son titre, sa matière
 et son dossier d'origine (« BTS », « L2 », « semestre 5 », « mémoire de master »…), sinon d'après sa source.
-Pour les documents déjà publiés : Actions > « Classer par niveau » (l'agent le refait aussi chaque jour).
+Chaque document reçoit aussi un type (Cours, TD, TP, Examen, Corrigé, Mémoire, Résumé) d'après les mêmes indices.
+Pour les documents déjà publiés : Actions > « Classer par niveau et type » (l'agent le refait aussi chaque jour).

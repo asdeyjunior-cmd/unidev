@@ -17,7 +17,7 @@ import path from "node:path";
 import crypto from "node:crypto";
 import "dotenv/config";
 import { tamponUnidev, sansModification } from "./marque.js";
-import { motsPourFiliere, FILIERES, niveauDe } from "./outils.js";
+import { motsPourFiliere, FILIERES, niveauDe, typeDe } from "./outils.js";
 import { comptes, choisirCompte, basculer, comptePlein } from "./stockage.js";
 import {
   TYPES, NIVEAUX, EXTENSIONS, TAILLE_MORCEAU, MAX_IMAGE_PDF, MAX_FICHIER,
@@ -31,6 +31,13 @@ const args = process.argv.slice(2);
 const mode = args[0];
 const opt = (nom, def = null) => { const i = args.indexOf(`--${nom}`); return i >= 0 ? args[i + 1] : def; };
 const ESSAI = args.includes("--essai");
+// Erreur hors des boucles (ex. : quota Firestore épuisé dès la 1re lecture) : message clair dans le Résumé
+const messageErreur = (e) => /RESOURCE_EXHAUSTED|quota|exhausted/i.test(String(e?.message) + String(e?.code))
+  ? "QUOTA FIRESTORE DU JOUR ÉPUISÉ (50 000 lectures). Rien n'est cassé : relance après 8h00 (heure d'Abidjan), quand le quota revient à zéro."
+  : /too many index entries/i.test(String(e?.message))
+    ? "INDEX FIRESTORE PLEIN : lance « firebase deploy --only firestore » sur ton PC, attends 15 minutes et relance."
+    : e?.message || String(e);
+process.on("unhandledRejection", (e) => { console.error(`\nERREUR : ${messageErreur(e)}`); process.exit(1); });
 // --attente : les documents sont proposés à l'admin (Modération > Documents à valider) au lieu d'être publiés
 const ATTENTE = args.includes("--attente");
 // --partenaires : cherche aussi sur les sites de sites-partenaires.json (sites qui ont donné leur accord)
@@ -126,6 +133,11 @@ async function envoyerImage(chemin) {
 
 /** Envoie un document et crée sa fiche publiée. Renvoie l'ID Firestore. */
 async function publier(buffer, nomFichier, infos, imageChemin = null) {
+  // Toujours un type : d'abord le titre, la matière et le nom du fichier, sinon « Cours » pour les sources de cours
+  if (!TYPES.includes(infos.type) || infos.type === "Autre") {
+    infos.type = typeDe(`${infos.titre} ${infos.matiere} ${nomFichier}`)
+      || (/wiki|zenodo|hal/i.test(String(infos.universite || "")) ? "Cours" : "Autre");
+  }
   // Toujours un niveau : d'abord ce que disent le titre, la matière et la filière, sinon d'après la source
   if (!NIVEAUX.includes(infos.niveau) || infos.niveau === "Autre") {
     const src = String(infos.universite || "");
@@ -511,6 +523,6 @@ try {
   }
   process.exit(0);
 } catch (e) {
-  console.error(`\nERREUR : ${e.message}`);
+  console.error(`\nERREUR : ${messageErreur(e)}`);
   process.exit(1);
 }

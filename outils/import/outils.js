@@ -219,11 +219,24 @@ const MOTS_TYPES = [
   ["corrige", "Corrigé"], ["correction", "Corrigé"], ["solution", "Corrigé"],
   ["memoire", "Mémoire"], ["rapport de stage", "Mémoire"], ["these", "Mémoire"],
   ["examen", "Examen"], ["exam", "Examen"], ["partiel", "Examen"], ["devoir", "Examen"], ["sujet", "Examen"], ["session", "Examen"],
-  ["epreuve", "Examen"], ["bts blanc", "Examen"], ["interrogation", "Examen"],
+  ["epreuve", "Examen"], ["bts blanc", "Examen"], ["interrogation", "Examen"], ["interro", "Examen"], ["composition", "Examen"],
+  ["concours", "Examen"], ["bac blanc", "Examen"], ["qcm", "Examen"], ["evaluation", "Examen"], ["controle continu", "Examen"],
+  ["serie d exercices", "TD"], ["exercices", "TD"], ["fiche de td", "TD"], ["applications", "TD"], ["cas pratique", "TD"], ["etude de cas", "Examen"],
+  ["rapport", "Mémoire"], ["projet de fin", "Mémoire"], ["soutenance", "Mémoire"],
+  ["aide memoire", "Résumé"], ["formulaire", "Résumé"], ["recapitulatif", "Résumé"], ["memento", "Résumé"], ["essentiel", "Résumé"],
   ["td", "TD"], ["travaux diriges", "TD"], ["exercice", "TD"], ["tp", "TP"], ["travaux pratiques", "TP"],
   ["resume", "Résumé"], ["fiche", "Résumé"], ["synthese", "Résumé"], ["roman", "Roman"], ["romans", "Roman"],
   ["cours", "Cours"], ["chapitre", "Cours"], ["support", "Cours"], ["module", "Cours"], ["introduction", "Cours"],
+  ["lecon", "Cours"], ["polycopie", "Cours"], ["notes de cours", "Cours"], ["manuel", "Cours"], ["presentation", "Cours"],
+  ["diaporama", "Cours"], ["slides", "Cours"], ["initiation", "Cours"], ["notions", "Cours"], ["principes", "Cours"], ["generalites", "Cours"],
 ];
+// « aide mémoire » doit passer avant « mémoire », « séries d'exercices corrigés » reste un corrigé
+MOTS_TYPES.sort((a, b) => (a[1] === "Corrigé" ? -1 : 0) - (b[1] === "Corrigé" ? -1 : 0) || (b[0].includes(" ") - a[0].includes(" ")));
+/** Type d'après un texte (titre, matière, dossier…). "" si rien ne l'indique. */
+export function typeDe(texte) {
+  const t = " " + norm(texte) + " ";
+  return MOTS_TYPES.find(([m]) => new RegExp(`(^|\\s)${m}s?(\\s|\\d|$)`).test(t))?.[1] || "";
+}
 // Du plus précis au plus général (le 1er qui correspond gagne)
 const MOTS_NIVEAUX = [
   [/\b(l1|licence (1|i|1ere annee|premiere annee)|(1ere|premiere) annee (de )?licence|semestres? (1|2)|s1|s2)\b/, "Licence 1"],
@@ -249,7 +262,7 @@ export function deviner(texte) {
   const t = " " + norm(texte) + " ";
   const contient = (mot) => t.includes(" " + mot) || t.includes(mot + " ");
   const f = MOTS_FILIERES.find(([m]) => contient(m));
-  const ty = MOTS_TYPES.find(([m]) => new RegExp(`(^|\\s)${m}s?(\\s|\\d|$)`).test(t));
+  const ty = [, typeDe(texte)];
   return { filiere: f?.[1] || "", matiere: f?.[2] || "", type: ty?.[1] || "", niveau: niveauDe(texte) };
 }
 

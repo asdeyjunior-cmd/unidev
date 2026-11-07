@@ -1,5 +1,5 @@
 # Classe par niveau (BTS 1, Licence 2, Master 1…) les documents déjà publiés qui n'en ont pas, d'après leur titre.
-name: Classer par niveau
+name: Classer par niveau et type
 
 on:
   workflow_dispatch:
@@ -30,4 +30,4 @@ jobs:
       - name: Résumé
         if: always()
         run: |
-          { echo "### Classement par niveau"; echo '```'; head -n 30 resultat.txt; echo '…'; tail -n 2 resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+          { echo "### Classement par niveau et type"; echo '```'; head -n 30 resultat.txt; echo '…'; tail -n 2 resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
