@@ -42,6 +42,13 @@
       "profondeur": 50,
       "remplacer": [],
       "accord": true
+    },
+    {
+      "nom": "afrimatk",
+      "url": "https://www.afrimatk.com/BiblioBTS",
+      "profondeur": 50,
+      "remplacer": [],
+      "accord": true
     }
   ]
 }
