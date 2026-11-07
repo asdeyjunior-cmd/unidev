@@ -8353,5 +8353,92 @@
     "source": "https://www.fomesoutra.com/livres/developpement-personnel",
     "licence": "autorisation de www.fomesoutra.com",
     "date": "2026-11-06T06:00:59.760Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/sujet-concours/ens-sujet/professeur-de-college/ens-anglais/28916-prepa-ens-anglais-procedes-de-traduction-by-tehua/file": {
+    "id": "eJ4aquqi2ezLPGnDZqvQ",
+    "source": "https://www.fomesoutra.com/sujets/sujet-concours/ens-sujet/professeur-de-college/ens-anglais/28916-prepa-ens-anglais-procedes-de-traduction-by-tehua",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-07T10:12:56.900Z"
+  },
+  "site:https://www.fomesoutra.com/sujets-du-superieur/sujets-technicien-ingenierur-genie-civil/24054-td-rdmba-bts-soir-2023-btp-by-tehua/file": {
+    "doublon": true
+  },
+  "site:https://www.fomesoutra.com/sujets-du-superieur/sujets-technicien-ingenierur-genie-civil/24053-td-btp-projet-de-construction-dune-villa-duplex-by-tehua/file": {
+    "doublon": true
+  },
+  "site:https://www.fomesoutra.com/sujets-du-superieur/sujets-technicien-ingenierur-genie-civil/24052-prepa-bts-btp-economie-de-la-construction-by-tehua/file": {
+    "doublon": true
+  },
+  "site:https://www.fomesoutra.com/sujets-du-superieur/sujets-technicien-ingenierur-genie-civil/24051-exo-de-rdm-ba-13-btp-by-tehua/file": {
+    "doublon": true
+  },
+  "site:https://www.fomesoutra.com/sujets-du-superieur/sujets-technicien-ingenierur-genie-civil/24050-exercices-btp-poste-betonnage-by-tehua/file": {
+    "doublon": true
+  },
+  "site:https://www.fomesoutra.com/sujets-du-superieur/sujets-technicien-ingenierur-genie-civil/24049-exercice-de-rdm-1-btp-by-tehua/file": {
+    "doublon": true
+  },
+  "site:https://www.fomesoutra.com/sujets-du-superieur/sujets-technicien-ingenierur-genie-civil/24048-exercice-de-corrige-btp-maths-corps-des-nombres-complexes-by-tehua/file": {
+    "doublon": true
+  },
+  "site:https://www.fomesoutra.com/sujets-du-superieur/sujets-technicien-ingenierur-genie-civil/24047-exercice-corrige-btp-les-toitures-et-les-planchiers-by-tehua/file": {
+    "doublon": true
+  },
+  "site:https://www.fomesoutra.com/sujets-du-superieur/sujets-technicien-ingenierur-genie-civil/24046-exercice-btp-sur-application-modification-du-contrat-by-tehua/file": {
+    "doublon": true
+  },
+  "wiki:fr.wikiversity.org:Rôle de la compréhension dans le génie logiciel": {
+    "id": "WriQurJVuRbnHvkpPrFP",
+    "source": "https://fr.wikiversity.org/wiki/R%C3%B4le_de_la_compr%C3%A9hension_dans_le_g%C3%A9nie_logiciel",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-07T10:14:38.277Z"
+  },
+  "wiki:fr.wikiversity.org:Outils mathématiques pour la physique (PCSI)": {
+    "id": "h7RWwPm31gDFubM2jQEH",
+    "source": "https://fr.wikiversity.org/wiki/Outils_math%C3%A9matiques_pour_la_physique_(PCSI)",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-07T10:14:52.135Z"
+  },
+  "wiki:fr.wikiversity.org:Introduction au management de l'innovation": {
+    "id": "RNhswd7r7HVpBR2RnEhH",
+    "source": "https://fr.wikiversity.org/wiki/Introduction_au_management_de_l'innovation",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-07T10:15:00.161Z"
+  },
+  "wiki:fr.wikiversity.org:Mécanique 2 (PCSI)": {
+    "id": "nIyfh0gsSEAGWe9kP2at",
+    "source": "https://fr.wikiversity.org/wiki/M%C3%A9canique_2_(PCSI)",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-07T10:15:21.369Z"
+  },
+  "wiki:fr.wikiversity.org:Psychanalyse & Robotique": {
+    "id": "72EburOS7zlNbvFTQLd4",
+    "source": "https://fr.wikiversity.org/wiki/Psychanalyse_%26_Robotique",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-07T10:15:22.749Z"
+  },
+  "wiki:fr.wikiversity.org:Approche de programmation concurrente sous Android": {
+    "id": "rKsm8MkWZztm21ZTLOhY",
+    "source": "https://fr.wikiversity.org/wiki/Approche_de_programmation_concurrente_sous_Android",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-07T10:15:23.920Z"
+  },
+  "wiki:fr.wikiversity.org:Signaux physiques (PCSI)": {
+    "id": "f5SUAXVW8lxz8IOxdaWE",
+    "source": "https://fr.wikiversity.org/wiki/Signaux_physiques_(PCSI)",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-07T10:15:34.381Z"
+  },
+  "wiki:fr.wikiversity.org:Mécanique 1 (PCSI)": {
+    "id": "Ros2YVYdW4aevnZYiw13",
+    "source": "https://fr.wikiversity.org/wiki/M%C3%A9canique_1_(PCSI)",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-07T10:15:44.847Z"
+  },
+  "wiki:fr.wikiversity.org:Analyse des Logiques Subjectives": {
+    "id": "89Fw1OQeY8D17sEf0kWX",
+    "source": "https://fr.wikiversity.org/wiki/Analyse_des_Logiques_Subjectives",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-07T10:15:57.129Z"
   }
 }
