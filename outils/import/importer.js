@@ -435,11 +435,16 @@ try {
         const { documentsDuSite } = await import("./sources.js");
         const cles = [...mots, ...filiere.split(/[\s-]+/)].map(sansAcc).filter((m) => m.length >= 4 && !MOTS_VIDES.has(m));
         const filtre = (t) => { const x = sansAcc(t); return cles.some((c) => x.includes(c)); };
-        for (const p of partenaires()) {
+        // Chaque site partenaire (et les sources libres) a sa part : un seul site ne prend pas toute la place
+        const sites = partenaires();
+        const part = Math.max(1, Math.ceil(voulu / (sites.length + 1)));
+        console.log(`\nSites partenaires : ${sites.map((p) => p.nom).join(", ") || "aucun"} (${part} document(s) chacun, le reste vient des sources libres)`);
+        for (const p of sites) {
           if (!reste()) break;
+          const quota = Math.min(part, reste());
           console.log(`\n========== ${p.nom} · « ${filiere} » ==========`);
           try {
-            faits += (await importerSource(p.nom, (o) => documentsDuSite({ url: p.url, profondeur: p.profondeur || 3, max: reste(), essai: ESSAI, remplacer: p.remplacer || [], logos: LOGOS, filtre, ...o }), reste(), filiere)) || 0;
+            faits += (await importerSource(p.nom, (o) => documentsDuSite({ url: p.url, profondeur: p.profondeur || 3, max: quota, essai: ESSAI, remplacer: p.remplacer || [], logos: LOGOS, filtre, ...o }), quota, filiere)) || 0;
           } catch (e) { console.log(`${p.nom} indisponible : ${e.message}`); }
         }
       }

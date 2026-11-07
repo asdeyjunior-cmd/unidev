@@ -50,7 +50,7 @@ jobs:
       - name: Résumé
         if: always()
         run: |
-          { echo "### Agent des filières demandées"; echo '```'; grep -E "Terminé|Aujourd.hui|#####|ERREUR|ATTENTION|=>|sans niveau|Niveaux :|Types   :" resultat.txt | tail -n 40; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+          { echo "### Agent des filières demandées"; echo '```'; grep -E "Terminé|Aujourd.hui|#####|ERREUR|ATTENTION|=>|sans niveau|Niveaux :|Types   :|Sites partenaires|=========="  resultat.txt | tail -n 40; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
       - name: Garder le journal (pour ne rien proposer deux fois)
         if: always()
         run: |
