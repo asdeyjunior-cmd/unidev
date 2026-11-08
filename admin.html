@@ -19,7 +19,7 @@
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
-  <link rel="stylesheet" href="css/style.css?v=54" />
+  <link rel="stylesheet" href="css/style.css?v=55" />
   <script type="speculationrules">
     { "prefetch": [{ "source": "document", "where": { "href_matches": "/*.html" }, "eagerness": "moderate" }] }
   </script>
@@ -64,6 +64,9 @@
         </div>
         <p style="margin:-6px 0 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center"><button class="btn btn-sm btn-ghost-ink" id="notif-btn">Activer les notifications</button><button class="btn btn-sm btn-ghost-ink" id="rebuild">Mettre à jour l'index de recherche</button><button class="btn btn-sm btn-ghost-ink" id="harmo">Corriger les filières</button><button class="btn btn-sm btn-ghost-ink" id="doublons">Supprimer les doublons</button>
           <span class="muted" id="rebuild-etat"></span></p>
+        <div id="reclasser" class="field" hidden style="margin:0 0 12px">
+          <input id="cherche-pub" type="search" placeholder="Retrouver un document mal placé (titre, filière, matière…)" autocomplete="off" />
+        </div>
         <div class="cards" id="list"><div class="loader"></div></div>
       </div>
     </div>
@@ -83,14 +86,18 @@
   <script type="module">
     import {
       listByStatus, setStatus, removeDocument, publishDocument, getFileInfo,
-      listPaiements, confirmPaiement, rejectPaiement, login, logout, checkAdmin, rebuildIndex, watchEnAttente, harmoniserFilieres, trouverDoublons, supprimerDocuments,
+      listPaiements, confirmPaiement, modifierClassement, rejectPaiement, login, logout, checkAdmin, rebuildIndex, watchEnAttente, harmoniserFilieres, trouverDoublons, supprimerDocuments,
       listDemandes, ajouterFiliereOfficielle, supprimerDemandes, filieresPretes, getSearchIndex,
     } from "./js/firebase.js";
     import { toutesLesFilieres } from "./js/filieres.js";
+    import { CATEGORIES } from "./js/config.js";
     import { initLayout, docCard, toast, esc, modal, formatDate, fileModal } from "./js/ui.js";
 
     const $ = (id) => document.getElementById(id);
     let current = "doc:en_attente";
+    // Ouvert depuis la notification d'un paiement : onglet Paiements, ce paiement en premier
+    const paiementVise = new URLSearchParams(location.search).get("paiement");
+    if (paiementVise) current = "pay:en_attente";
     let items = [];
 
     // Seul le compte admin (UID dans parametres/admin) voit la modération.
@@ -142,6 +149,7 @@
       if (!res.ok) return showDiagnostic(user, res);
       $("login-zone").classList.add("hidden");
       $("zone").classList.remove("hidden");
+      if (paiementVise) document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("active", x.dataset.s === current));
       load(); suivre(); statistiques();
     });
 
@@ -221,8 +229,9 @@
       const ok = btn("publier", d.id, "Publier", "btn-ok");
       const no = btn("refuser", d.id, "Refuser", "btn-danger");
       const del = btn("supprimer", d.id, "Supprimer", "btn-danger");
+      const mod = btn("modifier", d.id, "Modifier", "btn-ghost");
       const agent = d.propose === "agent" ? `<p class="muted" style="margin:6px 0 0;font-weight:700;color:#1f8f4e">Trouvé par l'agent automatique · vérifie avant de publier</p>` : "";
-      return `${agent}<div class="card-actions">${{ en_attente: [voir, ok, no], publie: [voir, no, del], rejete: [voir, ok, del] }[statut].join("")}</div>`;
+      return `${agent}<div class="card-actions">${{ en_attente: [voir, mod, ok, no], publie: [voir, mod, no, del], rejete: [voir, ok, del] }[statut].join("")}</div>`;
     }
 
     // Références déjà vues (tous statuts) : une même référence déclarée deux fois est suspecte
@@ -240,7 +249,7 @@
         ? `<div class="card-actions">${btn("confirmer", p.id, `Confirmer (+${p.credits})`, "btn-ok")}${btn("rejeter", p.id, "Refuser", "btn-danger")}</div>`
         : `<span class="status status-${p.statut}">${p.statut === "confirme" ? "Confirmé" : "Refusé"}</span>`;
       return `
-        <article class="card">
+        <article class="card"${p.id === paiementVise && statut === "en_attente" ? ` style="outline:3px solid var(--accent);outline-offset:2px"` : ""}>
           <div class="card-top"><span class="badge">${esc(p.operateur)}</span><span class="ext">${formatDate(p.createdAt)}</span></div>
           <h3>${p.montant} FCFA</h3>
           <p class="subject">${p.credits} crédits · ${p.packs} pack(s)</p>
@@ -302,9 +311,13 @@
         } catch (e) { toast(e.message, "err"); }
         return;
       }
+      $("reclasser").hidden = current !== "doc:publie";
+      if (current === "doc:publie" && $("cherche-pub").value.trim().length >= 2) return chercherPublies();
       try {
         if (kind === "pay") await chargerRefs().catch(() => {});
         items = kind === "doc" ? await listByStatus(statut) : await listPaiements(statut);
+        // Le paiement de la notification en haut, les plus anciens ensuite (premier arrivé, premier servi)
+        if (kind === "pay" && statut === "en_attente") items.sort((a, b) => (b.id === paiementVise) - (a.id === paiementVise) || (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
         $("list").innerHTML = !items.length
           ? `<div class="empty">Rien ici pour le moment.</div>`
           : kind === "doc"
@@ -312,6 +325,23 @@
             : items.map((p) => payCard(p, statut)).join("");
       } catch (e) { toast(e.message, "err"); }
     }
+
+    // Publiés : recherche dans tout le catalogue (1 lecture), pour reclasser un document mal placé
+    const sansAcc = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    let catalogueAdmin = null;
+    async function chercherPublies() {
+      const mots = sansAcc($("cherche-pub").value).split(/\s+/).filter(Boolean);
+      try {
+        const tous = await (catalogueAdmin ||= getSearchIndex());
+        items = tous.filter((d) => { const t = sansAcc(`${d.titre} ${d.filiere} ${d.matiere} ${d.type} ${d.niveau}`); return mots.every((m) => t.includes(m)); })
+          .slice(0, 60).map((d) => ({ ...d, statut: "publie" }));
+        $("list").innerHTML = items.length
+          ? items.map((d) => docCard(d, docActions(d, "publie")).replace("</h3>", `</h3><p class="muted">${esc(d.filiere || "?")} · ${esc(d.matiere || "?")} · ${esc(d.type || "?")} · ${esc(d.niveau || "?")}</p>`)).join("")
+          : `<div class="empty">Aucun document trouvé.</div>`;
+      } catch (e) { toast(e.message, "err"); }
+    }
+    let attente;
+    $("cherche-pub").oninput = () => { clearTimeout(attente); attente = setTimeout(() => ($("cherche-pub").value.trim().length >= 2 ? chercherPublies() : load()), 300); };
 
     document.querySelectorAll(".tabs button").forEach((b) => b.onclick = () => {
       current = b.dataset.s;
@@ -321,12 +351,12 @@
 
     const confirmMsg = {
       supprimer: "Supprimer définitivement ce document de la base ?",
-      confirmer: "As-tu bien reçu ce paiement sur ton compte ? Les crédits seront ajoutés.",
+      confirmer: "As-tu bien reçu ce paiement sur ton compte (Wave, Orange…) ?",
       rejeter: "Refuser ce paiement ?",
     };
     const doneMsg = {
       publier: "Document publié, auteur crédité.", refuser: "Document refusé.", supprimer: "Document supprimé.",
-      confirmer: "Paiement confirmé, crédits ajoutés.", rejeter: "Paiement refusé.",
+      confirmer: "Paiement confirmé.", rejeter: "Paiement refusé.",
     };
 
     $("rebuild").onclick = async (e) => {
@@ -396,6 +426,33 @@
       const item = items.find((x) => x.id === id);
       e.target.disabled = true;
       try {
+        if (act === "modifier") {
+          e.target.disabled = false;
+          const options = (liste, actuel) => [...new Set([actuel, ...liste].filter(Boolean))].map((v) => `<option${v === actuel ? " selected" : ""}>${esc(v)}</option>`).join("");
+          const m = modal(`
+            <h2 style="margin:0 0 4px">Classer le document</h2>
+            <p class="muted" style="margin:0 0 14px">${esc(item.titre || "")}</p>
+            <form id="classer">
+              <div class="field"><label>Filière</label><select id="c-fil">${options(toutesLesFilieres(), item.filiere)}</select></div>
+              <div class="field"><label>Matière</label><input id="c-mat" maxlength="80" value="${esc(item.matiere || "")}" /></div>
+              <div class="field"><label>Type</label><select id="c-type">${options(CATEGORIES.types, item.type)}</select></div>
+              <div class="field"><label>Niveau</label><select id="c-niv">${options(CATEGORIES.niveaux, item.niveau)}</select></div>
+              <div class="modal-actions"><button type="button" class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-ok">Enregistrer</button></div>
+            </form>`);
+          m.querySelector("#classer").onsubmit = async (ev) => {
+            ev.preventDefault();
+            const b = ev.submitter; if (b) b.disabled = true;
+            try {
+              const n = await modifierClassement(item, {
+                filiere: m.querySelector("#c-fil").value, matiere: m.querySelector("#c-mat").value.trim(),
+                type: m.querySelector("#c-type").value, niveau: m.querySelector("#c-niv").value,
+              });
+              Object.assign(item, n); catalogueAdmin = null;
+              m.remove(); toast("Document reclassé."); load();
+            } catch (err) { toast(err.message, "err"); if (b) b.disabled = false; }
+          };
+          return;
+        }
         if (act === "voir") {
           const info = await getFileInfo(id);
           const n = info.parts?.length || 1;

@@ -4,7 +4,7 @@ import { paymentConfig } from "./config.js";
 
 const $ = (id) => document.getElementById(id);
 const { prixPack, creditsParPack } = paymentConfig;
-const STATUS = { en_attente: "En attente", confirme: "Confirmé", rejete: "Refusé" };
+const STATUS = { en_attente: "En attente", immediat: "Crédits reçus", confirme: "Confirmé", rejete: "Refusé" };
 let me = null;
 let profile = null;
 

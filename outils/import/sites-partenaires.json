@@ -4,51 +4,16 @@
     {
       "nom": "Fomesoutra",
       "url": "https://www.fomesoutra.com/",
-      "profondeur": 50,
+      "profondeur": 3,
       "remplacer": ["fomesoutra", "fo me soutra"],
       "accord": true
     },
     {
-      "nom": "etudiant.fr",
-      "url": "https://www.letudiant.fr/etudes/btsdut/bts-retrouvez-les-sujets-et-les-corriges-des-epreuves.html",
-      "profondeur": 50,
+      "nom": "Exemple (à remplacer par un autre site partenaire)",
+      "url": "https://exemple.com/documents/",
+      "profondeur": 3,
       "remplacer": [],
-      "accord": true
-    },
-    {
-      "nom": "aidexam",
-      "url": "https://www.aidexam.com",
-      "profondeur": 50,
-      "remplacer": [],
-      "accord": true
-    },
-    {
-      "nom": "aide afrique",
-      "url": "http://aide-afrique.com/sujets-corriges-bts-c-te-ivoire.html",
-      "profondeur": 50,
-      "remplacer": [],
-      "accord": true
-    },
-    {
-      "nom": "epreuves et corriges",
-      "url": "https://epreuvesetcorriges.com/categories/cote-d-ivoire/examens/bts",
-      "profondeur": 50,
-      "remplacer": [],
-      "accord": true
-    },
-    {
-      "nom": "maxisujets",
-      "url": "https://maxisujets.net/",
-      "profondeur": 50,
-      "remplacer": [],
-      "accord": true
-    },
-    {
-      "nom": "afrimatk",
-      "url": "https://www.afrimatk.com/BiblioBTS",
-      "profondeur": 50,
-      "remplacer": [],
-      "accord": true
+      "accord": false
     }
   ]
 }

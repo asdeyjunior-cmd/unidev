@@ -30,4 +30,4 @@ jobs:
       - name: Résumé
         if: always()
         run: |
-          { echo "### Classement par niveau et type"; echo '```'; head -n 30 resultat.txt; echo '…'; tail -n 2 resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+          { echo "### Classement par niveau et type"; echo '```'; head -n 80 resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true

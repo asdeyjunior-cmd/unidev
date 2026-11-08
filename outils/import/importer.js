@@ -65,6 +65,8 @@ const noter = (cle, valeur) => { journal[cle] = valeur; fs.writeFileSync(JOURNAL
 let cloudinary, db, FieldValue, ADMIN_UID;
 // Mode « filiere » : tous les documents trouvés sont rangés dans la filière demandée
 let FILIERE_FORCEE = "";
+// Recherche par filière : un document n'y est rangé que s'il en parle vraiment (sinon il était mal placé)
+let PERTINENT = null;
 let LOGOS = new Set(); // logos de sites partenaires reconnus par signature.js (parametres/logos)
 async function connecter() {
   if (!process.env.FIREBASE_CLE) throw new Error("Variable manquante dans .env : FIREBASE_CLE");
@@ -344,7 +346,8 @@ async function importerHal(rechercheImposee = null, maxImpose = null) {
         universite: couper((d.structName_s || [])[0] || "Archive ouverte HAL", 100),
         description: `${resume}${resume ? "\n" : ""}Auteur(s) : ${auteurs || "inconnu"} · Licence : ${licence} · Source : https://hal.science/${d.halId_s}`,
       };
-      console.log(`[${ok + erreurs + 1}] ${titre}  ·  ${infos.filiere} · ${licence}`);
+      if (PERTINENT && !PERTINENT(`${titre} ${(d.keyword_s || []).join(" ")}`, infos.filiere)) { sautes++; continue; }
+      console.log(`[${ok + erreurs + 1}] ${titre}  ·  ${FILIERE_FORCEE || infos.filiere} · ${licence}`);
       if (ESSAI) { ok++; continue; }
 
       try {
@@ -377,6 +380,9 @@ async function importerSource(nom, generateur, max, rechercheAffichee = null) {
   try {
   for await (const d of it) {
     const infos = { ...d.infos, filiere: canonFiliere(d.infos.filiere) || "Autre" };
+    if (PERTINENT && !PERTINENT(`${d.titre} ${d.infos.matiere || ""} ${d.nomFichier || ""}`, infos.filiere)) {
+      ecartes["hors de la filière"] = (ecartes["hors de la filière"] || 0) + 1; continue;
+    }
     console.log(`[${ok + erreurs + 1}] ${d.titre}  ·  ${infos.filiere} · ${d.licence} · ${(d.buffer.length / 1048576).toFixed(1)} Mo`);
     if (ESSAI) { ok++; continue; }
     try {
@@ -426,6 +432,16 @@ try {
     for (const filiere of liste) {
       if (grandTotal >= total) break;
       FILIERE_FORCEE = filiere;
+      {
+        const cles = [...motsPourFiliere(filiere), ...filiere.split(/[\s-]+/)].map(sansAcc).filter((m) => m.length >= 4 && !MOTS_VIDES.has(m));
+        PERTINENT = (texte, devinee) => {
+          // Le document dit lui-même appartenir à une autre filière connue : pas ici
+          const f = canonFiliere(devinee || "");
+          if (f && f !== "Autre" && f !== canonFiliere(filiere)) return false;
+          const t = sansAcc(texte);
+          return !cles.length || cles.some((c) => t.includes(c));
+        };
+      }
       const voulu = Math.min(part, total - grandTotal);
       const mots = motsPourFiliere(filiere);
       let faits = 0;

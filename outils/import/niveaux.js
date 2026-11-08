@@ -14,7 +14,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
-import { niveauDe, typeDe } from "./outils.js";
+import { niveauDe, typeDe, deviner } from "./outils.js";
+import { canonFiliere } from "../../js/filieres.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const ESSAI = process.argv.includes("--essai");
@@ -25,13 +26,19 @@ const db = admin.firestore();
 
 const index = (await db.doc("index/catalogue").get()).data()?.docs || {};
 const changements = [];
+const suspects = []; // peut-être dans la mauvaise filière : signalés, à vérifier dans l'admin (bouton « Modifier »)
 const vide = (v) => !v || v === "Autre";
 for (const [id, e] of Object.entries(index)) {
-  if (!Array.isArray(e) || (!vide(e[3]) && !vide(e[4]))) continue;
+  if (!Array.isArray(e)) continue;
   const texte = `${e[0]} ${e[1]} ${e[2]}`; // titre, matière, filière
+  // Filière « Autre » : rangé dans la filière que son titre indique
+  const devinee = canonFiliere(deviner(`${e[0]} ${e[1]}`).filiere || "");
+  const filiere = vide(e[2]) && devinee && devinee !== "Autre" ? devinee : "";
+  if (!filiere && devinee && devinee !== "Autre" && !vide(e[2]) && canonFiliere(e[2]) !== devinee) suspects.push({ titre: e[0], actuelle: e[2], devinee });
+  if (!vide(e[3]) && !vide(e[4]) && !filiere) continue;
   const type = vide(e[3]) ? typeDe(texte) : "";
   const niveau = vide(e[4]) ? niveauDe(texte) : "";
-  if (type || niveau) changements.push({ id, titre: e[0], type, niveau, entree: e });
+  if (type || niveau || filiere) changements.push({ id, titre: e[0], type, niveau, filiere, entree: e });
 }
 const compter = (cle) => { const r = {}; changements.forEach((c) => { if (c[cle]) r[c[cle]] = (r[c[cle]] || 0) + 1; }); return r; };
 const sansNiveau = Object.values(index).filter((e) => Array.isArray(e) && vide(e[4])).length;
@@ -39,13 +46,18 @@ const sansType = Object.values(index).filter((e) => Array.isArray(e) && vide(e[3
 console.log(`${Object.keys(index).length} document(s) : ${sansNiveau} sans niveau, ${sansType} sans type. ${changements.length} classé(s) maintenant.\n`);
 console.log("Niveaux :", Object.entries(compter("niveau")).map(([n, k]) => `${n} ${k}`).join(" · ") || "aucun");
 console.log("Types   :", Object.entries(compter("type")).map(([n, k]) => `${n} ${k}`).join(" · ") || "aucun");
-changements.slice(0, 20).forEach((c) => console.log(`  ${c.titre}  ->  ${[c.type, c.niveau].filter(Boolean).join(" · ")}`));
+console.log("Filières :", Object.entries(compter("filiere")).map(([n, k]) => `${n} ${k}`).join(" · ") || "aucune");
+changements.slice(0, 20).forEach((c) => console.log(`  ${c.titre}  ->  ${[c.filiere, c.type, c.niveau].filter(Boolean).join(" · ")}`));
+if (suspects.length) {
+  console.log(`\nPEUT-ÊTRE MAL PLACÉS : ${suspects.length} document(s). Admin > Publiés > cherche le titre > « Modifier » :`);
+  suspects.slice(0, 40).forEach((x) => console.log(`  ${x.titre}  ·  rangé en ${x.actuelle}, plutôt ${x.devinee} ?`));
+}
 if (ESSAI) { console.log("\n(mode essai : rien n'a été modifié)"); process.exit(0); }
 
 for (let i = 0; i < changements.length; i += 200) {
   const lot = changements.slice(i, i + 200);
-  const entree = (c) => { const e = [...c.entree]; if (c.type) e[3] = c.type; if (c.niveau) e[4] = c.niveau; return e; };
-  const champs = (c) => ({ ...(c.type ? { type: c.type } : {}), ...(c.niveau ? { niveau: c.niveau } : {}) });
+  const entree = (c) => { const e = [...c.entree]; if (c.filiere) e[2] = c.filiere; if (c.type) e[3] = c.type; if (c.niveau) e[4] = c.niveau; return e; };
+  const champs = (c) => ({ ...(c.filiere ? { filiere: c.filiere } : {}), ...(c.type ? { type: c.type } : {}), ...(c.niveau ? { niveau: c.niveau } : {}) });
   const batch = db.batch();
   for (const c of lot) batch.update(db.collection("documents").doc(c.id), champs(c));
   batch.set(db.doc("index/catalogue"), { docs: Object.fromEntries(lot.map((c) => [c.id, entree(c)])) }, { merge: true });

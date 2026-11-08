@@ -413,6 +413,18 @@ export async function publishDocument(d) {
   }
   await batch.commit();
 }
+/** Admin : change la filière, la matière, le type ou le niveau d'un document (et sa place dans le catalogue) */
+export async function modifierClassement(d, champs) {
+  const n = { ...d, ...champs, filiere: canonFiliere(champs.filiere) || champs.filiere };
+  const batch = writeBatch(db);
+  batch.update(doc(db, "documents", d.id), { filiere: n.filiere, matiere: n.matiere, type: n.type, niveau: n.niveau });
+  if (d.statut === "publie") {
+    batch.set(indexRef, { docs: { [d.id]: indexEntry(n) } }, { merge: true });
+    ajouterFiliereAuLot(batch, n.filiere);
+  }
+  await batch.commit();
+  return n;
+}
 export async function setStatus(id, statut) {
   const batch = writeBatch(db);
   batch.update(doc(db, "documents", id), { statut });
@@ -511,7 +523,8 @@ export async function createPaiement(user, profile, { packs, operateur, numero, 
     statut: "en_attente",
     createdAt: serverTimestamp(),
   });
-  prevenirAdmin("Paiement à confirmer", `${packs * paymentConfig.prixPack} FCFA (${packs * paymentConfig.creditsParPack} crédits) via ${operateur}. Vérifie la référence.`, "admin.html");
+  // Notification : un appui ouvre directement ce paiement dans l'admin, prêt à confirmer
+  prevenirAdmin("Paiement à confirmer", `${packs * paymentConfig.prixPack} FCFA (${packs * paymentConfig.creditsParPack} crédits) via ${operateur}, réf. ${reference}. Appuie pour confirmer.`, `admin.html?paiement=${ref.id}`);
   return ref;
 }
 export async function listMyPaiements(uid) {
