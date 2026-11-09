@@ -231,7 +231,15 @@
       const del = btn("supprimer", d.id, "Supprimer", "btn-danger");
       const mod = btn("modifier", d.id, "Modifier", "btn-ghost");
       const agent = d.propose === "agent" ? `<p class="muted" style="margin:6px 0 0;font-weight:700;color:#1f8f4e">Trouvé par l'agent automatique · vérifie avant de publier</p>` : "";
-      return `${agent}<div class="card-actions">${{ en_attente: [voir, mod, ok, no], publie: [voir, mod, no, del], rejete: [voir, ok, del] }[statut].join("")}</div>`;
+      const COUL = { ok: "#1f8f4e", douteux: "#b7791f", refuser: "#c0392b" };
+      const NOM = { ok: "IA : semble bon", douteux: "IA : à regarder de près", refuser: "IA : conseille de refuser" };
+      const ia = d.ia && statut === "en_attente"
+        ? `<div style="margin:6px 0 0;padding:8px 10px;border-radius:10px;border-left:4px solid ${COUL[d.ia.avis] || "#888"};background:var(--tint)">
+             <b style="color:${COUL[d.ia.avis] || "#555"}">${NOM[d.ia.avis] || "IA"}</b>
+             ${d.ia.resume ? `<div class="muted" style="margin-top:2px">${esc(d.ia.resume)}</div>` : ""}
+             ${(d.ia.raisons || []).length ? `<ul style="margin:4px 0 0;padding-left:18px">${d.ia.raisons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}
+           </div>` : "";
+      return `${agent}${ia}<div class="card-actions">${{ en_attente: [voir, mod, ok, no], publie: [voir, mod, no, del], rejete: [voir, ok, del] }[statut].join("")}</div>`;
     }
 
     // Références déjà vues (tous statuts) : une même référence déclarée deux fois est suspecte

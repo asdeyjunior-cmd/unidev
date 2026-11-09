@@ -1,0 +1,64 @@
+# L'IA de unidev (Google Gemini, gratuit) : chaque jour, elle
+#  1. lit les documents envoyés par les étudiants et donne son avis dans Modération (ok / à regarder / à refuser),
+#     en complétant les infos manquantes ;
+#  2. relit les documents publiés et corrige filière, matière, type, niveau et titres illisibles.
+# Elle ne publie et ne supprime jamais rien. Secret nécessaire : GEMINI_API_KEY.
+name: IA (vérifier et ranger les documents)
+
+on:
+  schedule:
+    - cron: "41 10 * * *"   # 10h41 à Abidjan (après l'agent des filières)
+  workflow_dispatch:
+    inputs:
+      max:
+        description: "Documents publiés à relire cette fois"
+        default: "150"
+      essai:
+        description: "Essai : montrer sans rien modifier"
+        type: boolean
+        default: false
+
+concurrency: { group: unidev-ia, cancel-in-progress: false }
+
+jobs:
+  ia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    defaults: { run: { working-directory: outils/import } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Documents déjà relus par l'IA
+        uses: actions/cache@v4
+        with:
+          path: outils/import/ia-faits.json
+          key: ia-faits-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: ia-faits-
+      - name: Installation et clés
+        env:
+          CLE: ${{ secrets.FIREBASE_CLE_JSON }}
+        run: |
+          npm install --no-audit --no-fund
+          printf '%s' "$CLE" > cle-firebase.json
+          printf 'FIREBASE_CLE=./cle-firebase.json\n' > .env
+      - name: Vérifier les documents envoyés
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -o pipefail
+          node ia.js --verifier ${{ inputs.essai && '--essai' || '' }} 2>&1 | tee verifier.txt
+      - name: Ranger les documents publiés
+        if: always()
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -o pipefail
+          node ia.js --ranger --max "${{ inputs.max || '150' }}" ${{ inputs.essai && '--essai' || '' }} 2>&1 | tee ranger.txt
+      - name: Résumé
+        if: always()
+        run: |
+          {
+            echo "### IA : documents envoyés"; echo '```'; grep -E "à valider|OK|DOUTEUX|REFUSER|ARRÊT|ERREUR" verifier.txt | head -n 40; echo '```'
+            echo "### IA : rangement"; echo '```'; grep -E "publié|->|ARRÊT|Terminé" ranger.txt | tail -n 50; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY" || true

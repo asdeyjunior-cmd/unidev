@@ -251,3 +251,10 @@ Chaque document importé reçoit un niveau (BTS 1/2, Licence 1/2/3, Master 1/2, 
 et son dossier d'origine (« BTS », « L2 », « semestre 5 », « mémoire de master »…), sinon d'après sa source.
 Chaque document reçoit aussi un type (Cours, TD, TP, Examen, Corrigé, Mémoire, Résumé) d'après les mêmes indices.
 Pour les documents déjà publiés : Actions > « Classer par niveau et type » (l'agent le refait aussi chaque jour).
+
+## L'IA (Google Gemini, gratuit)
+Actions > « IA (vérifier et ranger les documents) », chaque jour à 10h41.
+1. Documents envoyés : elle lit les 3 premières pages et donne son avis dans Modération (semble bon / à regarder / conseille de refuser),
+   avec les raisons, et complète filière, matière, type, niveau ou titre s'ils manquent.
+2. Documents publiés : elle les relit (150 par jour) et corrige filière, matière, type, niveau et titres illisibles, seulement si elle est sûre.
+Elle ne publie et ne supprime jamais rien. Clé : secret GitHub GEMINI_API_KEY (gratuite sur https://aistudio.google.com/apikey).
