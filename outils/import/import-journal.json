@@ -8620,5 +8620,80 @@
     "source": "https://doi.org/10.5281/zenodo.23276722",
     "licence": "CC BY",
     "date": "2026-11-08T19:25:36.814Z"
+  },
+  "zenodo:17996025": {
+    "id": "efoewX2ROD7MCiE8QfvK",
+    "source": "https://doi.org/10.5281/zenodo.17996025",
+    "licence": "CC BY",
+    "date": "2026-11-08T23:05:02.609Z"
+  },
+  "zenodo:3970917": {
+    "id": "LfKYA0g6MHBhznmzDQ8R",
+    "source": "https://doi.org/10.5252/anthropozoologica2020v55a11",
+    "licence": "CC BY",
+    "date": "2026-11-08T23:05:09.442Z"
+  },
+  "zenodo:10057498": {
+    "id": "pDxpSOjbovnYJlbkHiUs",
+    "source": "https://doi.org/10.4000/pallas.24779",
+    "licence": "CC BY",
+    "date": "2026-11-08T23:05:16.201Z"
+  },
+  "zenodo:2251726": {
+    "id": "N581IuknYOtJcwAhABkk",
+    "source": "https://doi.org/10.1017/s1026881200078211",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-08T23:05:19.328Z"
+  },
+  "zenodo:2158827": {
+    "id": "kzjEX4hQo9KLQN5HpnrQ",
+    "source": "https://doi.org/10.1080/00378941.1893.10828816",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-08T23:05:22.672Z"
+  },
+  "zenodo:16479998": {
+    "id": "OD7LYjPeztRvZTEz0zgP",
+    "source": "https://doi.org/10.5281/zenodo.16479998",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-08T23:05:25.327Z"
+  },
+  "zenodo:1528868": {
+    "id": "CZzlds8PFc4peID7zH03",
+    "source": "https://doi.org/10.1017/s1026881200182522",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-08T23:05:27.155Z"
+  },
+  "zenodo:20862838": {
+    "id": "7VcgKm7w5DTMs0LKMJcg",
+    "source": "https://doi.org/10.5281/zenodo.20862838",
+    "licence": "CC BY",
+    "date": "2026-11-08T23:05:38.512Z"
+  },
+  "zenodo:20894511": {
+    "doublon": true
+  },
+  "zenodo:3593455": {
+    "id": "gE0tcO1oNha6LgJ94rvS",
+    "source": "https://doi.org/10.5281/zenodo.3593455",
+    "licence": "CC BY",
+    "date": "2026-11-08T23:18:51.971Z"
+  },
+  "zenodo:23650047": {
+    "id": "WE27boFM5hXl4xp2jR6P",
+    "source": "https://doi.org/10.5281/zenodo.23650047",
+    "licence": "CC BY",
+    "date": "2026-11-08T23:25:50.227Z"
+  },
+  "site:https://www.fomesoutra.com/enseignement-technique-et-professionnel/20219-le-systeme-dallumage-by-tehua/file": {
+    "id": "wb1h0zgDqvTtO5pEQtkE",
+    "source": "https://www.fomesoutra.com/enseignement-technique-et-professionnel?limit=50&limitstart=100",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-09T18:46:39.042Z"
+  },
+  "site:https://www.fomesoutra.com/enseignement-technique-et-professionnel/20160-examen-2e-stm-2014-systeme-de-distribution-automatique-by-tehua/file": {
+    "id": "QUYfX7HVET00mleXq6mF",
+    "source": "https://www.fomesoutra.com/enseignement-technique-et-professionnel?limit=50&limitstart=150",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-09T18:53:36.430Z"
   }
 }
