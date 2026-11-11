@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
 import { niveauDe, typeDe, deviner } from "./outils.js";
-import { canonFiliere } from "../../js/filieres.js";
+import { canonFiliere, ajouterFilieres, FILIERES_AJOUTEES } from "../../js/filieres.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const ESSAI = process.argv.includes("--essai");
@@ -24,6 +24,11 @@ if (!fs.existsSync(cle)) { console.error(`Clé Firebase introuvable : ${cle}`); 
 admin.initializeApp({ credential: admin.credential.cert(JSON.parse(fs.readFileSync(cle, "utf8"))) });
 const db = admin.firestore();
 
+// Filières en double (« Marketing digital » / « Marketing digitale »…) : la liste partagée est nettoyée,
+// et chaque document reprend le nom unique de sa filière
+const listeAvant = (await db.doc("index/filieres").get()).data()?.liste || [];
+ajouterFilieres(listeAvant);
+const doublonsFilieres = listeAvant.length - FILIERES_AJOUTEES.length;
 const index = (await db.doc("index/catalogue").get()).data()?.docs || {};
 const changements = [];
 const suspects = []; // peut-être dans la mauvaise filière : signalés, à vérifier dans l'admin (bouton « Modifier »)
@@ -33,7 +38,8 @@ for (const [id, e] of Object.entries(index)) {
   const texte = `${e[0]} ${e[1]} ${e[2]}`; // titre, matière, filière
   // Filière « Autre » : rangé dans la filière que son titre indique
   const devinee = canonFiliere(deviner(`${e[0]} ${e[1]}`).filiere || "");
-  const filiere = vide(e[2]) && devinee && devinee !== "Autre" ? devinee : "";
+  const unique = vide(e[2]) ? "" : canonFiliere(e[2]);
+  const filiere = vide(e[2]) && devinee && devinee !== "Autre" ? devinee : unique && unique !== e[2] ? unique : "";
   if (!filiere && devinee && devinee !== "Autre" && !vide(e[2]) && canonFiliere(e[2]) !== devinee) suspects.push({ titre: e[0], actuelle: e[2], devinee });
   if (!vide(e[3]) && !vide(e[4]) && !filiere) continue;
   const type = vide(e[3]) ? typeDe(texte) : "";
@@ -44,6 +50,7 @@ const compter = (cle) => { const r = {}; changements.forEach((c) => { if (c[cle]
 const sansNiveau = Object.values(index).filter((e) => Array.isArray(e) && vide(e[4])).length;
 const sansType = Object.values(index).filter((e) => Array.isArray(e) && vide(e[3])).length;
 console.log(`${Object.keys(index).length} document(s) : ${sansNiveau} sans niveau, ${sansType} sans type. ${changements.length} classé(s) maintenant.\n`);
+console.log(`Filières en double retirées de la liste : ${Math.max(0, doublonsFilieres)}`);
 console.log("Niveaux :", Object.entries(compter("niveau")).map(([n, k]) => `${n} ${k}`).join(" · ") || "aucun");
 console.log("Types   :", Object.entries(compter("type")).map(([n, k]) => `${n} ${k}`).join(" · ") || "aucun");
 console.log("Filières :", Object.entries(compter("filiere")).map(([n, k]) => `${n} ${k}`).join(" · ") || "aucune");
@@ -54,6 +61,7 @@ if (suspects.length) {
 }
 if (ESSAI) { console.log("\n(mode essai : rien n'a été modifié)"); process.exit(0); }
 
+if (doublonsFilieres > 0) await db.doc("index/filieres").set({ liste: FILIERES_AJOUTEES });
 for (let i = 0; i < changements.length; i += 200) {
   const lot = changements.slice(i, i + 200);
   const entree = (c) => { const e = [...c.entree]; if (c.filiere) e[2] = c.filiere; if (c.type) e[3] = c.type; if (c.niveau) e[4] = c.niveau; return e; };
