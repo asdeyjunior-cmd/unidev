@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
-import { canonFiliere } from "../../js/filieres.js";
+import { canonFiliere, nomComplet, libelleFiliere } from "../../js/filieres.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const SITE = path.resolve(ICI, "../..");
@@ -168,11 +168,11 @@ for (const d of docs) {
   const titre = couper(`${d.titre}${meta.length ? " — " + meta.join(" · ") : ""} | unidev`, 110);
   const resume = d.description
     ? couper(d.description, 155)
-    : couper(`${d.type || "Document"} de ${d.matiere || d.filiere}${d.niveau && d.niveau !== "Autre" ? `, ${d.niveau}` : ""}${d.universite ? `, ${d.universite}` : ""}. À télécharger sur unidev, la bibliothèque des étudiants.`, 155);
+    : couper(`${d.type || "Document"} de ${d.matiere || nomComplet(d.filiere)}${d.niveau && d.niveau !== "Autre" ? `, ${d.niveau}` : ""}${d.universite ? `, ${d.universite}` : ""}. À télécharger sur unidev, la bibliothèque des étudiants.`, 155);
   const canonical = `${URL_SITE}/d/${d.page}`;
   const similaires = docs.filter((x) => x.id !== d.id && x.filiere === d.filiere).slice(0, 8);
   const lignes = [
-    ["Matière", d.matiere], ["Filière", d.filiere], ["Niveau", d.niveau], ["Type", d.type],
+    ["Matière", d.matiere], ["Filière", libelleFiliere(d.filiere)], ["Niveau", d.niveau], ["Type", d.type],
     ["Année", d.annee], ["Établissement", d.universite], ["Format", (d.format || "").toUpperCase()], ["Taille", taille(d.taille)],
     ["Téléchargements", String(d.telechargements || 0)],
   ].filter(([, v]) => v && v !== "Autre");
@@ -196,7 +196,7 @@ for (const d of docs) {
   const jsonld = {
     "@context": "https://schema.org", "@type": "LearningResource", name: d.titre, description: resume, url: canonical,
     inLanguage: "fr", learningResourceType: d.type || "Document", educationalLevel: d.niveau || undefined,
-    about: d.matiere || d.filiere, image: d.imageUrl || undefined, datePublished: d.date ? d.date.toISOString().slice(0, 10) : undefined,
+    about: d.matiere || nomComplet(d.filiere), image: d.imageUrl || undefined, datePublished: d.date ? d.date.toISOString().slice(0, 10) : undefined,
     provider: { "@type": "Organization", name: "unidev", url: URL_SITE + "/" },
     isAccessibleForFree: false,
   };

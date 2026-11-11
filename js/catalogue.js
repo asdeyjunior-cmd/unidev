@@ -3,7 +3,7 @@ import { thumb } from "./cloudinary.js";
 import { ouvrirDemandeFiliere } from "./demande-filiere.js";
 import { habiller } from "./choix.js";
 import { initLayout, docCard, fillSelect, toast, esc, modal, setNavCredits, fileModal } from "./ui.js";
-import { canonFiliere, toutesLesFilieres } from "./filieres.js";
+import { canonFiliere, toutesLesFilieres, nomComplet, libelleFiliere } from "./filieres.js";
 import { CATEGORIES, paymentConfig, CREDITS_PAR_PUBLICATION } from "./config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -56,7 +56,7 @@ function visibleDocs() {
     (!els.type.value || d.type === els.type.value) &&
     (!els.niveau.value || d.niveau === els.niveau.value) &&
     (!els.filiere.value || d.filiere === els.filiere.value) &&
-    (!q || norm([d.titre, d.matiere, d.filiere, d.universite, d.description, d.annee].join(" ")).includes(q))
+    (!q || norm([d.titre, d.matiere, d.filiere, nomComplet(d.filiere), d.universite, d.description, d.annee].join(" ")).includes(q))
   );
 }
 
@@ -86,7 +86,7 @@ function remplirFilieres() {
   const liste = [...new Set([...filieres, ...toutesLesFilieres()])].filter((f) => f && f !== "Autre").sort((a, b) => a.localeCompare(b, "fr"));
   if (filieres.has("Autre")) liste.push("Autre");
   const current = els.filiere.value;
-  els.filiere.innerHTML = `<option value="">Filière</option>${liste.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("")}<option value="__demande__">Ma filière n'est pas là…</option>`;
+  els.filiere.innerHTML = `<option value="">Filière</option>${liste.map((v) => `<option value="${esc(v)}">${esc(libelleFiliere(v))}</option>`).join("")}<option value="__demande__">Ma filière n'est pas là…</option>`;
   if (current && ![...els.filiere.options].some((o) => o.value === current)) els.filiere.add(new Option(current, current), els.filiere.options[1]);
   els.filiere.value = current;
 }
@@ -334,7 +334,7 @@ const surligne = (texte, q) => {
   const i = norm(t).indexOf(q);
   return i < 0 ? esc(t) : esc(t.slice(0, i)) + "<mark>" + esc(t.slice(i, i + q.length)) + "</mark>" + esc(t.slice(i + q.length));
 };
-const correspond = (d, q) => norm([d.titre, d.matiere, d.filiere, d.universite, d.description, d.type, d.niveau, d.annee].join(" ")).includes(q);
+const correspond = (d, q) => norm([d.titre, d.matiere, d.filiere, nomComplet(d.filiere), d.universite, d.description, d.type, d.niveau, d.annee].join(" ")).includes(q);
 
 function tousLesDocs(extra) {
   const map = new Map();

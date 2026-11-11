@@ -1,7 +1,7 @@
 // « Ma filière n'est pas là » : l'étudiant indique sa filière, l'admin est prévenu.
 import { demanderFiliere, filieresPretes } from "./firebase.js";
 import { CATEGORIES } from "./config.js";
-import { canonFiliere, toutesLesFilieres } from "./filieres.js";
+import { canonFiliere, toutesLesFilieres, verifierFiliere } from "./filieres.js";
 import { modal, toast, esc } from "./ui.js";
 
 export function ouvrirDemandeFiliere(texte = "") {
@@ -32,12 +32,13 @@ export function ouvrirDemandeFiliere(texte = "") {
   $("df-form").onsubmit = async (e) => {
     e.preventDefault();
     const filiere = $("df-filiere").value.replace(/\s+/g, " ").trim();
-    if (filiere.length < 2) return toast("Écris le nom de ta filière.", "err");
+    const fil = verifierFiliere(filiere);
+    if (!fil.ok) return toast(fil.message, "err");
     const btn = $("df-ok");
     btn.disabled = true; btn.textContent = "Envoi…";
     try {
       await demanderFiliere({
-        filiere: canonFiliere(filiere) || filiere,
+        filiere: fil.nom,
         niveau: $("df-niveau").value,
         universite: $("df-univ").value.trim(),
         contact: $("df-contact").value.trim(),

@@ -24,7 +24,7 @@ import {
   infosDepuisChemin, lireCsv, normaliserNiveau, normaliserType, licenceAutorisee,
   filiereDepuisDomaines, couper, decouper, couvertureSvg, avecRelance, telecharger,
 } from "./outils.js";
-import { canonFiliere, ajouterFilieres, filiereConnue } from "../../js/filieres.js";
+import { canonFiliere, ajouterFilieres, filiereConnue, nomComplet } from "../../js/filieres.js";
 
 /* ---------- Arguments ---------- */
 const args = process.argv.slice(2);
@@ -433,7 +433,7 @@ try {
       if (grandTotal >= total) break;
       FILIERE_FORCEE = filiere;
       {
-        const cles = [...motsPourFiliere(filiere), ...filiere.split(/[\s-]+/)].map(sansAcc).filter((m) => m.length >= 4 && !MOTS_VIDES.has(m));
+        const cles = [...motsPourFiliere(filiere), ...nomComplet(filiere).split(/[\s,-]+/)].map(sansAcc).filter((m) => m.length >= 4 && !MOTS_VIDES.has(m));
         PERTINENT = (texte, devinee) => {
           // Le document dit lui-même appartenir à une autre filière connue : pas ici
           const f = canonFiliere(devinee || "");
@@ -449,7 +449,7 @@ try {
       // 1. Sites partenaires (avec leur accord) : seulement les documents qui parlent de la filière
       if (args.includes("--partenaires")) {
         const { documentsDuSite } = await import("./sources.js");
-        const cles = [...mots, ...filiere.split(/[\s-]+/)].map(sansAcc).filter((m) => m.length >= 4 && !MOTS_VIDES.has(m));
+        const cles = [...mots, ...nomComplet(filiere).split(/[\s,-]+/)].map(sansAcc).filter((m) => m.length >= 4 && !MOTS_VIDES.has(m));
         const filtre = (t) => { const x = sansAcc(t); return cles.some((c) => x.includes(c)); };
         // Chaque site partenaire (et les sources libres) a sa part : un seul site ne prend pas toute la place
         const sites = partenaires();
@@ -489,7 +489,7 @@ try {
       if (reste() && args.includes("--partenaires")) {
         console.log(`\n----- Il manque encore ${reste()} document(s) : sites partenaires en profondeur -----`);
         const { documentsDuSite } = await import("./sources.js");
-        const cles = [...mots, ...filiere.split(/[\s-]+/)].map(sansAcc).filter((m) => m.length >= 4 && !MOTS_VIDES.has(m));
+        const cles = [...mots, ...nomComplet(filiere).split(/[\s,-]+/)].map(sansAcc).filter((m) => m.length >= 4 && !MOTS_VIDES.has(m));
         const filtre = (x) => { const y = sansAcc(x); return cles.some((c) => y.includes(c)); };
         for (const p of partenaires()) {
           if (!reste()) break;

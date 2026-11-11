@@ -25,26 +25,35 @@ export const FILIERES = [
   "Électrotechnique",
   "Électronique",
   "Génie civil",
+  "Industries agroalimentaires et chimiques",
   "Langues",
   "Littérature",
   "Autre",
 ];
 
+// Les filières s'affichent toujours par leur nom complet ; les sigles (IAC, FCGE…) ne sont que des raccourcis
+// reconnus à la saisie et aussitôt remplacés par le nom.
+export const nomComplet = (f) => f || "";
+export const libelleFiliere = (f) => f || "";
+
 /** Autres façons d'écrire une filière de la liste (sans accents, en minuscules) */
 const ALIAS = {
-  "Informatique de gestion": ["info de gestion", "informatique gestion", "ig"],
-  "Informatique développeur d'application": ["ida", "informatique developpement d applications", "informatique developpement application", "developpeur d application",
+  "Informatique de gestion": ["ig", "informatique de gestion", "info de gestion", "informatique gestion", "ig"],
+  "Informatique développeur d'application": ["ida", "informatique développeur d'application", "ida", "informatique developpement d applications", "informatique developpement application", "developpeur d application",
     "developpement d application", "informatique developpeur application", "developpement d applications informatiques", "informatique developpeur d applications"],
+  "Industries agroalimentaires et chimiques": ["iac", "industries agroalimentaires et chimiques", "iac", "industrie agro alimentaire et chimique", "industries agro alimentaires et chimiques", "agro alimentaire et chimie",
+    "iac controle", "iac option controle de qualite", "iac production", "agronomie option controle de qualite", "agronomie controle qualite",
+    "controle de qualite", "controle qualite", "agroalimentaire", "agro alimentaire", "industries agroalimentaires", "industrie agroalimentaire et chimique"],
   "Informatique": ["info", "informatiques"],
-  "Réseaux informatiques et télécommunications": ["rit", "reseaux informatiques", "reseaux et telecommunications", "reseau informatique et telecommunication", "reseaux telecoms"],
-  "Finance-Comptabilité": ["finance comptabilite", "comptabilite finance", "comptabilite", "compta", "finance compta", "compta finance", "fcge", "finance comptabilite et gestion des entreprises", "finances comptabilite", "comptabilite et finance"],
-  "Gestion commerciale": ["gestion commercial", "gc"],
+  "Réseaux informatiques et télécommunications": ["rit", "réseaux informatiques et télécommunications", "rit", "reseaux informatiques", "reseaux et telecommunications", "reseau informatique et telecommunication", "reseaux telecoms"],
+  "Finance-Comptabilité": ["fcge", "finance-comptabilité", "finance comptabilite", "comptabilite finance", "comptabilite", "compta", "finance compta", "compta finance", "fcge", "finance comptabilite et gestion des entreprises", "finances comptabilite", "comptabilite et finance"],
+  "Gestion commerciale": ["gec", "gestion commerciale", "gestion commercial", "gc"],
   "Banque-Assurance": ["banque assurance", "banque", "assurance", "banque finance assurance"],
   "Marketing": ["mkt", "marketing communication"],
   "Commerce international": ["commerce inter", "ci"],
-  "Logistique-Transport": ["logistique", "transport", "logistique et transport", "transport logistique"],
-  "Ressources humaines": ["rh", "grh", "gestion des ressources humaines", "ressources humaines et communication", "rhc"],
-  "Assistanat de direction": ["assistant de direction", "assistante de direction", "secretariat", "ad"],
+  "Logistique-Transport": ["log", "logistique-transport", "logistique", "transport", "logistique et transport", "transport logistique"],
+  "Ressources humaines": ["rhc", "ressources humaines", "rh", "grh", "gestion des ressources humaines", "ressources humaines et communication", "rhc"],
+  "Assistanat de direction": ["ad", "assistanat de direction", "assistant de direction", "assistante de direction", "secretariat", "ad"],
   "Économie": ["eco", "economie", "sciences economiques"],
   "Mathématiques": ["maths", "math", "mathematique"],
   "Physique-Chimie": ["physique chimie", "pc"],
@@ -104,6 +113,23 @@ function rapprocher(cle) {
   return trouve;
 }
 
+/** Vrai si le texte ressemble à un sigle (« TH », « QHSE », « rit ») plutôt qu'à un nom de filière */
+export function estSigle(v) {
+  const t = String(v || "").trim();
+  if (!t || /\s/.test(t.replace(/[.\-]/g, ""))) return false;
+  const lettres = t.replace(/[^A-Za-zÀ-ÿ]/g, "");
+  return lettres.length <= 3 || (lettres.length <= 8 && lettres === lettres.toUpperCase()) || (lettres.length <= 5 && !/[aeiouyàâéèêëîïôöùûü]/i.test(lettres));
+}
+/** Pour les formulaires : { ok, nom } ou { ok: false, message }. Un sigle connu devient le nom complet ; un sigle inconnu est refusé. */
+export function verifierFiliere(v) {
+  const brut = String(v || "").replace(/\s+/g, " ").trim();
+  if (brut.length < 2) return { ok: false, message: "Écris le nom de ta filière." };
+  const connue = rapprocher(cleFiliere(brut));
+  if (connue) return { ok: true, nom: connue };
+  if (estSigle(brut)) return { ok: false, message: `« ${brut} » est un sigle. Écris le nom complet de la filière (ex : « Industries agroalimentaires et chimiques » au lieu de « IAC »).` };
+  return { ok: true, nom: canonFiliere(brut) };
+}
+
 /** Filières ajoutées automatiquement (documents validés) : elles rejoignent la liste officielle */
 export const FILIERES_AJOUTEES = [];
 export function ajouterFilieres(liste = []) {
@@ -113,6 +139,7 @@ export function ajouterFilieres(liste = []) {
     // Presque le même nom qu'une filière existante : c'est la même (pas de doublon dans les listes)
     const meme = rapprocher(cle);
     if (meme) { TABLE.set(cle, meme); continue; }
+    if (estSigle(f)) continue; // un sigle inconnu n'entre pas dans la liste des filières
     TABLE.set(cle, f);
     FILIERES_AJOUTEES.push(f);
   }

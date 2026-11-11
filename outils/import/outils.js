@@ -1,3 +1,4 @@
+import { canonFiliere, nomComplet } from "../../js/filieres.js";
 // Fonctions sans connexion réseau (testables) utilisées par importer.js
 
 export const TYPES = ["Cours", "TD", "TP", "Examen", "Corrigé", "Mémoire", "Résumé", "Roman", "Autre"];
@@ -208,6 +209,9 @@ const MOTS_FILIERES = [
   ["droit", "Droit", "Droit"], ["juridique", "Droit", "Droit"],
   ["microeconomie", "Économie", "Microéconomie"], ["macroeconomie", "Économie", "Macroéconomie"], ["economie", "Économie", "Économie"],
   ["communication", "Communication", "Communication"], ["journalisme", "Communication", "Journalisme"],
+  ["agroalimentaire", "IAC", "Agroalimentaire"], ["agro alimentaire", "IAC", "Agroalimentaire"], ["technologie alimentaire", "IAC", "Technologie alimentaire"],
+  ["chimie alimentaire", "IAC", "Chimie alimentaire"], ["controle qualite", "IAC", "Contrôle qualité"], ["controle de qualite", "IAC", "Contrôle qualité"],
+  ["hygiene alimentaire", "IAC", "Hygiène alimentaire"], ["genie des procedes", "IAC", "Génie des procédés"],
   ["secretariat", "Assistanat de direction", "Secrétariat"], ["assistanat", "Assistanat de direction", ""],
   ["statistique", "Mathématiques", "Statistiques"], ["probabilite", "Mathématiques", "Probabilités"], ["algebre", "Mathématiques", "Algèbre"],
   ["analyse", "Mathématiques", "Analyse"], ["mathematique", "Mathématiques", ""], ["maths", "Mathématiques", ""],
@@ -319,9 +323,10 @@ export function titreAReparer(titre) {
 /** Mots à chercher pour une filière : son nom puis ses matières (ex. Finance-Comptabilité -> Comptabilité générale, Fiscalité…) */
 export function motsPourFiliere(filiere) {
   const cle = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
-  const f = cle(filiere);
-  const matieres = MOTS_FILIERES.filter(([, fil]) => cle(fil) === f).map(([, , m]) => m).filter(Boolean);
-  const mots = [String(filiere).replace(/-/g, " "), ...matieres];
+  // Les filières à sigle (FCGE, IAC…) sont cherchées par leur nom complet, pas par leur sigle
+  const f = canonFiliere(filiere) || filiere;
+  const matieres = MOTS_FILIERES.filter(([, fil]) => canonFiliere(fil) === f).map(([, , m]) => m).filter(Boolean);
+  const mots = [nomComplet(f).replace(/-/g, " "), ...matieres];
   const vus = new Set();
   return mots.filter((m) => { const k = cle(m); if (!k || vus.has(k)) return false; vus.add(k); return true; }).slice(0, 10);
 }

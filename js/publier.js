@@ -1,5 +1,5 @@
 import { createDocument, listMine, getSearchIndex, filieresPretes } from "./firebase.js";
-import { toutesLesFilieres, canonFiliere } from "./filieres.js";
+import { toutesLesFilieres, canonFiliere, verifierFiliere } from "./filieres.js";
 import { uploadFile, uploadDocument } from "./cloudinary.js";
 import { photosEnPdf, photoLegere, couvertureAuto, estImage, ACCEPT_IMAGES } from "./photos-pdf.js";
 import { initLayout, docCard, fillSelect, toast, esc } from "./ui.js";
@@ -165,6 +165,9 @@ $("form").onsubmit = async (e) => {
   e.preventDefault();
   if (!file && !photos.length) return toast("Choisis un fichier ou prends tes pages en photo.", "err");
   // Image facultative : sans image, on prend la 1re page du PDF (ou une couverture verte avec le titre)
+  const fil = verifierFiliere($("filiere").value);
+  if (!fil.ok) { $("filiere").focus(); return toast(fil.message, "err"); }
+  $("filiere").value = fil.nom;
   const suite = suiteChoisie();
   if (!suite.ok) return toast("« Suite de » : choisis le document précédent dans la liste, ou laisse vide.", "err");
 
@@ -223,6 +226,7 @@ $("form").onsubmit = async (e) => {
 
 // La filière tapée est corrigée tout de suite (majuscules, accents, fautes de frappe)
 $("filiere").addEventListener("change", () => {
-  const v = $("filiere").value, c = canonFiliere(v);
-  if (c && c !== v.trim()) { $("filiere").value = c; toast(`Filière enregistrée sous : ${c}`); }
+  const v = $("filiere").value, r = verifierFiliere(v);
+  if (!r.ok) { if (v.trim()) toast(r.message, "err"); return; }
+  if (r.nom !== v.trim()) { $("filiere").value = r.nom; toast(`Filière enregistrée sous : ${r.nom}`); }
 });
