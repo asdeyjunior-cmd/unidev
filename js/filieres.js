@@ -4,6 +4,7 @@
 /** Liste officielle affichée dans les suggestions. Ajoute ici une filière pour la proposer. */
 export const FILIERES = [
   "Informatique de gestion",
+  "Informatique développeur d'application",
   "Informatique",
   "Réseaux informatiques et télécommunications",
   "Finance-Comptabilité",
@@ -32,6 +33,8 @@ export const FILIERES = [
 /** Autres façons d'écrire une filière de la liste (sans accents, en minuscules) */
 const ALIAS = {
   "Informatique de gestion": ["info de gestion", "informatique gestion", "ig"],
+  "Informatique développeur d'application": ["ida", "informatique developpement d applications", "informatique developpement application", "developpeur d application",
+    "developpement d application", "informatique developpeur application", "developpement d applications informatiques", "informatique developpeur d applications"],
   "Informatique": ["info", "informatiques"],
   "Réseaux informatiques et télécommunications": ["rit", "reseaux informatiques", "reseaux et telecommunications", "reseau informatique et telecommunication", "reseaux telecoms"],
   "Finance-Comptabilité": ["finance comptabilite", "comptabilite finance", "comptabilite", "compta", "finance compta", "compta finance", "fcge", "finance comptabilite et gestion des entreprises", "finances comptabilite", "comptabilite et finance"],
