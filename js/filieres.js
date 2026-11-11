@@ -66,7 +66,7 @@ const ALIAS = {
 // sans accents ni ponctuation, sans petits mots ni « BTS / filière / option… », au singulier, mots triés.
 const MOTS_VIDES = new Set(["et", "de", "des", "du", "la", "le", "les", "en", "d", "l", "a", "au", "aux", "pour", "un", "une",
   "bts", "dut", "licence", "master", "filiere", "filieres", "option", "specialite", "parcours", "departement", "section", "niveau"]);
-const racine = (m) => (m.length > 4 ? m.replace(/(es|s|x|e)$/, "") : m);
+const racine = (m) => { const sing = m.length > 3 ? m.replace(/[sx]$/, "") : m; return sing.length > 4 ? sing.replace(/e$/, "") : sing; };
 export function cleFiliere(s) {
   return String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter((m) => m && !MOTS_VIDES.has(m) && !/^\d+$/.test(m)).map(racine).sort().join(" ");
@@ -98,7 +98,8 @@ function rapprocher(cle) {
   if (TABLE.has(cle)) return TABLE.get(cle);
   const tol = tolerance(cle);
   let best = null, bd = 99;
-  if (tol) for (const [k, f] of TABLE) { if (k.length < 4) continue; const dd = distance(cle, k); if (dd < bd) { bd = dd; best = f; } }
+  // Faute de frappe sur un nom d'un seul mot (pour plusieurs mots : comparaison mot à mot, plus bas)
+  if (tol && !cle.includes(" ")) for (const [k, f] of TABLE) { if (k.length < 4 || k.includes(" ")) continue; const dd = distance(cle, k); if (dd < bd) { bd = dd; best = f; } }
   if (best && bd <= tol) return best;
   // Tous les mots d'une filière connue + seulement des mots sans importance (ou son sigle) : c'est elle
   const mots = cle.split(" ");
@@ -110,7 +111,27 @@ function rapprocher(cle) {
     const enPlus = mots.filter((m) => !km.includes(m));
     if (enPlus.every((m) => FAIBLES.has(m) || TABLE.get(m) === f)) { trouve = f; taille = km.length; }
   }
-  return trouve;
+  if (trouve) return trouve;
+  // Mêmes mots à une terminaison près (« développement d'applications » / « développeur d'application »,
+  // « gestion commerce » / « gestion commerciale ») : même filière. Seulement pour les noms de 2 mots et plus.
+  if (mots.length >= 2) for (const [k, f] of TABLE) {
+    const km = k.split(" ");
+    if (km.length !== mots.length) continue;
+    const libres = [...km];
+    const ok = mots.every((m) => { const i = libres.findIndex((x) => memeMot(m, x)); if (i < 0) return false; libres.splice(i, 1); return true; });
+    if (ok) return f;
+  }
+  return null;
+}
+/** Deux mots de même famille : identiques, à une faute de frappe près, ou même début sur au moins 75 % du plus court (6 lettres minimum) */
+function memeMot(a, b) {
+  if (a === b) return true;
+  const court = Math.min(a.length, b.length);
+  // faute de frappe : 1 lettre (2 pour un mot long)
+  if (court >= 5 && distance(a, b) <= (court >= 10 ? 2 : 1)) return true;
+  if (court < 6) return false;
+  let i = 0; while (i < court && a[i] === b[i]) i++;
+  return i >= 6 && i >= 0.75 * court;
 }
 
 /** Vrai si le texte ressemble à un sigle (« TH », « QHSE », « rit ») plutôt qu'à un nom de filière */

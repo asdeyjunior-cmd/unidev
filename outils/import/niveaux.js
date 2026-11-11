@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
 import { niveauDe, typeDe, deviner } from "./outils.js";
-import { canonFiliere, ajouterFilieres, FILIERES_AJOUTEES } from "../../js/filieres.js";
+import { canonFiliere, ajouterFilieres, FILIERES_AJOUTEES, toutesLesFilieres } from "../../js/filieres.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const ESSAI = process.argv.includes("--essai");
@@ -51,6 +51,7 @@ const sansNiveau = Object.values(index).filter((e) => Array.isArray(e) && vide(e
 const sansType = Object.values(index).filter((e) => Array.isArray(e) && vide(e[3])).length;
 console.log(`${Object.keys(index).length} document(s) : ${sansNiveau} sans niveau, ${sansType} sans type. ${changements.length} classé(s) maintenant.\n`);
 console.log(`Filières en double retirées de la liste : ${Math.max(0, doublonsFilieres)}`);
+console.log(`Filières du site (${toutesLesFilieres().length}) : ${toutesLesFilieres().join(" | ")}`);
 console.log("Niveaux :", Object.entries(compter("niveau")).map(([n, k]) => `${n} ${k}`).join(" · ") || "aucun");
 console.log("Types   :", Object.entries(compter("type")).map(([n, k]) => `${n} ${k}`).join(" · ") || "aucun");
 console.log("Filières :", Object.entries(compter("filiere")).map(([n, k]) => `${n} ${k}`).join(" · ") || "aucune");
