@@ -8695,5 +8695,32 @@
     "source": "https://www.fomesoutra.com/enseignement-technique-et-professionnel?limit=50&limitstart=150",
     "licence": "autorisation de www.fomesoutra.com",
     "date": "2026-11-09T18:53:36.430Z"
+  },
+  "site:https://www.fomesoutra.com/docs-par-nos-ambassadeurs/6911-homme-daffaire-malgre-moi-by-yvon-chouinard-z-lib-org/file": {
+    "id": "7W9HyVjszQyP3pn8DAWH",
+    "source": "https://www.fomesoutra.com/docs-par-nos-ambassadeurs?limit=50&limitstart=1250",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-11T08:01:20.425Z"
+  },
+  "zenodo:23637781": {
+    "id": "jLsf3TwZEvN8IwyVaoY9",
+    "source": "https://doi.org/10.5281/zenodo.23637781",
+    "licence": "CC BY",
+    "date": "2026-11-11T08:31:41.494Z"
+  },
+  "zenodo:3264211": {
+    "id": "Cm6JVsxDK1Z3ggWooCgC",
+    "source": "https://doi.org/10.5281/zenodo.3264211",
+    "licence": "CC BY",
+    "date": "2026-11-11T08:37:08.847Z"
+  },
+  "zenodo:3264209": {
+    "doublon": true
+  },
+  "zenodo:20295534": {
+    "id": "rFjmZot9xRze2QtenHrf",
+    "source": "https://doi.org/10.5281/zenodo.20295534",
+    "licence": "CC BY",
+    "date": "2026-11-11T08:37:33.542Z"
   }
 }
