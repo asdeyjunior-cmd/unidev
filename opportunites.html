@@ -38,6 +38,13 @@
       <h1 class="page-title">Opportunités</h1>
       <p class="muted" style="margin-bottom:18px">Stages, emplois, bourses, concours et formations. Ouvrir une opportunité coûte <b id="opp-cout">2</b> crédits ; elle reste ensuite ouverte sur ton compte.</p>
 
+      <div class="opp-recherche">
+        <input id="opp-q" type="search" placeholder="Rechercher : stage, bourse, Abidjan, comptabilité…" autocomplete="off" aria-label="Rechercher une opportunité" />
+        <div class="opp-types" id="opp-types">
+          <button type="button" data-type="" class="on">Toutes</button><button type="button" data-type="Stage">Stages</button><button type="button" data-type="Emploi">Emplois</button><button type="button" data-type="Bourse">Bourses</button><button type="button" data-type="Concours">Concours</button><button type="button" data-type="Formation">Formations</button>
+        </div>
+      </div>
+
       <div class="opp-liste" id="opps"><div class="loader"></div></div>
       <button type="button" class="btn btn-ghost-ink btn-block hidden" id="opp-plus" style="margin-top:14px">Voir plus</button>
     </div>

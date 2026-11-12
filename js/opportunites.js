@@ -7,6 +7,10 @@ const $ = (id) => document.getElementById(id);
 $("opp-cout").textContent = COUT_OPPORTUNITE;
 let me = null, admin = false, credits = 0, debloquees = new Set();
 let opps = [], cursor = null, fini = false, charge = false;
+// Recherche : sur toutes les opportunités chargées ; « Voir plus » affiche 6 de plus
+const PAR_PAGE = 6;
+let montrees = PAR_PAGE, typeChoisi = "";
+const norm = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
 const jour = (iso) => { const [a, m, j] = String(iso || "").split("-"); return a && m && j ? `${j}/${m}/${a}` : ""; };
 const passee = (o) => o.dateLimite && o.dateLimite < new Date().toISOString().slice(0, 10);
@@ -39,16 +43,24 @@ function carte(o) {
     <button type="button" class="btn ${ouverte(o) ? "btn-ghost-ink" : ""}" data-opp="${esc(o.id)}">${ouverte(o) ? "Ouvrir" : `Voir l'opportunité · ${COUT_OPPORTUNITE} crédits`}</button>
   </article>`;
 }
-function afficher() {
-  $("opps").innerHTML = opps.length ? opps.map(carte).join("")
-    : charge ? `<div class="loader"></div>` : `<div class="empty">Aucune opportunité pour le moment. Reviens bientôt.</div>`;
-  $("opp-plus").classList.toggle("hidden", fini || !opps.length);
+function filtrees() {
+  const mots = norm($("opp-q").value).split(/\s+/).filter(Boolean);
+  return opps.filter((o) => (!typeChoisi || cleType(o.type) === typeChoisi)
+    && mots.every((m) => norm(`${o.titre} ${o.type} ${o.organisme} ${o.lieu} ${o.apercu}`).includes(m)));
 }
+function afficher() {
+  const liste = filtrees(), cherche = !!($("opp-q").value.trim() || typeChoisi);
+  $("opps").innerHTML = liste.length ? liste.slice(0, montrees).map(carte).join("")
+    : charge ? `<div class="loader"></div>`
+    : `<div class="empty">${cherche ? "Aucune opportunité ne correspond à ta recherche." : "Aucune opportunité pour le moment. Reviens bientôt."}</div>`;
+  $("opp-plus").classList.toggle("hidden", liste.length <= montrees);
+}
+// Une recherche à la fois : toutes les opportunités sont chargées d'un coup (elles sont peu nombreuses)
 async function suite() {
   if (charge || fini) return;
   charge = true; $("opp-plus").disabled = true;
   try {
-    const p = await listOpportunites(cursor);
+    const p = await listOpportunites(cursor, 100);
     opps.push(...p.items); cursor = p.cursor; fini = p.done;
   } catch (e) {
     fini = true;
@@ -57,7 +69,16 @@ async function suite() {
   charge = false; $("opp-plus").disabled = false;
   afficher();
 }
-$("opp-plus").onclick = suite;
+$("opp-plus").onclick = () => { montrees += PAR_PAGE; afficher(); if (!fini && filtrees().length <= montrees) suite(); };
+let attente;
+$("opp-q").addEventListener("input", () => { clearTimeout(attente); attente = setTimeout(() => { montrees = PAR_PAGE; afficher(); }, 200); });
+$("opp-types").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-type]");
+  if (!b) return;
+  typeChoisi = b.dataset.type;
+  $("opp-types").querySelectorAll("[data-type]").forEach((x) => x.classList.toggle("on", x === b));
+  montrees = PAR_PAGE; afficher();
+});
 
 function montrer(o, d) {
   const lien = /^https?:\/\//i.test(d.lien || "") ? d.lien : "";
