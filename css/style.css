@@ -1330,16 +1330,18 @@ body.lecteur-page { padding-bottom: 0; background: #eef4f0; min-height: 100dvh; 
   border: 1px solid var(--line, #d7e6dc); background: #fff; color: var(--ink, #0d3b26); text-decoration: none; }
 .lien-opps span { color: var(--muted, #667); font-size: .88rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lien-opps::after { content: "›"; margin-left: auto; font-size: 1.2rem; color: var(--muted, #667); }
-.opp-liste { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); align-items: start; }
+.opp-liste { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); align-items: stretch; }
 .opp { background: #fff; border: 1px solid var(--line, #d7e6dc); border-radius: 14px; padding: 16px; overflow: hidden; display: flex; flex-direction: column; }
-.opp .btn { align-self: flex-start; margin-top: auto; }
+/* Bouton en bas de chaque carte, même largeur partout : alignés d'une carte à l'autre */
+.opp .btn { width: 100%; margin-top: auto; justify-content: center; text-align: center; }
+.opp-apercu { flex: none; }
 .opp-tete { display: flex; justify-content: space-between; gap: 10px; align-items: center; font-size: .82rem; }
 .opp-type { font-weight: 800; text-transform: uppercase; letter-spacing: .04em; font-size: .74rem; color: var(--accent-dark, #14633a);
   background: var(--tint, #eef6f1); padding: 3px 8px; border-radius: 6px; }
 .opp-date { color: var(--muted, #667); }
 .opp-titre { font-size: 1.08rem; margin: 10px 0 4px; line-height: 1.3; }
 .opp-infos { color: var(--muted, #667); font-size: .92rem; margin: 0 0 8px; }
-.opp-apercu { margin: 0 0 12px; }
+.opp-apercu { margin: 0 0 14px; }
 .opp-passee { opacity: .6; }
 .opp-texte { line-height: 1.55; overflow-wrap: anywhere; }
 .opp-image { display: block; width: 100%; height: auto; margin-top: 12px; border-radius: 10px; border: 1px solid var(--line, #d7e6dc); }
@@ -1356,9 +1358,25 @@ body.lecteur-page { padding-bottom: 0; background: #eef4f0; min-height: 100dvh; 
 @media (max-width: 600px) {
   .compte-btn { padding: 6px 10px; font-size: .8rem; gap: 4px; }
   .compte-btn svg { width: 18px; height: 18px; }
-  /* Sur téléphone, « Compte » n'apparaît que dans la page Crédits */
-  .compte-btn:not(.compte-ici) { display: none; }
+}
+/* Téléphone et tablette : pas de Connexion / Déconnexion dans la barre du bas (place d'Opportunités) */
+.bottomnav #nav-user { display: none; }
+/* PC (barre de gauche) : Connexion / Déconnexion en bas, plus besoin du bouton Compte */
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  .bottomnav #nav-user { display: contents; }
+  .compte-btn { display: none; }
 }
 .cr-compte { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .cr-compte p { margin: 0; overflow-wrap: anywhere; }
 .bottomnav #nav-opps > span { font-size: .9em; letter-spacing: -.02em; }
+/* Carte sans image : bandeau coloré de la même taille qu'une image */
+.opp-bandeau { width: calc(100% + 32px); margin: -16px -16px 12px; aspect-ratio: 16 / 9; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; padding: 16px; color: #fff; text-align: center; font-weight: 800; font-size: 1.02rem; line-height: 1.25; }
+.opp-bandeau svg { width: 46px; height: 46px; opacity: .9; }
+.opp-bandeau span { max-width: 90%; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.opp-t-stage { background: linear-gradient(135deg, #1b7a4a, #12603a); }
+.opp-t-emploi { background: linear-gradient(135deg, #1f5f8b, #174a6d); }
+.opp-t-bourse { background: linear-gradient(135deg, #8a5a14, #6d460f); }
+.opp-t-concours { background: linear-gradient(135deg, #7a2f4f, #5e243d); }
+.opp-t-formation { background: linear-gradient(135deg, #4b3f8f, #3a3170); }
+.opp-t-autre { background: linear-gradient(135deg, #46605a, #354a45); }

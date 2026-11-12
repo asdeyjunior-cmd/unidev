@@ -12,10 +12,24 @@ const jour = (iso) => { const [a, m, j] = String(iso || "").split("-"); return a
 const passee = (o) => o.dateLimite && o.dateLimite < new Date().toISOString().slice(0, 10);
 const ouverte = (o) => admin || debloquees.has(o.id);
 
+// Sans image : un bandeau de la même taille, couleur et icône selon le type (les cartes restent alignées)
+const ICONE_TYPE = {
+  Stage: '<path d="M4 8h16v11H4z"/><path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/>',
+  Emploi: '<path d="M4 8h16v11H4z"/><path d="M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M4 13h16"/>',
+  Bourse: '<path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11v5c3 2 7 2 10 0v-5"/>',
+  Concours: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M12 13v4M8 20h8M16 6h3a3 3 0 0 1-3 3M8 6H5a3 3 0 0 0 3 3"/>',
+  Formation: '<path d="M4 5h7a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4zM20 5h-7a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h7z"/>',
+  Autre: '<circle cx="12" cy="12" r="8"/><path d="M12 8v5M12 16h.01"/>',
+};
+const cleType = (t) => (ICONE_TYPE[t] ? t : "Autre");
+const bandeau = (o) => `<div class="opp-bandeau opp-t-${cleType(o.type).toLowerCase()}">
+    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICONE_TYPE[cleType(o.type)]}</svg>
+    <span>${esc(o.organisme || o.type || "Opportunité")}</span></div>`;
+
 function carte(o) {
   const infos = [o.organisme, o.lieu].filter(Boolean).map(esc).join(" · ");
   return `<article class="opp${passee(o) ? " opp-passee" : ""}">
-    ${lienSur(o.image || "", "image") ? `<img class="opp-img" src="${esc(o.image)}" alt="" loading="lazy" />` : ""}
+    ${lienSur(o.image || "", "image") ? `<img class="opp-img" src="${esc(o.image)}" alt="" loading="lazy" />` : bandeau(o)}
     <div class="opp-tete"><span class="opp-type">${esc(o.type || "Opportunité")}</span>
       ${o.dateLimite ? `<span class="opp-date">${passee(o) ? "Terminée le" : "Jusqu'au"} ${jour(o.dateLimite)}</span>` : ""}</div>
     <h2 class="opp-titre">${esc(o.titre)}</h2>

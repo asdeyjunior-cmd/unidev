@@ -80,21 +80,30 @@ export function initLayout(active, onUser = () => {}) {
       <a href="emploi.html" data-k="emploi">${ICONS.emploi}<span>Planning</span></a>
       <a href="credits.html" data-k="credits">${ICONS.credits}<span>Crédits</span><span class="pill" id="nav-credits"></span></a>
       <a href="admin.html" data-k="admin" class="hidden" id="nav-admin">${ICONS.admin}<span>Modération</span></a>
-      <a href="opportunites.html" data-k="opportunites" id="nav-opps">${ICONS.opps}<span>Opportunités</span></a>`;
+      <a href="opportunites.html" data-k="opportunites" id="nav-opps">${ICONS.opps}<span>Opportunités</span></a>
+      <span id="nav-user"></span>`;
     document.body.append(nav);
     nav.querySelector(`[data-k="${active}"]`)?.classList.add("active");
   }
-  // Compte : en haut à droite (connexion, ou page Crédits avec la déconnexion)
+  // Compte : sur PC, Connexion / Déconnexion en bas de la barre de gauche ;
+  // sur téléphone, bouton « Compte » en haut à droite de la page Crédits (la barre du bas est pleine)
   let compte = header.querySelector(".compte-btn");
-  if (!compte) {
+  if (!compte && active === "credits") {
     compte = document.createElement("a");
     compte.className = "compte-btn";
     header.querySelector(".topbar-in")?.append(compte);
   }
   const majCompte = (connecte) => {
-    compte.href = connecte ? "credits.html#compte" : `connexion.html${active && active !== "credits" ? `?next=${encodeURIComponent(location.pathname.split("/").pop() || "index.html")}` : ""}`;
+    const slot = nav.querySelector("#nav-user");
+    if (slot) {
+      if (connecte) {
+        slot.innerHTML = `<button id="btn-logout">${ICONS.compte}<span>Déconnexion</span></button>`;
+        slot.querySelector("#btn-logout").onclick = seDeconnecter;
+      } else slot.innerHTML = `<a href="connexion.html" class="${active === "" ? "active" : ""}">${ICONS.compte}<span>Connexion</span></a>`;
+    }
+    if (!compte) return;
+    compte.href = connecte ? "#compte" : "connexion.html?next=credits.html";
     compte.innerHTML = `${ICONS.compte}<span>${connecte ? "Compte" : "Connexion"}</span>`;
-    compte.classList.toggle("compte-ici", active === "credits");
   };
 
   if (!document.querySelector(".footer")) {
