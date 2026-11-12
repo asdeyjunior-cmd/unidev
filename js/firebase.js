@@ -500,11 +500,11 @@ export async function debloquerOpportunite(uid, id) {
   await batch.commit();
 }
 /** Admin : publie une opportunité */
-export async function creerOpportunite({ titre, type, organisme, lieu, dateLimite, apercu, description, lien, contact }) {
+export async function creerOpportunite({ titre, type, organisme, lieu, dateLimite, apercu, description, lien, contact, images = [] }) {
   const ref = doc(oppsCol);
   const batch = writeBatch(db);
-  batch.set(ref, { titre, type, organisme, lieu, dateLimite, apercu, createdAt: serverTimestamp() });
-  batch.set(doc(db, "opportunites", ref.id, "prive", "detail"), { description, lien, contact });
+  batch.set(ref, { titre, type, organisme, lieu, dateLimite, apercu, nbImages: images.length, createdAt: serverTimestamp() });
+  batch.set(doc(db, "opportunites", ref.id, "prive", "detail"), { description, lien, contact, images, nbImages: images.length });
   await batch.commit();
   return ref.id;
 }

@@ -1341,3 +1341,8 @@ body.lecteur-page { padding-bottom: 0; background: #eef4f0; min-height: 100dvh; 
 .opp-apercu { margin: 0 0 12px; }
 .opp-passee { opacity: .6; }
 .opp-texte { line-height: 1.55; overflow-wrap: anywhere; }
+.opp-image { display: block; width: 100%; height: auto; margin-top: 12px; border-radius: 10px; border: 1px solid var(--line, #d7e6dc); }
+.o-apercus { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.o-apercus img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line, #d7e6dc); }
+.opp-img { display: block; width: calc(100% + 32px); margin: -16px -16px 12px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 14px 14px 0 0; background: var(--tint, #eef6f1); }
+.opp-affiche { display: block; width: 100%; margin-top: 12px; border-radius: 10px; border: 1px solid var(--line, #d7e6dc); }

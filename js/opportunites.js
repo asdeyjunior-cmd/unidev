@@ -1,6 +1,7 @@
 // Page Opportunités : liste publique (6 à la fois, bouton « Voir plus »), détail débloqué pour 2 crédits.
 import { listOpportunites, listOppsDebloquees, getOpportuniteDetail, debloquerOpportunite, getCredits, COUT_OPPORTUNITE } from "./firebase.js";
 import { initLayout, esc, toast, modal, setNavCredits } from "./ui.js";
+import { lienSur } from "./cloudinary.js";
 
 const $ = (id) => document.getElementById(id);
 $("opp-cout").textContent = COUT_OPPORTUNITE;
@@ -14,11 +15,13 @@ const ouverte = (o) => admin || debloquees.has(o.id);
 function carte(o) {
   const infos = [o.organisme, o.lieu].filter(Boolean).map(esc).join(" · ");
   return `<article class="opp${passee(o) ? " opp-passee" : ""}">
+    ${/^https:\/\//.test(o.image || "") ? `<img class="opp-img" src="${esc(o.image)}" alt="" loading="lazy" />` : ""}
     <div class="opp-tete"><span class="opp-type">${esc(o.type || "Opportunité")}</span>
       ${o.dateLimite ? `<span class="opp-date">${passee(o) ? "Terminée le" : "Jusqu'au"} ${jour(o.dateLimite)}</span>` : ""}</div>
     <h2 class="opp-titre">${esc(o.titre)}</h2>
     ${infos ? `<p class="opp-infos">${infos}</p>` : ""}
     ${o.apercu ? `<p class="opp-apercu">${esc(o.apercu)}</p>` : ""}
+    ${o.nbImages ? `<p class="opp-infos">${o.nbImages} image${o.nbImages > 1 ? "s" : ""} jointe${o.nbImages > 1 ? "s" : ""}</p>` : ""}
     <button type="button" class="btn ${ouverte(o) ? "btn-ghost-ink" : ""}" data-opp="${esc(o.id)}">${ouverte(o) ? "Ouvrir" : `Voir l'opportunité · ${COUT_OPPORTUNITE} crédits`}</button>
   </article>`;
 }
@@ -48,6 +51,8 @@ function montrer(o, d) {
     <h3 style="margin-top:8px">${esc(o.titre)}</h3>
     <p class="muted" style="margin:4px 0 12px">${[o.organisme, o.lieu, o.dateLimite ? `jusqu'au ${jour(o.dateLimite)}` : ""].filter(Boolean).map(esc).join(" · ")}</p>
     <div class="opp-texte">${esc(d.description || "").replace(/\n/g, "<br>")}</div>
+    ${(d.images || []).filter((u) => /^https:\/\//.test(u)).map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener"><img class="opp-affiche" src="${esc(u)}" alt="Image de l'annonce" loading="lazy" /></a>`).join("")}
+    ${(d.images || []).filter((u) => lienSur(u, "image")).map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener"><img class="opp-image" src="${esc(u)}" alt="" loading="lazy" /></a>`).join("")}
     ${d.contact ? `<p style="margin-top:12px"><b>Contact :</b> ${esc(d.contact)}</p>` : ""}
     <div class="modal-actions"><button class="btn btn-ghost-ink" data-close>Fermer</button>
       ${lien ? `<a class="btn" href="${esc(lien)}" target="_blank" rel="noopener">Postuler / voir le site</a>` : ""}</div>`);

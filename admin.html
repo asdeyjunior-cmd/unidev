@@ -19,7 +19,7 @@
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
-  <link rel="stylesheet" href="css/style.css?v=57" />
+  <link rel="stylesheet" href="css/style.css?v=58" />
   <script type="speculationrules">
     { "prefetch": [{ "source": "document", "where": { "href_matches": "/*.html" }, "eagerness": "moderate" }] }
   </script>
@@ -91,6 +91,8 @@
       listDemandes, ajouterFiliereOfficielle, supprimerDemandes, filieresPretes, getSearchIndex,
     } from "./js/firebase.js";
     import { toutesLesFilieres } from "./js/filieres.js";
+    import { uploadFile } from "./js/cloudinary.js";
+    import { photoLegere, estImage, ACCEPT_IMAGES } from "./js/photos-pdf.js";
     import { CATEGORIES } from "./js/config.js";
     import { initLayout, docCard, toast, esc, modal, formatDate, fileModal } from "./js/ui.js";
 
@@ -327,28 +329,49 @@
           <div class="field"><label for="o-apercu">Aperçu visible par tous (1 ou 2 phrases, sans le contact) *</label><input id="o-apercu" required maxlength="220" /></div>
           <div class="field"><label for="o-desc">Description complète, visible après déblocage *</label><textarea id="o-desc" required maxlength="4000" rows="6"></textarea></div>
           <div class="grid-2">
+            <div class="field"><label for="o-img">Image visible par tous (facultatif)</label><input id="o-img" type="file" accept="${ACCEPT_IMAGES}" />
+              <small class="muted">Sur la carte. Sans contact ni détail important.</small></div>
+            <div class="field"><label for="o-imgs">Images de l'annonce (facultatif, plusieurs possibles)</label><input id="o-imgs" type="file" accept="${ACCEPT_IMAGES}" multiple />
+              <small class="muted">Affiche, fiche de poste… Visibles seulement après déblocage.</small></div>
+          </div>
+          <div class="grid-2">
             <div class="field"><label for="o-lien">Lien pour postuler</label><input id="o-lien" type="url" maxlength="300" placeholder="https://…" /></div>
             <div class="field"><label for="o-contact">Contact (e-mail, téléphone)</label><input id="o-contact" maxlength="150" /></div>
           </div>
+          <div class="field"><label for="o-images">Images (affiche, flyer…), visibles après déblocage. Facultatif, 6 au plus</label>
+            <input id="o-images" type="file" accept="${ACCEPT_IMAGES}" multiple />
+            <div id="o-apercus" class="o-apercus"></div></div>
           <button class="btn btn-block" id="o-ok">Publier</button>
         </form>
-        ${liste.map((o) => `<article class="card"><div class="card-body">
+        ${liste.map((o) => `<article class="card">${o.image ? `<img src="${esc(o.image)}" alt="" loading="lazy" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px 12px 0 0">` : ""}<div class="card-body">
             <p class="card-cat">${esc(o.type || "")}${o.dateLimite ? ` · jusqu'au ${esc(o.dateLimite.split("-").reverse().join("/"))}` : ""}</p>
             <h3>${esc(o.titre)}</h3>
             <p class="muted">${esc([o.organisme, o.lieu].filter(Boolean).join(" · "))}</p>
             <p class="muted">${esc(o.apercu || "")}</p>
             <div class="card-actions"><button class="btn btn-danger" data-opp-suppr="${esc(o.id)}">Retirer</button></div>
           </div></article>`).join("") || `<div class="empty">Aucune opportunité publiée.</div>`}`;
+      $("o-images").onchange = () => {
+        const f = [...$("o-images").files].filter(estImage).slice(0, 6);
+        $("o-apercus").innerHTML = f.map((x) => `<img src="${URL.createObjectURL(x)}" alt="" />`).join("");
+        if ($("o-images").files.length > 6) toast("6 images au plus : les premières sont gardées.", "err");
+      };
       $("opp-form").onsubmit = async (e) => {
         e.preventDefault();
         const v = (id) => $(id).value.replace(/[ \t]+/g, " ").trim();
         $("o-ok").disabled = true;
         try {
+          // Images allégées (1600 px) puis envoyées sur Cloudinary, une par une
+          const fichiers = [...$("o-images").files].filter(estImage).slice(0, 6), images = [];
+          for (let i = 0; i < fichiers.length; i++) {
+            $("o-ok").textContent = `Envoi de l'image ${i + 1}/${fichiers.length}…`;
+            images.push((await uploadFile(await photoLegere(fichiers[i], 1600), () => {}, "image")).url);
+          }
+          $("o-ok").textContent = "Publication…";
           await creerOpportunite({ titre: v("o-titre"), type: $("o-type").value, organisme: v("o-org"), lieu: v("o-lieu"), dateLimite: $("o-date").value || "",
-            apercu: v("o-apercu"), description: $("o-desc").value.trim(), lien: v("o-lien"), contact: v("o-contact") });
+            apercu: v("o-apercu"), description: $("o-desc").value.trim(), lien: v("o-lien"), contact: v("o-contact"), images });
           toast("Opportunité publiée.");
           chargerOpportunites();
-        } catch (err) { toast(err.message, "err"); $("o-ok").disabled = false; }
+        } catch (err) { toast(err.message, "err"); $("o-ok").disabled = false; $("o-ok").textContent = "Publier"; }
       };
       $("list").querySelectorAll("[data-opp-suppr]").forEach((b) => b.onclick = async () => {
         if (!confirm("Retirer cette opportunité ?")) return;
