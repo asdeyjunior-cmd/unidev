@@ -8695,5 +8695,188 @@
     "source": "https://www.fomesoutra.com/enseignement-technique-et-professionnel?limit=50&limitstart=150",
     "licence": "autorisation de www.fomesoutra.com",
     "date": "2026-11-09T18:53:36.430Z"
+  },
+  "site:https://www.fomesoutra.com/docs-par-nos-ambassadeurs/6911-homme-daffaire-malgre-moi-by-yvon-chouinard-z-lib-org/file": {
+    "id": "7W9HyVjszQyP3pn8DAWH",
+    "source": "https://www.fomesoutra.com/docs-par-nos-ambassadeurs?limit=50&limitstart=1250",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-11T08:01:20.425Z"
+  },
+  "zenodo:23637781": {
+    "id": "jLsf3TwZEvN8IwyVaoY9",
+    "source": "https://doi.org/10.5281/zenodo.23637781",
+    "licence": "CC BY",
+    "date": "2026-11-11T08:31:41.494Z"
+  },
+  "zenodo:3264211": {
+    "id": "Cm6JVsxDK1Z3ggWooCgC",
+    "source": "https://doi.org/10.5281/zenodo.3264211",
+    "licence": "CC BY",
+    "date": "2026-11-11T08:37:08.847Z"
+  },
+  "zenodo:3264209": {
+    "doublon": true
+  },
+  "zenodo:20295534": {
+    "id": "rFjmZot9xRze2QtenHrf",
+    "source": "https://doi.org/10.5281/zenodo.20295534",
+    "licence": "CC BY",
+    "date": "2026-11-11T08:37:33.542Z"
+  },
+  "wiki:fr.wikiversity.org:Histoire-géographie en terminale S": {
+    "id": "I9OQRHn19NIJONi8wSiN",
+    "source": "https://fr.wikiversity.org/wiki/Histoire-g%C3%A9ographie_en_terminale_S",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-12T01:35:48.276Z"
+  },
+  "wiki:fr.wikiversity.org:Histoire-géographie en première générale": {
+    "id": "xJ7WHCttp1JxQT0VcAmW",
+    "source": "https://fr.wikiversity.org/wiki/Histoire-g%C3%A9ographie_en_premi%C3%A8re_g%C3%A9n%C3%A9rale",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-12T01:35:57.693Z"
+  },
+  "wiki:fr.wikiversity.org:Géographie urbaine": {
+    "id": "KOWNGtYtwSHDIxfBvlML",
+    "source": "https://fr.wikiversity.org/wiki/G%C3%A9ographie_urbaine",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-12T01:36:02.089Z"
+  },
+  "wiki:fr.wikiversity.org:Option d'histoire-géographie 2012-2014": {
+    "id": "yuHXqfuAKBB2fD7PBzOE",
+    "source": "https://fr.wikiversity.org/wiki/Option_d'histoire-g%C3%A9ographie_2012-2014",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-12T01:36:05.608Z"
+  },
+  "wiki:fr.wikiversity.org:Géographie des États-Unis": {
+    "id": "0D88YlM3sdTAoBo6k6NU",
+    "source": "https://fr.wikiversity.org/wiki/G%C3%A9ographie_des_%C3%89tats-Unis",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-12T01:36:13.566Z"
+  },
+  "wiki:fr.wikiversity.org:Géographie du Japon": {
+    "id": "RMLKOxYfJshLpFfUejyP",
+    "source": "https://fr.wikiversity.org/wiki/G%C3%A9ographie_du_Japon",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-12T01:36:22.354Z"
+  },
+  "wiki:fr.wikiversity.org:Géographie de la France": {
+    "id": "WCdF3SSUuHbCnpgthlMV",
+    "source": "https://fr.wikiversity.org/wiki/G%C3%A9ographie_de_la_France",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-12T01:36:35.636Z"
+  },
+  "wiki:fr.wikiversity.org:Mallette pedagogique Enfants Intellectuellement Precoces-Outils cle en main-En fonction des matieres-En histoire et geographie": {
+    "id": "oYPujpCEFsqzYRZBk4mB",
+    "source": "https://fr.wikiversity.org/wiki/Mallette_pedagogique_Enfants_Intellectuellement_Precoces-Outils_cle_en_main-En_fonction_des_matieres-En_histoire_et_geographie",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-12T01:36:46.899Z"
+  },
+  "zenodo:7696241": {
+    "id": "2gxhH9cLioqodDosh2HD",
+    "source": "https://doi.org/10.5281/zenodo.7696241",
+    "licence": "CC BY",
+    "date": "2026-11-12T01:40:35.013Z"
+  },
+  "zenodo:7696438": {
+    "id": "rxtfB9kcTXJaiWObbk7y",
+    "source": "https://doi.org/10.5281/zenodo.7696438",
+    "licence": "CC BY",
+    "date": "2026-11-12T01:40:39.588Z"
+  },
+  "zenodo:15615240": {
+    "id": "d7SZbPOIpGsH8ZZUBrSX",
+    "source": "https://doi.org/10.5281/zenodo.15615240",
+    "licence": "CC BY",
+    "date": "2026-11-12T01:40:44.921Z"
+  },
+  "zenodo:1524697": {
+    "id": "LccIcgUUFeGWWggioBFX",
+    "source": "https://doi.org/10.1007/bf01491654",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:40:53.577Z"
+  },
+  "zenodo:4059654": {
+    "id": "O04NyhHPsQSKxdvDayiB",
+    "source": "https://doi.org/10.5281/zenodo.4059654",
+    "licence": "CC BY",
+    "date": "2026-11-12T01:41:02.133Z"
+  },
+  "zenodo:3377503": {
+    "id": "U6YKs5JbTEOGTo7tkG7t",
+    "source": "https://doi.org/10.5281/zenodo.3377503",
+    "licence": "CC BY-ND",
+    "date": "2026-11-12T01:41:04.527Z"
+  },
+  "zenodo:2229883": {
+    "id": "OfdZSIiM59rI96HJ2tUA",
+    "source": "https://doi.org/10.1080/00378941.1914.10832562",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:41:06.587Z"
+  },
+  "zenodo:2120718": {
+    "id": "OducuMNIAFkuuvwofLL3",
+    "source": "https://doi.org/10.1515/byzs.1910.19.1.59",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:41:08.753Z"
+  },
+  "zenodo:2490642": {
+    "id": "7eqibClJky9C20Rr3Gie",
+    "source": "https://doi.org/10.2307/1780579",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:41:11.691Z"
+  },
+  "zenodo:1937728": {
+    "id": "DbJxPqGK6bDI1qrEadOC",
+    "source": "https://doi.org/10.1038/061099a0",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:41:13.653Z"
+  },
+  "zenodo:1944710": {
+    "id": "9Xz3cUsetXM4MZumPm95",
+    "source": "https://doi.org/10.1038/067053a0",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:41:15.337Z"
+  },
+  "zenodo:2388028": {
+    "id": "xZ56mvT3EQlrZZOnnLZx",
+    "source": "https://doi.org/10.1524/klio.1909.9.9.263",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:41:17.823Z"
+  },
+  "zenodo:16560846": {
+    "id": "PgTw22rdjtSd75pyX4xD",
+    "source": "https://doi.org/10.5281/zenodo.16560846",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:42:01.951Z"
+  },
+  "zenodo:16495372": {
+    "id": "B9S0WxKjENGkxKmsjnkH",
+    "source": "https://doi.org/10.5281/zenodo.16495372",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:42:04.706Z"
+  },
+  "zenodo:1508610": {
+    "id": "agD9uJmI4VdS4pmEfnHo",
+    "source": "https://doi.org/10.1038/088136a0",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:42:06.549Z"
+  },
+  "zenodo:1604369": {
+    "id": "txhWQWGgwC7jelIDayaj",
+    "source": "https://doi.org/10.2307/1781093",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:42:08.237Z"
+  },
+  "zenodo:1736335": {
+    "id": "207iHSEA0OA3jQhb5JAc",
+    "source": "https://doi.org/10.1080/00378941.1907.10831218",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:42:10.336Z"
+  },
+  "zenodo:2213276": {
+    "id": "WPudeKzF2MlITZux28mz",
+    "source": "https://doi.org/10.1515/byzs.1911.20.2.492",
+    "licence": "Domaine public (CC0)",
+    "date": "2026-11-12T01:42:12.865Z"
   }
 }
