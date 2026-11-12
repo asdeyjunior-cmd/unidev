@@ -5,7 +5,10 @@
       "nom": "Fomesoutra",
       "url": "https://www.fomesoutra.com/",
       "profondeur": 50,
-      "remplacer": ["fomesoutra", "fo me soutra"],
+      "remplacer": [
+        "fomesoutra",
+        "fo me soutra"
+      ],
       "accord": true
     },
     {
@@ -13,7 +16,8 @@
       "url": "https://fr.scribd.com/home",
       "profondeur": 50,
       "remplacer": [],
-      "accord": true
+      "accord": false,
+      "_note": "Désactivé : pas d'import automatique depuis Scribd (documents appartenant à leurs auteurs, téléchargement réservé aux abonnés)."
     },
     {
       "nom": "epreuvesetcorriges",
@@ -22,8 +26,6 @@
       "remplacer": [],
       "accord": true
     },
-
-    
     {
       "nom": "maxisujets",
       "url": "https://maxisujets.net/",

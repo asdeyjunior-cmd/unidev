@@ -9,7 +9,8 @@ import {
   query, where, limit, orderBy, startAfter, serverTimestamp, increment, writeBatch, deleteField, onSnapshot, arrayUnion,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { canonFiliere, ajouterFilieres, filiereConnue } from "./filieres.js";
-import { firebaseConfig, paymentConfig, CREDITS_PAR_PUBLICATION, CREDITS_BIENVENUE, NTFY_TOPIC } from "./config.js";
+import { NOMS_MORCEAUX, parMorceau } from "./morceaux.js";
+import { firebaseConfig, paymentConfig, CREDITS_PAR_PUBLICATION, CREDITS_BIENVENUE, NTFY_TOPIC, APP_CHECK_CLE } from "./config.js";
 
 /** Prévient l'admin sur son téléphone et son PC (ntfy). Ne bloque jamais, aucune donnée personnelle envoyée. */
 function prevenirAdmin(title, message, page) {
@@ -23,6 +24,12 @@ function prevenirAdmin(title, message, page) {
 }
 
 const app = initializeApp(firebaseConfig);
+// App Check : chargé seulement si une clé est réglée (js/config.js)
+if (APP_CHECK_CLE) {
+  import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js")
+    .then(({ initializeAppCheck, ReCaptchaV3Provider }) => initializeAppCheck(app, { provider: new ReCaptchaV3Provider(APP_CHECK_CLE), isTokenAutoRefreshEnabled: true }))
+    .catch(() => {});
+}
 export const auth = getAuth(app);
 auth.languageCode = "fr"; // e-mails de Firebase (mot de passe oublié, vérification) en français
 export const db = getFirestore(app);
@@ -89,6 +96,7 @@ async function creerProfilSiAbsent(user, nom) {
   };
   try {
     await setDoc(ref, profile);
+    if (!dejaUtilise) declarerParrain(user.uid); // un seul parrainage par appareil
     await marquerBonus();
     const msg = dejaUtilise ? "Compte créé. Les crédits offerts ont déjà été utilisés sur cet appareil."
       : !verifie ? `Compte créé. Confirme ton e-mail (lien envoyé à ${user.email}) pour recevoir tes ${CREDITS_BIENVENUE} crédits offerts.` : "";
@@ -365,11 +373,23 @@ export async function unlockDocument(uid, docId) {
    Un seul document Firestore (index/catalogue) contient un résumé de tous les documents publiés.
    La recherche lit ce document (1 lecture) au lieu de relire toute la base. */
 const indexRef = doc(db, "index", "catalogue");
+// Le catalogue est réparti sur plusieurs documents (1 Mo maximum chacun) : voir js/morceaux.js
+/** Ajoute au lot l'écriture de ces entrées du catalogue (valeur null = retirer) */
+function ecrireIndex(batch, entrees) {
+  const ancien = {};
+  for (const [nom, lot] of Object.entries(parMorceau(entrees))) {
+    batch.set(doc(db, "index", nom), { docs: Object.fromEntries(Object.entries(lot).map(([id, v]) => [id, v === null ? deleteField() : v])) }, { merge: true });
+    if (nom !== "catalogue") Object.keys(lot).forEach((id) => (ancien[id] = deleteField()));
+  }
+  // L'entrée quitte l'ancien document unique (sinon elle y resterait en double)
+  if (Object.keys(ancien).length) batch.set(indexRef, { docs: ancien }, { merge: true });
+}
 // 9e case (facultative) : id du document dont celui-ci est la suite
 export const indexEntry = (d) => [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", d.imageUrl || "", d.format || "", d.universite || "", ...(d.suiteDe ? [d.suiteDe] : [])];
 export async function getSearchIndex() {
-  const snap = await getDoc(indexRef);
-  const map = snap.data()?.docs || {};
+  const snaps = await Promise.all(NOMS_MORCEAUX.map((n) => getDoc(doc(db, "index", n))));
+  const map = {};
+  for (const s of snaps) Object.assign(map, s.data()?.docs || {}); // l'ancien document d'abord, les morceaux le remplacent
   return Object.entries(map).map(([id, e]) => ({
     id, titre: e[0], matiere: e[1], filiere: canonFiliere(e[2]), type: e[3], niveau: e[4], imageUrl: e[5], format: e[6], universite: e[7], suiteDe: e[8] || "", partiel: true,
   }));
@@ -399,14 +419,15 @@ export async function rebuildIndex() {
   const snap = await getDocs(query(docsCol, where("statut", "==", "publie"), limit(5000)));
   const map = {};
   snap.docs.forEach((s) => { map[s.id] = indexEntry(lireDoc(s)); });
-  await setDoc(indexRef, { docs: map, majLe: serverTimestamp() });
+  const lots = parMorceau(map);
+  await Promise.all(NOMS_MORCEAUX.map((n) => setDoc(doc(db, "index", n), { docs: lots[n] || {}, majLe: serverTimestamp() })));
   return snap.size;
 }
 
 export async function publishDocument(d) {
   const batch = writeBatch(db);
   batch.update(doc(db, "documents", d.id), { statut: "publie", creditAccorde: true });
-  batch.set(indexRef, { docs: { [d.id]: indexEntry(d) } }, { merge: true });
+  ecrireIndex(batch, { [d.id]: indexEntry(d) });
   ajouterFiliereAuLot(batch, canonFiliere(d.filiere));
   if (!d.creditAccorde && d.auteurId) {
     batch.update(doc(db, "users", d.auteurId), { credits: increment(CREDITS_PAR_PUBLICATION) });
@@ -419,7 +440,7 @@ export async function modifierClassement(d, champs) {
   const batch = writeBatch(db);
   batch.update(doc(db, "documents", d.id), { filiere: n.filiere, matiere: n.matiere, type: n.type, niveau: n.niveau });
   if (d.statut === "publie") {
-    batch.set(indexRef, { docs: { [d.id]: indexEntry(n) } }, { merge: true });
+    ecrireIndex(batch, { [d.id]: indexEntry(n) });
     ajouterFiliereAuLot(batch, n.filiere);
   }
   await batch.commit();
@@ -428,12 +449,12 @@ export async function modifierClassement(d, champs) {
 export async function setStatus(id, statut) {
   const batch = writeBatch(db);
   batch.update(doc(db, "documents", id), { statut });
-  if (statut !== "publie") batch.set(indexRef, { docs: { [id]: deleteField() } }, { merge: true });
+  if (statut !== "publie") ecrireIndex(batch, { [id]: null });
   await batch.commit();
 }
 export async function removeDocument(id) {
   const batch = writeBatch(db);
-  batch.set(indexRef, { docs: { [id]: deleteField() } }, { merge: true });
+  ecrireIndex(batch, { [id]: null });
   batch.delete(fileRef(id));
   batch.delete(doc(db, "documents", id));
   await batch.commit();
@@ -441,10 +462,45 @@ export async function removeDocument(id) {
 
 /* ---------- Filières demandées par les étudiants ---------- */
 const demandesCol = collection(db, "demandes");
-export async function demanderFiliere({ filiere, niveau = "", universite = "", contact = "" }) {
-  await addDoc(demandesCol, { filiere, niveau, universite, contact, uid: auth.currentUser?.uid || "", createdAt: serverTimestamp() });
-  prevenirAdmin("Filière demandée", [filiere, niveau, universite].filter(Boolean).join(" · "), "admin.html");
+export async function demanderFiliere({ filiere, niveau = "", universite = "", contact = "", document = "" }) {
+  const base = { filiere, niveau, universite, contact, uid: auth.currentUser?.uid || "", createdAt: serverTimestamp() };
+  try { await addDoc(demandesCol, document ? { ...base, document: document.slice(0, 120) } : base); }
+  catch (e) {
+    // Règles pas encore à jour : le document recherché est noté dans le contact, la demande n'est pas perdue
+    if (!document || e?.code !== "permission-denied") throw e;
+    await addDoc(demandesCol, { ...base, contact: `Cherche : ${document}`.slice(0, 120) });
+  }
+  prevenirAdmin(document ? "Document demandé" : "Filière demandée", [document, filiere, niveau, universite].filter(Boolean).join(" · "), "admin.html");
 }
+/** Signalement d'un document : notification immédiate de l'admin + trace dans la base (si les règles l'autorisent) */
+export async function signalerDocument(d, motif, detail = "") {
+  prevenirAdmin("Document signalé", `${d.titre} : ${motif}${detail ? ` (${detail})` : ""}`, `admin.html`);
+  try {
+    await addDoc(collection(db, "signalements"), { docId: d.id, titre: String(d.titre || "").slice(0, 140), motif: String(motif).slice(0, 80), detail: String(detail).slice(0, 150), uid: auth.currentUser?.uid || "", createdAt: serverTimestamp() });
+  } catch {}
+}
+
+/* ---------- Parrainage ----------
+   Le lien « index.html?parrain=UID » est retenu sur l'appareil ; à l'inscription, le filleul le déclare.
+   Les crédits du parrain sont donnés par le rapport quotidien (GitHub), quand l'e-mail du filleul est confirmé. */
+try {
+  const p = new URLSearchParams(location.search).get("parrain");
+  if (p && /^[A-Za-z0-9]{10,40}$/.test(p)) localStorage.setItem("unidev-parrain", p);
+} catch {}
+async function declarerParrain(uid) {
+  try {
+    const parrain = localStorage.getItem("unidev-parrain");
+    if (!parrain || parrain === uid) return;
+    await setDoc(doc(db, "parrainages", uid), { parrain, paye: false, createdAt: serverTimestamp() });
+    localStorage.removeItem("unidev-parrain");
+  } catch {}
+}
+export const lienParrainage = (uid) => `${location.origin}/index.html?parrain=${uid}`;
+/** Vitrine publique préparée chaque jour par le rapport : meilleurs contributeurs, documents recherchés */
+export async function lireVitrine() {
+  try { return (await getDoc(doc(db, "parametres", "vitrine"))).data() || {}; } catch { return {}; }
+}
+
 /** Admin : demandes regroupées par filière (la plus demandée en premier) */
 export async function listDemandes() {
   const snap = await getDocs(query(demandesCol, orderBy("createdAt", "desc"), limit(150)));
@@ -500,7 +556,7 @@ export async function supprimerDocuments(ids) {
   for (let i = 0; i < ids.length; i += 150) {
     const batch = writeBatch(db);
     const lot = ids.slice(i, i + 150);
-    batch.set(indexRef, { docs: Object.fromEntries(lot.map((id) => [id, deleteField()])) }, { merge: true });
+    ecrireIndex(batch, Object.fromEntries(lot.map((id) => [id, null])));
     lot.forEach((id) => { batch.delete(fileRef(id)); batch.delete(doc(db, "documents", id)); });
     await batch.commit();
   }
@@ -527,6 +583,23 @@ export async function createPaiement(user, profile, { packs, operateur, numero, 
   prevenirAdmin("Paiement à confirmer", `${packs * paymentConfig.prixPack} FCFA (${packs * paymentConfig.creditsParPack} crédits) via ${operateur}, réf. ${reference}. Appuie pour confirmer.`, `admin.html?paiement=${ref.id}`);
   return ref;
 }
+/* ---------- Paiement automatique (serveur Jèko, voir serveur/worker.js) ---------- */
+async function appelServeur(chemin, corps) {
+  const user = auth.currentUser;
+  if (!user) throw new Error("Connecte-toi d'abord.");
+  const r = await fetch(paymentConfig.serveur.replace(/\/$/, "") + chemin, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...corps, idToken: await user.getIdToken() }),
+  }).catch(() => { throw new Error("Le paiement automatique ne répond pas. Vérifie ta connexion ou utilise le paiement manuel."); });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.erreur || "Le paiement automatique ne répond pas.");
+  return j;
+}
+/** Lance un paiement : renvoie l'adresse de la page de paiement Jèko */
+export const payerAuto = (packs, methode) => appelServeur("/payer", { packs, methode });
+/** Au retour du paiement : { statut: "confirme" | "jeko" (pas encore reçu) | "rejete", credits } */
+export const verifierPaiementAuto = (paiement) => appelServeur("/verifier", { paiement });
+
 export async function listMyPaiements(uid) {
   return mapSnap(await getDocs(query(paiementsCol, where("uid", "==", uid), limit(100))));
 }

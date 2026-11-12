@@ -1,0 +1,41 @@
+# Sauvegarde de la base chaque semaine (fichiers gardés 30 jours dans GitHub) + classement des contributeurs.
+# Pour récupérer une sauvegarde : Actions > « Sauvegarde de la base » > la dernière exécution > Artifacts.
+name: Sauvegarde de la base
+
+on:
+  schedule:
+    - cron: "40 8 * * 0"   # le dimanche à 8h40
+  workflow_dispatch:
+
+concurrency: { group: unidev-sauvegarde, cancel-in-progress: false }
+
+jobs:
+  sauvegarde:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults: { run: { working-directory: outils/import } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Installation et clés
+        env:
+          CLE: ${{ secrets.FIREBASE_CLE_JSON }}
+        run: |
+          npm install --no-audit --no-fund
+          printf '%s' "$CLE" > cle-firebase.json
+          printf 'FIREBASE_CLE=./cle-firebase.json\n' > .env
+      - name: Sauvegarde
+        run: |
+          set -o pipefail
+          node sauvegarde.js 2>&1 | tee resultat.txt
+      - name: Garder les fichiers 30 jours
+        uses: actions/upload-artifact@v4
+        with:
+          name: sauvegarde-unidev-${{ github.run_number }}
+          path: outils/import/sauvegarde/
+          retention-days: 30
+      - name: Résumé
+        if: always()
+        run: |
+          { echo "### Sauvegarde"; echo '```'; cat resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true

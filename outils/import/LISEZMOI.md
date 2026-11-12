@@ -258,3 +258,11 @@ Actions > « IA (vérifier et ranger les documents) », chaque jour à 10h41.
    avec les raisons, et complète filière, matière, type, niveau ou titre s'ils manquent.
 2. Documents publiés : elle les relit (150 par jour) et corrige filière, matière, type, niveau et titres illisibles, seulement si elle est sûre.
 Elle ne publie et ne supprime jamais rien. Clé : secret GitHub GEMINI_API_KEY (gratuite sur https://aistudio.google.com/apikey).
+
+## Rapport du matin, sauvegarde, parrainage
+- **Rapport du matin** (Actions, chaque jour à 8h12) : donne les crédits de parrainage, prépare la liste des documents recherchés
+  affichée sur la page Publier, et t'envoie une notification avec l'état du site.
+- **Sauvegarde de la base** (chaque dimanche) : toute la base en fichiers .json, gardés 30 jours dans Actions > Artifacts.
+  Elle calcule aussi le classement des contributeurs affiché sur la page Publier.
+- **Catalogue en 4 morceaux** : `index/catalogue`, `catalogue-1`, `-2`, `-3` (limite de 1 Mo par document). Tout passe par `catalogue.js`.
+- **Paiement automatique Jèko** : voir `serveur/LISEZMOI.md`.

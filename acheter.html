@@ -19,7 +19,7 @@
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
-  <link rel="stylesheet" href="css/style.css?v=55" />
+  <link rel="stylesheet" href="css/style.css?v=56" />
   <script type="speculationrules">
     { "prefetch": [{ "source": "document", "where": { "href_matches": "/*.html" }, "eagerness": "moderate" }] }
   </script>
@@ -40,31 +40,45 @@
       <div class="panel" id="gate"><div class="loader"></div></div>
 
       <div class="panel hidden" id="zone">
-        <ol class="steps">
+        <ol class="steps" id="etapes-manuel">
           <li>Choisis le nombre de packs.</li>
           <li>Paie le montant indiqué avec le bouton ci-dessous.</li>
           <li>Reviens ici et déclare ton paiement avec la référence de la transaction.</li>
           <li>Les crédits sont ajoutés dès que l'administrateur a vérifié le paiement.</li>
+        </ol>
+        <ol class="steps hidden" id="etapes-auto">
+          <li>Choisis le nombre de packs.</li>
+          <li>Choisis ton moyen de paiement et paie.</li>
+          <li>Tes crédits sont ajoutés tout de suite, automatiquement.</li>
         </ol>
 
         <div class="grid-2">
           <div class="field"><label for="packs">Nombre de packs</label><select id="packs"></select></div>
           <div class="field"><label>Montant à payer</label><div class="amount" id="montant"></div></div>
         </div>
-        <a class="btn btn-block" id="pay" target="_blank" rel="noopener">Payer maintenant</a>
+        <div id="auto" class="hidden">
+          <label class="pay-auto-titre">Payer avec</label>
+          <div class="pay-auto" id="methodes"></div>
+          <p class="muted" id="auto-info" style="margin-top:10px">Paiement sécurisé par Jèko. Tes crédits arrivent dès que le paiement est validé.</p>
+        </div>
 
-        <form id="form" style="margin-top:24px">
-          <h2 class="section-title">Déclarer mon paiement</h2>
-          <div class="grid-2">
-            <div class="field"><label for="operateur">Moyen de paiement *</label><select id="operateur" required></select></div>
-            <div class="field"><label for="numero">Numéro utilisé *</label><input id="numero" required inputmode="tel" maxlength="20" placeholder="Ex : 07 00 00 00 00" /></div>
-          </div>
-          <div class="field">
-            <label for="reference">Référence / ID de la transaction *</label>
-            <input id="reference" required maxlength="60" placeholder="Visible dans le SMS ou l'historique de paiement" />
-          </div>
-          <button class="btn btn-ink btn-block" id="submit">Envoyer pour vérification</button>
-        </form>
+        <details id="manuel" open>
+          <summary id="manuel-titre" class="hidden">Un problème ? Payer et déclarer à la main</summary>
+          <a class="btn btn-block" id="pay" target="_blank" rel="noopener" style="margin-top:14px">Payer maintenant</a>
+
+          <form id="form" style="margin-top:24px">
+            <h2 class="section-title">Déclarer mon paiement</h2>
+            <div class="grid-2">
+              <div class="field"><label for="operateur">Moyen de paiement *</label><select id="operateur" required></select></div>
+              <div class="field"><label for="numero">Numéro utilisé *</label><input id="numero" required inputmode="tel" maxlength="20" placeholder="Ex : 07 00 00 00 00" /></div>
+            </div>
+            <div class="field">
+              <label for="reference">Référence / ID de la transaction *</label>
+              <input id="reference" required maxlength="60" placeholder="Visible dans le SMS ou l'historique de paiement" />
+            </div>
+            <button class="btn btn-ink btn-block" id="submit">Envoyer pour vérification</button>
+          </form>
+        </details>
       </div>
     </div>
   </main>

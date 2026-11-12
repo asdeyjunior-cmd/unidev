@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
 import { titreAReparer } from "./outils.js";
+import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const ESSAI = process.argv.includes("--essai");
@@ -23,7 +24,7 @@ if (!fs.existsSync(cle)) { console.error(`Clé Firebase introuvable : ${cle}`); 
 admin.initializeApp({ credential: admin.credential.cert(JSON.parse(fs.readFileSync(cle, "utf8"))) });
 const db = admin.firestore();
 
-const index = (await db.doc("index/catalogue").get()).data()?.docs || {};
+const index = await lireCatalogue(db);
 const changements = [];
 for (const [id, e] of Object.entries(index)) {
   if (!Array.isArray(e)) continue;
@@ -40,12 +41,12 @@ for (let i = 0; i < changements.length; i += 200) {
   const batch = db.batch();
   const lot = changements.slice(i, i + 200);
   for (const c of lot) batch.update(db.collection("documents").doc(c.id), { titre: c.apres });
-  batch.set(db.doc("index/catalogue"), { docs: Object.fromEntries(lot.map((c) => [c.id, [c.apres, ...c.entree.slice(1)]])) }, { merge: true });
+  ecrireCatalogue(batch, db, Object.fromEntries(lot.map((c) => [c.id, [c.apres, ...c.entree.slice(1)]])));
   try { await batch.commit(); }
   catch (e) {
     // Un document disparu entre-temps fait échouer le lot : on refait un par un
     for (const c of lot) {
-      try { await db.collection("documents").doc(c.id).update({ titre: c.apres }); await db.doc("index/catalogue").set({ docs: { [c.id]: [c.apres, ...c.entree.slice(1)] } }, { merge: true }); }
+      try { await db.collection("documents").doc(c.id).update({ titre: c.apres }); await ecrireCatalogueDirect(db, { [c.id]: [c.apres, ...c.entree.slice(1)] }); }
       catch {}
     }
   }

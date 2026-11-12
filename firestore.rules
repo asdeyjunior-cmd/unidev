@@ -145,11 +145,35 @@ service cloud.firestore {
 
     /* ---------- Filières demandées (« ma filière n'est pas là ») ---------- */
     match /demandes/{id} {
-      allow create: if request.resource.data.keys().hasOnly(['filiere', 'niveau', 'universite', 'contact', 'uid', 'createdAt'])
+      allow create: if request.resource.data.keys().hasOnly(['filiere', 'niveau', 'universite', 'contact', 'uid', 'createdAt', 'document'])
+        && texte('document', 120)
         && request.resource.data.filiere is string
         && request.resource.data.filiere.size() >= 2 && request.resource.data.filiere.size() <= 80
         && texte('niveau', 30) && texte('universite', 100) && texte('contact', 120)
         && (request.resource.data.get('uid', '') == '' || (signedIn() && request.resource.data.uid == request.auth.uid))
+        && request.resource.data.createdAt == request.time;
+      allow read, delete: if isAdmin();
+      allow update: if false;
+    }
+
+    /* ---------- Parrainage : le filleul déclare son parrain une seule fois ; les crédits sont donnés par le serveur ---------- */
+    match /parrainages/{uid} {
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['parrain', 'paye', 'createdAt'])
+        && request.resource.data.parrain is string && request.resource.data.parrain.size() <= 40
+        && request.resource.data.parrain != uid
+        && request.resource.data.paye == false
+        && request.resource.data.createdAt == request.time;
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    /* ---------- Signalements de documents ---------- */
+    match /signalements/{id} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['docId', 'titre', 'motif', 'detail', 'uid', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
+        && texte('docId', 40) && texte('titre', 140) && texte('motif', 80) && texte('detail', 150)
         && request.resource.data.createdAt == request.time;
       allow read, delete: if isAdmin();
       allow update: if false;

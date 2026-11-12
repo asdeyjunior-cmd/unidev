@@ -2,7 +2,7 @@ import { listPublishedPage, listPublished, getSearchIndex, getDocsByIds, getFile
 import { thumb } from "./cloudinary.js";
 import { ouvrirDemandeFiliere } from "./demande-filiere.js";
 import { habiller } from "./choix.js";
-import { initLayout, docCard, fillSelect, toast, esc, modal, setNavCredits, fileModal } from "./ui.js";
+import { initLayout, docCard, fillSelect, toast, esc, modal, setNavCredits, fileModal, favoris } from "./ui.js";
 import { canonFiliere, toutesLesFilieres, nomComplet, libelleFiliere } from "./filieres.js";
 import { CATEGORIES, paymentConfig, CREDITS_PAR_PUBLICATION } from "./config.js";
 
@@ -50,8 +50,20 @@ const filieres = new Set();
 
 const filtersActive = () => els.q.value.trim() || els.type.value || els.niveau.value || els.filiere.value;
 
+// Rangement « par niveau » : BTS 1, BTS 2, Licence 1… puis Cours, TD, Examen… puis titre
+const RANG_NIVEAU = ["BTS 1", "BTS 2", "Licence 1", "Licence 2", "Licence 3", "Master 1", "Master 2", "Doctorat"];
+const rang = (liste, v) => { const i = liste.indexOf(v); return i < 0 ? 99 : i; };
+const parNiveau = (a, b) => rang(RANG_NIVEAU, a.niveau) - rang(RANG_NIVEAU, b.niveau)
+  || rang(CATEGORIES.types, a.type) - rang(CATEGORIES.types, b.type)
+  || String(a.titre || "").localeCompare(String(b.titre || ""), "fr", { numeric: true });
+
 function visibleDocs() {
   const q = norm(els.q.value.trim());
+  const liste = docsFiltres(q);
+  // Une filière choisie (ou le tri « Par niveau ») : documents rangés par niveau, puis par type
+  return els.filiere.value || els.sort.value === "niveau" ? [...liste].sort(parNiveau) : liste;
+}
+function docsFiltres(q) {
   return docs.filter((d) =>
     (!els.type.value || d.type === els.type.value) &&
     (!els.niveau.value || d.niveau === els.niveau.value) &&
@@ -69,7 +81,7 @@ function render() {
         return docCard(d, `<button class="btn btn-sm btn-dl ${free ? "" : "btn-ink"}" data-dl="${d.id}"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span>Télécharger</span>${free ? "" : `<span class="dl-cout"> · 1 crédit</span>`}</button>`, { prix: free ? "Débloqué" : "1 crédit" });
       }).join("")
     : done || (filtersActive() && (indexComplet || pagesFiltre >= 5))
-      ? `<div class="empty">${filtersActive() ? (els.filiere.value && !els.q.value.trim() ? `Pas encore de documents en ${esc(els.filiere.value)}.` : "Aucun document ne correspond à ta recherche.") : "Aucun document pour le moment."}<br><a href="publier.html">Publie le premier !</a>${filtersActive() ? `<br><a href="#" data-demande-filiere>Ta filière n'est pas sur unidev ? Dis-le nous</a>` : ""}</div>`
+      ? `<div class="empty">${filtersActive() ? (els.filiere.value && !els.q.value.trim() ? `Pas encore de documents en ${esc(els.filiere.value)}.` : "Aucun document ne correspond à ta recherche.") : els.sort.value === "favoris" ? "Aucun favori pour l'instant : ouvre un document avec « Voir plus », puis appuie sur « Favori »." : "Aucun document pour le moment."}<br><a href="publier.html">Publie le premier !</a>${filtersActive() ? `<br><a href="#" data-demande-filiere>Ta filière n'est pas sur unidev ? Dis-le nous</a>` : ""}</div>`
       : "";
   $("more").innerHTML = loading ? `<div class="loader loader-sm"></div>` : "";
 }
@@ -137,7 +149,9 @@ async function pageDeLaSemaine() {
     const liste = await getPool();
     if (!indexComplet) return listPublishedPage("recent", cursor, PAGE); // pas d'index : les plus récents
     const n = semaine();
-    ordreSemaine = liste.map((d) => [melange(d.id, n), d]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
+    if (els.sort.value === "niveau") ordreSemaine = [...liste].sort(parNiveau);
+    else if (els.sort.value === "favoris") { const f = favoris.liste(); ordreSemaine = liste.filter((d) => f.includes(d.id)); }
+    else ordreSemaine = liste.map((d) => [melange(d.id, n), d]).sort((a, b) => a[0] - b[0]).map((x) => x[1]);
   }
   const tranche = ordreSemaine.slice(rangSemaine, rangSemaine + PAGE);
   rangSemaine += tranche.length;
@@ -166,7 +180,7 @@ async function loadPage() {
   render();
   watchSlow();
   try {
-    const page = els.sort.value === "semaine" ? await pageDeLaSemaine() : await listPublishedPage(els.sort.value, cursor, PAGE);
+    const page = ["semaine", "niveau", "favoris"].includes(els.sort.value) ? await pageDeLaSemaine() : await listPublishedPage(els.sort.value, cursor, PAGE);
     if (fromCache) { docs = []; fromCache = false; } // les données fraîches remplacent le cache
     const deja = new Set(docs.map((x) => x.id));
     docs.push(...page.items.filter((x) => !deja.has(x.id)));

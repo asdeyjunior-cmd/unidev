@@ -17,6 +17,8 @@ export function ouvrirDemandeFiliere(texte = "") {
         <select id="df-niveau"><option value="">Choisir…</option>${CATEGORIES.niveaux.filter((n) => n !== "Autre").map((n) => `<option>${esc(n)}</option>`).join("")}</select></div>
       <div class="field"><label for="df-univ">Ton école ou université</label>
         <input id="df-univ" maxlength="100" placeholder="Ex : ESATIC, INP-HB…" /></div>
+      <div class="field"><label for="df-doc">Un document précis que tu cherches ? (facultatif)</label>
+        <input id="df-doc" maxlength="120" placeholder="Ex : Sujet BTS 2023 de comptabilité générale" /></div>
       <div class="field"><label for="df-contact">WhatsApp ou e-mail (facultatif)</label>
         <input id="df-contact" maxlength="120" placeholder="Pour te prévenir quand ce sera en ligne" /></div>
       <button class="btn btn-block" id="df-ok">Envoyer</button>
@@ -42,6 +44,7 @@ export function ouvrirDemandeFiliere(texte = "") {
         niveau: $("df-niveau").value,
         universite: $("df-univ").value.trim(),
         contact: $("df-contact").value.trim(),
+        document: $("df-doc").value.replace(/\s+/g, " ").trim(),
       });
       m.remove();
       toast("Merci ! Ta filière a bien été envoyée.");

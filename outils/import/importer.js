@@ -25,6 +25,7 @@ import {
   filiereDepuisDomaines, couper, decouper, couvertureSvg, avecRelance, telecharger,
 } from "./outils.js";
 import { canonFiliere, ajouterFilieres, filiereConnue, nomComplet } from "../../js/filieres.js";
+import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
 
 /* ---------- Arguments ---------- */
 const args = process.argv.slice(2);
@@ -87,7 +88,7 @@ async function connecter() {
   // Documents déjà sur unidev : pour ne jamais publier deux fois le même
   // Économie de lectures Firestore : les documents publiés viennent de l'index (1 seule lecture),
   // plus ceux qui attendent la validation (peu nombreux)
-  const index = (await db.doc("index/catalogue").get()).data()?.docs || {};
+  const index = await lireCatalogue(db);
   for (const e of Object.values(index)) if (Array.isArray(e)) retenir({ titre: e[0], universite: e[7] });
   const attente = await db.collection("documents").where("statut", "==", "en_attente").select("titre", "universite").get();
   attente.docs.forEach((s) => retenir(s.data()));
@@ -222,11 +223,11 @@ async function publier(buffer, nomFichier, infos, imageChemin = null) {
   }
   batch.set(ref.collection("prive").doc("fichier"), { ...fichier, auteurId: ADMIN_UID });
   // En attente : il entrera dans le catalogue quand l'admin le validera
-  if (!ATTENTE) batch.set(db.doc("index/catalogue"), { docs: { [ref.id]: [
+  if (!ATTENTE) ecrireCatalogue(batch, db, { [ref.id]: [
     couper(infos.titre, 140), couper(infos.matiere || infos.filiere || "Divers", 80), couper(infos.filiere || "Autre", 80),
     TYPES.includes(infos.type) ? infos.type : "Autre", NIVEAUX.includes(infos.niveau) ? infos.niveau : "Autre",
     imageUrl, ext, couper(infos.universite || "", 100),
-  ] } }, { merge: true });
+  ] });
   await batch.commit();
   retenir({ titre: infos.titre, taille: buffer.length, universite: infos.universite });
   return ref.id;

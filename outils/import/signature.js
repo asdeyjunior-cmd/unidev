@@ -19,6 +19,7 @@ import admin from "firebase-admin";
 import { v2 as cloudinary } from "cloudinary";
 import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF, titreAReparer, sansCodeDevant } from "./outils.js";
 import { remplacerSignature, tamponUnidev, sansModification, annulerAnciennesMarques } from "./marque.js";
+import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -153,7 +154,7 @@ for (const [i, s] of concernes.entries()) {
     const batch = db.batch();
     batch.update(s.ref, maj);
     batch.set(s.ref.collection("prive").doc("fichier"), { ...nouveau, auteurId: fichier.auteurId || d.auteurId });
-    if (d.statut === "publie") batch.set(db.doc("index/catalogue"), { docs: { [s.id]: [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", maj.imageUrl || d.imageUrl || "", d.format || "", d.universite || "", ...(d.suiteDe ? [d.suiteDe] : [])] } }, { merge: true });
+    if (d.statut === "publie") ecrireCatalogue(batch, db, { [s.id]: [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", maj.imageUrl || d.imageUrl || "", d.format || "", d.universite || "", ...(d.suiteDe ? [d.suiteDe] : [])] });
     await batch.commit();
     ok++; if (original) depuisOrigine++; if (nettoye) repares++;
     console.log(`   ${change ? `remplacé : ${r.logos ? `${r.logos} logo(s), ` : ""}${r.lignes} ligne(s), ${r.liens} lien(s)` : "remis au propre"}${nettoye ? " · anciennes marques ratées retirées" : original ? " · depuis le fichier d'origine" : ""}`);

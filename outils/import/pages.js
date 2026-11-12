@@ -14,6 +14,7 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
 import { canonFiliere, nomComplet, libelleFiliere } from "../../js/filieres.js";
+import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const SITE = path.resolve(ICI, "../..");
@@ -115,7 +116,7 @@ const enPanne = (e) => {
   process.exit(2);
 };
 let index = null, horsLigne = false;
-try { index = (await db.doc("index/catalogue").get()).data()?.docs; } catch (e) { horsLigne = enPanne(e); }
+try { index = await lireCatalogue(db); } catch (e) { horsLigne = enPanne(e); }
 let ids;
 if (horsLigne) { /* on garde le cache tel quel */ }
 else if (index && Object.keys(index).length) {

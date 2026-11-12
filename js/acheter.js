@@ -1,9 +1,9 @@
-import { createPaiement } from "./firebase.js";
+import { createPaiement, payerAuto } from "./firebase.js";
 import { initLayout, fillSelect, toast } from "./ui.js";
 import { paymentConfig } from "./config.js";
 
 const $ = (id) => document.getElementById(id);
-const { url, prixPack, creditsParPack, operateurs } = paymentConfig;
+const { url, prixPack, creditsParPack, operateurs, serveur } = paymentConfig;
 let me = null;
 let profile = null;
 
@@ -18,6 +18,33 @@ updateAmount();
 
 if (url.startsWith("http")) $("pay").href = url;
 else $("pay").onclick = (e) => { e.preventDefault(); toast("Lien de paiement non configuré (js/config.js).", "err"); };
+
+/* Paiement automatique (Jèko) : un bouton par moyen de paiement ; le paiement manuel reste en secours, replié */
+if (serveur) {
+  const METHODES = [["wave", "Wave"], ["orange", "Orange Money"], ["mtn", "MTN MoMo"], ["moov", "Moov Money"]];
+  $("methodes").innerHTML = METHODES.map(([m, nom]) => `<button type="button" class="btn btn-block pay-m pay-${m}" data-m="${m}">${nom}</button>`).join("");
+  $("auto").classList.remove("hidden");
+  $("etapes-auto").classList.remove("hidden");
+  $("etapes-manuel").classList.add("hidden");
+  $("manuel").open = false;
+  $("manuel-titre").classList.remove("hidden");
+  if (new URLSearchParams(location.search).has("echec")) toast("Le paiement n'a pas abouti. Tu peux réessayer.", "err");
+  $("methodes").onclick = async (e) => {
+    const b = e.target.closest("[data-m]");
+    if (!b || !me) return;
+    const tous = [...$("methodes").querySelectorAll("button")];
+    tous.forEach((x) => (x.disabled = true));
+    const texte = b.textContent; b.textContent = "Ouverture du paiement…";
+    try {
+      const r = await payerAuto(Number($("packs").value), b.dataset.m);
+      location.href = r.url;
+    } catch (err) {
+      toast(err.message, "err");
+      b.textContent = texte; tous.forEach((x) => (x.disabled = false));
+      $("manuel").open = true;
+    }
+  };
+}
 
 initLayout("credits", (state) => {
   me = state.user; profile = state.profile;

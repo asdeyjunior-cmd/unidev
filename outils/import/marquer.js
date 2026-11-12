@@ -18,6 +18,7 @@ import admin from "firebase-admin";
 import { v2 as cloudinary } from "cloudinary";
 import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF } from "./outils.js";
 import { tamponUnidev, sansModification } from "./marque.js";
+import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -50,7 +51,7 @@ let faits = new Set();
 try { faits = new Set(JSON.parse(fs.readFileSync(FAITS, "utf8"))); } catch {}
 const noter = (id) => { faits.add(id); fs.writeFileSync(FAITS, JSON.stringify([...faits])); };
 
-const index = (await db.doc("index/catalogue").get()).data()?.docs || {};
+const index = await lireCatalogue(db);
 const restants = Object.keys(index).filter((id) => !faits.has(id) && String(index[id]?.[6] || "pdf").toLowerCase() === "pdf");
 console.log(`${Object.keys(index).length} document(s) publié(s), ${restants.length} PDF sans tampon à traiter (${MAX} au plus cette fois).\n`);
 if (ESSAI) { console.log("(mode essai : rien n'a été modifié)"); process.exit(0); }
@@ -100,7 +101,7 @@ for (let i = 0; i < lot.length; i += 50) {
       const batch = db.batch();
       batch.update(s.ref, maj);
       batch.set(s.ref.collection("prive").doc("fichier"), { ...nouveau, auteurId: fichier.auteurId || d.auteurId });
-      if (d.statut === "publie" && maj.imageUrl) batch.set(db.doc("index/catalogue"), { docs: { [s.id]: [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", maj.imageUrl, d.format || "", d.universite || "", ...(d.suiteDe ? [d.suiteDe] : [])] } }, { merge: true });
+      if (d.statut === "publie" && maj.imageUrl) ecrireCatalogue(batch, db, { [s.id]: [d.titre || "", d.matiere || "", d.filiere || "", d.type || "", d.niveau || "", maj.imageUrl, d.format || "", d.universite || "", ...(d.suiteDe ? [d.suiteDe] : [])] });
       await batch.commit();
       noter(s.id);
       ok++;

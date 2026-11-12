@@ -19,6 +19,7 @@ import { PDFDocument } from "pdf-lib";
 import { telecharger } from "./outils.js";
 import { toutesLesFilieres, canonFiliere } from "../../js/filieres.js";
 import { CATEGORIES } from "../../js/config.js";
+import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -144,7 +145,7 @@ async function verifier() {
   const aLire = snap.docs.filter((s) => !s.data().ia);
   console.log(`${snap.size} document(s) à valider, ${aLire.length} pas encore lu(s) par l'IA.\n`);
   const titres = new Set();
-  try { Object.values((await db.doc("index/catalogue").get()).data()?.docs || {}).forEach((e) => titres.add(sansAcc(e?.[0]))); } catch {}
+  try { Object.values(await lireCatalogue(db)).forEach((e) => titres.add(sansAcc(e?.[0]))); } catch {}
   let n = 0;
   for (const s of aLire) {
     const d = s.data();
@@ -179,7 +180,7 @@ async function verifier() {
 
 /* ---------- 2. Ranger les documents publiés ---------- */
 async function ranger() {
-  const index = (await db.doc("index/catalogue").get()).data()?.docs || {};
+  const index = await lireCatalogue(db);
   // D'abord ceux qui en ont le plus besoin : infos manquantes ou titre illisible
   const besoin = ([, e]) => (vide(e[2]) ? 3 : 0) + (vide(e[3]) ? 2 : 0) + (vide(e[4]) ? 1 : 0) + (titreMoche(e[0]) ? 3 : 0) + (!e[1] ? 1 : 0);
   const restants = Object.entries(index).filter(([id, e]) => Array.isArray(e) && !faits.has(id)).sort((a, b) => besoin(b) - besoin(a));
@@ -210,7 +211,7 @@ async function ranger() {
           if (maj.type) ent[3] = maj.type; if (maj.niveau) ent[4] = maj.niveau;
           const batch = db.batch();
           batch.update(db.collection("documents").doc(id), { ...maj, rangeParIA: true });
-          batch.set(db.doc("index/catalogue"), { docs: { [id]: ent } }, { merge: true });
+          ecrireCatalogue(batch, db, { [id]: ent });
           await batch.commit();
         }
       } else console.log("   bien rangé");

@@ -1,10 +1,10 @@
-import { listMyPaiements, getCredits, renvoyerVerification } from "./firebase.js";
+import { listMyPaiements, getCredits, renvoyerVerification, verifierPaiementAuto, lienParrainage } from "./firebase.js";
 import { initLayout, esc, formatDate, setNavCredits, toast } from "./ui.js";
 import { paymentConfig } from "./config.js";
 
 const $ = (id) => document.getElementById(id);
 const { prixPack, creditsParPack } = paymentConfig;
-const STATUS = { en_attente: "En attente", immediat: "Crédits reçus", confirme: "Confirmé", rejete: "Refusé" };
+const STATUS = { en_attente: "En attente", jeko: "En cours", confirme: "Confirmé", rejete: "Refusé" };
 let me = null;
 let profile = null;
 
@@ -24,8 +24,37 @@ initLayout("credits", async (state) => {
   const attente = !!profile?.bonusEnAttente;
   $("verif").classList.toggle("hidden", !attente);
   if (attente) $("verif-texte").textContent = `Un lien a été envoyé à ${me.email}. Pense à regarder dans les spams.`;
+  // Parrainage : le lien personnel de l'étudiant
+  const lien = lienParrainage(me.uid);
+  $("parrain-lien").value = lien;
+  $("parrain-wa").href = `https://wa.me/?text=${encodeURIComponent(`Cours, TD, sujets et corrigés de BTS et d'université sur unidev. Inscris-toi avec mon lien, tu reçois des crédits offerts : ${lien}`)}`;
+  $("parrain-copier").onclick = async () => {
+    try { await navigator.clipboard.writeText(lien); } catch { $("parrain-lien").select(); document.execCommand("copy"); }
+    toast("Lien copié.");
+  };
   refresh();
+  retourPaiement();
 });
+
+/* Retour de la page de paiement Jèko : on attend la confirmation (quelques secondes), puis le solde se met à jour */
+let retourFait = false;
+async function retourPaiement() {
+  const id = new URLSearchParams(location.search).get("paiement");
+  if (!id || retourFait || !paymentConfig.serveur) return;
+  retourFait = true;
+  history.replaceState(null, "", "credits.html");
+  toast("Vérification de ton paiement…");
+  for (let essai = 0; essai < 8; essai++) {
+    try {
+      const r = await verifierPaiementAuto(id);
+      if (r.statut === "confirme") { toast(`Paiement reçu : +${r.credits} crédits.`); return refresh(); }
+      if (r.statut === "rejete") { toast("Le paiement n'a pas abouti. Aucun montant n'a été crédité.", "err"); return refresh(); }
+    } catch {}
+    await new Promise((ok) => setTimeout(ok, 4000));
+  }
+  toast("Paiement en cours de validation : tes crédits arriveront dans quelques minutes.");
+  refresh();
+}
 
 async function refresh() {
   const solde = await getCredits(me.uid).catch(() => profile?.credits || 0);
@@ -38,7 +67,8 @@ async function refresh() {
 
   $("history").innerHTML = `<div class="loader"></div>`;
   try {
-    const list = await listMyPaiements(me.uid);
+    // Les paiements automatiques jamais terminés (page de paiement fermée) ne sont pas affichés
+    const list = (await listMyPaiements(me.uid)).filter((p) => !(p.auto && p.statut !== "confirme"));
     $("history").innerHTML = list.length
       ? `<div class="pay-list">${list.map((p) => `
           <button type="button" class="pay-row" aria-expanded="false">

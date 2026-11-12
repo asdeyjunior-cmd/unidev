@@ -1,4 +1,4 @@
-import { createDocument, listMine, getSearchIndex, filieresPretes } from "./firebase.js";
+import { createDocument, listMine, getSearchIndex, filieresPretes, lireVitrine } from "./firebase.js";
 import { toutesLesFilieres, canonFiliere, verifierFiliere } from "./filieres.js";
 import { uploadFile, uploadDocument } from "./cloudinary.js";
 import { photosEnPdf, photoLegere, couvertureAuto, estImage, ACCEPT_IMAGES } from "./photos-pdf.js";
@@ -230,3 +230,19 @@ $("filiere").addEventListener("change", () => {
   if (!r.ok) { if (v.trim()) toast(r.message, "err"); return; }
   if (r.nom !== v.trim()) { $("filiere").value = r.nom; toast(`Filière enregistrée sous : ${r.nom}`); }
 });
+
+
+/* Vitrine : documents recherchés et meilleurs contributeurs */
+lireVitrine().then((v) => {
+  const demandes = (v.demandes || []).slice(0, 12), top = (v.classement || []).slice(0, 10);
+  if (!demandes.length && !top.length) return;
+  $("vitrine").classList.remove("hidden");
+  if (demandes.length) {
+    $("vit-demandes").classList.remove("hidden");
+    $("vit-demandes-liste").innerHTML = demandes.map((d) => `<li><b>${esc(d.document)}</b>${d.filiere ? ` <span class="muted">· ${esc(d.filiere)}${d.niveau ? `, ${esc(d.niveau)}` : ""}</span>` : ""}</li>`).join("");
+  }
+  if (top.length) {
+    $("vit-classement").classList.remove("hidden");
+    $("vit-classement-liste").innerHTML = top.map((c) => `<li><b>${esc(c.nom)}</b> <span class="muted">· ${c.n} document${c.n > 1 ? "s" : ""}</span></li>`).join("");
+  }
+}).catch(() => {});

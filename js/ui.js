@@ -1,4 +1,4 @@
-import { watchUser, logout, cachedProfile, getDocsByIds } from "./firebase.js";
+import { watchUser, logout, cachedProfile, getDocsByIds, signalerDocument } from "./firebase.js";
 import { thumb, assembleParts, lienSur, recupererFichier } from "./cloudinary.js";
 import { serieDe } from "./series.js";
 
@@ -364,6 +364,18 @@ try {
   if (msg) { sessionStorage.removeItem("unidev-message"); setTimeout(() => toast(msg), 600); }
 } catch {}
 
+/* ---------- Favoris : gardés sur l'appareil (aucune lecture Firestore) ---------- */
+export const favoris = {
+  liste() { try { return JSON.parse(localStorage.getItem("unidev-favoris") || "[]"); } catch { return []; } },
+  a(id) { return this.liste().includes(id); },
+  basculer(id) {
+    const l = this.liste(), i = l.indexOf(id);
+    if (i >= 0) l.splice(i, 1); else l.unshift(id);
+    try { localStorage.setItem("unidev-favoris", JSON.stringify(l.slice(0, 300))); } catch {}
+    return i < 0;
+  },
+};
+
 /* ---------- « Voir plus » : fiche détaillée d'un document ---------- */
 document.addEventListener("click", async (e) => {
   const b = e.target.closest?.("[data-voir]");
@@ -385,11 +397,37 @@ document.addEventListener("click", async (e) => {
       ${ligne("Taille", d.taille ? formatSize(d.taille) : "")}${ligne("Téléchargements", String(d.telechargements || 0))}
     </div>
     <div id="fiche-serie"></div>
+    <div class="fiche-outils">
+      <a class="fiche-outil" id="fiche-partager" target="_blank" rel="noopener">Partager sur WhatsApp</a>
+      <button type="button" class="fiche-outil" id="fiche-favori">${favoris.a(d.id) ? "Retirer des favoris" : "Favori"}</button>
+      <button type="button" class="fiche-outil" id="fiche-signaler">Signaler</button>
+    </div>
     <div class="modal-actions">
       <button class="btn btn-ghost-ink" data-close>Fermer</button>
       ${btn ? `<button class="btn" id="fiche-dl">${esc(btn.textContent.trim())}</button>` : ""}
     </div>`);
   m.querySelector("#fiche-dl")?.addEventListener("click", () => { m.remove(); btn.click(); });
+  // Partage : lien direct vers ce document
+  const lien = `${location.origin}/index.html?doc=${encodeURIComponent(d.id)}`;
+  m.querySelector("#fiche-partager").href = `https://wa.me/?text=${encodeURIComponent(`${d.titre}${d.filiere ? ` (${d.filiere})` : ""} sur unidev : ${lien}`)}`;
+  m.querySelector("#fiche-favori").onclick = (ev) => {
+    const ajoute = favoris.basculer(d.id);
+    ev.currentTarget.textContent = ajoute ? "Retirer des favoris" : "Favori";
+    toast(ajoute ? "Ajouté à tes favoris (tri « Mes favoris »)." : "Retiré de tes favoris.");
+  };
+  m.querySelector("#fiche-signaler").onclick = () => {
+    const s = modal(`<h3>Signaler ce document</h3>
+      <p class="muted" style="margin:6px 0 14px">${esc(d.titre)}</p>
+      <div class="field"><label for="sig-motif">Quel est le problème ?</label>
+        <select id="sig-motif"><option>Fichier illisible ou vide</option><option>Mauvaise filière, matière ou niveau</option><option>Ce n'est pas le bon document</option><option>Document en double</option><option>Contenu inapproprié</option><option>Autre</option></select></div>
+      <div class="field"><label for="sig-detail">Précision (facultatif)</label><input id="sig-detail" maxlength="150" /></div>
+      <div class="modal-actions"><button class="btn btn-ghost-ink" data-close>Annuler</button><button class="btn" id="sig-ok">Envoyer</button></div>`);
+    s.querySelector("#sig-ok").onclick = async (ev) => {
+      ev.currentTarget.disabled = true;
+      await signalerDocument(d, s.querySelector("#sig-motif").value, s.querySelector("#sig-detail").value.trim());
+      s.remove(); toast("Merci, le signalement a été envoyé au modérateur.");
+    };
+  };
   // Documents de la même série (1, 2, 3…) : on passe de l'un à l'autre d'un toucher
   serieDe(d).then((s) => { if (s) m.querySelector("#fiche-serie").innerHTML = blocSerie(s, (x) => `index.html?doc=${encodeURIComponent(x.id)}`); }).catch(() => {});
 });

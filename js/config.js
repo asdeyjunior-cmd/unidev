@@ -33,7 +33,13 @@ export const paymentConfig = {
   prixPack: 100,          // FCFA
   creditsParPack: 5,      // documents téléchargeables par pack
   operateurs: ["Wave", "Orange Money", "MTN MoMo", "Moov Money", "Autre"],
+  // Paiement automatique Jèko : adresse du serveur Cloudflare (voir serveur/LISEZMOI.md).
+  // Vide = paiement manuel seulement (l'admin confirme chaque paiement).
+  serveur: "https://unidev-paiement.asdeyjunior40.workers.dev",
 };
+// App Check (facultatif) : clé de site reCAPTCHA v3 enregistrée dans Firebase > App Check.
+// Une fois remplie et App Check activé dans la console, seul le vrai site peut utiliser la base. Vide = désactivé.
+export const APP_CHECK_CLE = "";
 // E-mail affiché sur la page À propos (laisser vide pour masquer le bloc Contact)
 export const CONTACT_EMAIL = "asdeyjunior@gmail.com";
 // Notifications de l'admin sur téléphone et PC (appli gratuite ntfy, voir README).

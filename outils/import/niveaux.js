@@ -16,6 +16,7 @@ import "dotenv/config";
 import admin from "firebase-admin";
 import { niveauDe, typeDe, deviner } from "./outils.js";
 import { canonFiliere, ajouterFilieres, FILIERES_AJOUTEES, toutesLesFilieres } from "../../js/filieres.js";
+import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect, repartirCatalogue } from "./catalogue.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const ESSAI = process.argv.includes("--essai");
@@ -29,7 +30,9 @@ const db = admin.firestore();
 const listeAvant = (await db.doc("index/filieres").get()).data()?.liste || [];
 ajouterFilieres(listeAvant);
 const doublonsFilieres = listeAvant.length - FILIERES_AJOUTEES.length;
-const index = (await db.doc("index/catalogue").get()).data()?.docs || {};
+// Le catalogue est réparti en 4 morceaux (limite de 1 Mo par document Firestore) : on finit de déplacer les anciennes entrées
+if (!ESSAI) { const n = await repartirCatalogue(db); if (n) console.log(`Catalogue : ${n} entrée(s) déplacée(s) dans leurs morceaux.`); }
+const index = await lireCatalogue(db);
 const changements = [];
 const suspects = []; // peut-être dans la mauvaise filière : signalés, à vérifier dans l'admin (bouton « Modifier »)
 const vide = (v) => !v || v === "Autre";
@@ -69,11 +72,11 @@ for (let i = 0; i < changements.length; i += 200) {
   const champs = (c) => ({ ...(c.filiere ? { filiere: c.filiere } : {}), ...(c.type ? { type: c.type } : {}), ...(c.niveau ? { niveau: c.niveau } : {}) });
   const batch = db.batch();
   for (const c of lot) batch.update(db.collection("documents").doc(c.id), champs(c));
-  batch.set(db.doc("index/catalogue"), { docs: Object.fromEntries(lot.map((c) => [c.id, entree(c)])) }, { merge: true });
+  ecrireCatalogue(batch, db, Object.fromEntries(lot.map((c) => [c.id, entree(c)])));
   try { await batch.commit(); }
   catch {
     for (const c of lot) {
-      try { await db.collection("documents").doc(c.id).update(champs(c)); await db.doc("index/catalogue").set({ docs: { [c.id]: entree(c) } }, { merge: true }); } catch {}
+      try { await db.collection("documents").doc(c.id).update(champs(c)); await ecrireCatalogueDirect(db, { [c.id]: entree(c) }); } catch {}
     }
   }
 }
