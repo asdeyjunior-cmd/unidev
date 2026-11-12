@@ -46,17 +46,23 @@ async function retourPaiement() {
   if (!id || retourFait || !paymentConfig.serveur) return;
   retourFait = true;
   history.replaceState(null, "", "credits.html");
-  toast("Vérification de ton paiement…");
-  for (let essai = 0; essai < 8; essai++) {
+  // Bandeau visible pendant la vérification (le paiement Wave/Orange peut prendre quelques secondes)
+  const bandeau = document.createElement("div");
+  bandeau.className = "paie-attente";
+  bandeau.innerHTML = `<span class="loader"></span><span>Paiement reçu par Jèko, ajout de tes crédits…</span>`;
+  document.querySelector("main .wrap, main")?.prepend(bandeau);
+  const fin = (texte, erreur = false) => { bandeau.remove(); toast(texte, erreur ? "err" : undefined); refresh(); };
+  const debut = Date.now();
+  // Vérifie toutes les 2,5 s pendant 30 s, puis toutes les 5 s jusqu'à 3 minutes
+  while (Date.now() - debut < 180000) {
     try {
       const r = await verifierPaiementAuto(id);
-      if (r.statut === "confirme") { toast(`Paiement reçu : +${r.credits} crédits.`); return refresh(); }
-      if (r.statut === "rejete") { toast("Le paiement n'a pas abouti. Aucun montant n'a été crédité.", "err"); return refresh(); }
+      if (r.statut === "confirme") return fin(`Paiement reçu : +${r.credits} crédits.`);
+      if (r.statut === "rejete") return fin("Le paiement n'a pas abouti. Aucun montant n'a été crédité.", true);
     } catch {}
-    await new Promise((ok) => setTimeout(ok, 4000));
+    await new Promise((ok) => setTimeout(ok, Date.now() - debut < 30000 ? 2500 : 5000));
   }
-  toast("Paiement en cours de validation : tes crédits arriveront dans quelques minutes.");
-  refresh();
+  fin("Le paiement est encore en cours chez l'opérateur : tes crédits arriveront tout seuls dans quelques minutes.");
 }
 
 async function refresh() {

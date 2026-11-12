@@ -52,6 +52,10 @@ export default {
         stockage: !!env.FICHIERS, outils: !!env.OUTILS_SECRET,
         // Empreinte du mot de passe des outils (4 caractères, ne révèle rien) : doit être la même que celle affichée par GitHub
         empreinte: env.OUTILS_SECRET ? (await empreinte(env.OUTILS_SECRET)) : "" };
+      if (url.pathname === "/etat" && env.FIREBASE_CLE_JSON) {
+        const t = await fsLire(env, "parametres/jeko").catch(() => null);
+        if (t) etat.dernierAvisJeko = { quand: t.champs.dernierAvis, etat: t.champs.dernierEtat, resultat: t.champs.dernierResultat };
+      }
       if (env.JEKO_API_KEY && url.pathname === "/etat") {
         try { etat.magasin = !!(await magasin(env)); } catch (e) { etat.magasin = false; etat.probleme = e.message; }
       }
@@ -76,7 +80,8 @@ const erreur = (message, status = 400) => Object.assign(new Error(message), { st
 
 /* ---------- 1. L'étudiant clique « Payer » ---------- */
 async function payer({ idToken, packs, methode }, env) {
-  const user = await quiEstCe(idToken, env);
+  // En parallèle : qui est l'étudiant, jeton Google et magasin Jèko (au lieu de les attendre l'un après l'autre)
+  const [user] = await Promise.all([quiEstCe(idToken, env), jetonGoogle(env).catch(() => {}), magasin(env).catch(() => {})]);
   packs = Math.floor(Number(packs));
   if (!(packs >= 1 && packs <= 50)) throw erreur("Nombre de packs invalide");
   if (!METHODES.includes(methode)) throw erreur("Moyen de paiement inconnu");
@@ -85,12 +90,6 @@ async function payer({ idToken, packs, methode }, env) {
   const site = (env.SITE || "").replace(/\/$/, "");
 
   const id = idAleatoire();
-  await fsCreer(env, `paiements/${id}`, {
-    uid: user.uid, nom: user.nom || user.email || "", email: user.email || "",
-    packs, montant, credits, operateur: NOMS[methode], numero: "", reference: `Jèko ${id}`,
-    statut: "jeko", auto: true, createdAt: new Date(),
-  });
-
   const r = await fetch(`${JEKO}/payment_requests`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-API-KEY": env.JEKO_API_KEY, "X-API-KEY-ID": env.JEKO_API_KEY_ID },
@@ -100,11 +99,17 @@ async function payer({ idToken, packs, methode }, env) {
     }),
   });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok || !j.redirectUrl) {
-    await fsModifier(env, `paiements/${id}`, { statut: "rejete", motif: `Jèko : ${String(j.message || j.error || r.status).slice(0, 150)}` });
-    throw erreur("Le paiement n'a pas pu être lancé. Réessaie, ou utilise le paiement manuel plus bas.", 502);
+  if (!r.ok || !j.redirectUrl) throw erreur("Le paiement n'a pas pu être lancé. Réessaie, ou utilise le paiement manuel plus bas.", 502);
+  // Une seule écriture (avec l'identifiant Jèko). Elle doit réussir AVANT d'envoyer l'étudiant payer.
+  const paiement = {
+    uid: user.uid, nom: user.nom || user.email || "", email: user.email || "",
+    packs, montant, credits, operateur: NOMS[methode], numero: "", reference: `Jèko ${id}`,
+    statut: "jeko", auto: true, jekoId: String(j.id || ""), createdAt: new Date(),
+  };
+  for (let essai = 1; ; essai++) {
+    try { await fsCreer(env, `paiements/${id}`, paiement); break; }
+    catch (e) { if (essai >= 3) throw erreur("Le paiement n'a pas pu être préparé. Réessaie dans un instant.", 503); }
   }
-  await fsModifier(env, `paiements/${id}`, { jekoId: String(j.id || "") });
   return { url: j.redirectUrl, paiement: id };
 }
 
@@ -136,16 +141,30 @@ async function avisJeko(request, env) {
   const brut = await request.text();
   const signature = (request.headers.get("Jeko-Signature") || "").trim().toLowerCase();
   const attendue = await hmacHex(env.JEKO_WEBHOOK_SECRET || "", brut);
-  if (!env.JEKO_WEBHOOK_SECRET || !memeTexte(signature.replace(/^sha256=/, ""), attendue)) return new Response("signature invalide", { status: 401 });
+  if (!env.JEKO_WEBHOOK_SECRET || !memeTexte(signature.replace(/^sha256=/, ""), attendue)) {
+    await fsModifier(env, "parametres/jeko", { dernierAvis: new Date().toISOString(), dernierResultat: "signature invalide (secret du webhook différent)" }).catch(() => {});
+    return new Response("signature invalide", { status: 401 });
+  }
   let avis = {};
   try { avis = JSON.parse(brut); } catch { return new Response("ok"); }
-  const ref = String(avis?.transactionDetails?.reference || avis?.apiTransactionableDetails?.reference || "");
-  if (avis.status === "success" && /^[A-Za-z0-9]{10,40}$/.test(ref)) {
-    const p = await fsLire(env, `paiements/${ref}`);
-    if (p) await crediterSiPaye(env, ref, p).catch(() => {});
+  const ref = String(avis?.transactionDetails?.reference || avis?.apiTransactionableDetails?.reference || avis?.reference || avis?.data?.reference || "");
+  const etat = etatJeko(avis);
+  let resultat = "ignoré";
+  if (PAYE.includes(etat) && /^[A-Za-z0-9]{10,40}$/.test(ref)) {
+    const p = await fsLire(env, `paiements/${ref}`).catch(() => null);
+    if (p && p.champs.statut === "jeko") {
+      // L'avis est signé par Jèko : il suffit (pas besoin de redemander à Jèko, c'est ce qui faisait attendre)
+      resultat = (await crediter(env, ref, p).catch((e) => ({ statut: `erreur ${e.message}` }))).statut;
+    } else resultat = p ? `déjà ${p.champs.statut}` : "paiement inconnu";
   }
+  // Trace du dernier avis (visible sur /etat), pour vérifier que Jèko prévient bien le serveur
+  await fsModifier(env, "parametres/jeko", { dernierAvis: new Date().toISOString(), dernierEtat: etat.slice(0, 30), dernierResultat: String(resultat).slice(0, 60) }).catch(() => {});
   return new Response("ok"); // 200 : Jèko n'a pas besoin de renvoyer l'avis
 }
+
+const PAYE = ["success", "successful", "succeeded", "completed", "paid", "done"];
+const RATE = ["error", "failed", "failure", "canceled", "cancelled", "expired", "rejected"];
+const etatJeko = (j) => String(j?.status ?? j?.data?.status ?? j?.state ?? "").toLowerCase();
 
 /** Demande à Jèko l'état réel du paiement ; s'il est payé, donne les crédits (une seule fois). */
 async function crediterSiPaye(env, id, p) {
@@ -155,10 +174,18 @@ async function crediterSiPaye(env, id, p) {
   const r = await fetch(`${JEKO}/payment_requests/${encodeURIComponent(c.jekoId)}`, { headers: { "X-API-KEY": env.JEKO_API_KEY, "X-API-KEY-ID": env.JEKO_API_KEY_ID } });
   const j = await r.json().catch(() => ({}));
   if (!r.ok) return { statut: "jeko" };
-  if (j.status === "error") { await fsModifier(env, `paiements/${id}`, { statut: "rejete", motif: "Paiement annulé ou échoué" }).catch(() => {}); return { statut: "rejete" }; }
-  if (j.status !== "success") return { statut: "jeko" };
+  const etat = etatJeko(j);
+  if (RATE.includes(etat)) { await fsModifier(env, `paiements/${id}`, { statut: "rejete", motif: "Paiement annulé ou échoué" }).catch(() => {}); return { statut: "rejete" }; }
+  if (!PAYE.includes(etat)) return { statut: "jeko" };
   // Le montant payé doit être celui du paiement (quand Jèko le renvoie)
   if (j.amountCents != null && Number(j.amountCents) !== c.montant * 100) return { statut: "jeko" };
+  return crediter(env, id, p);
+}
+
+/** Donne les crédits et marque le paiement confirmé, en une seule écriture qui ne peut réussir qu'une fois */
+async function crediter(env, id, p) {
+  const c = p.champs;
+  if (c.statut === "confirme") return { statut: "confirme", credits: c.credits };
   // Écriture groupée : « confirmé » + crédits. La condition (version du paiement inchangée) empêche de créditer deux fois.
   const jeton = await jetonGoogle(env);
   const base = `projects/${projet(env)}/databases/(default)/documents`;
