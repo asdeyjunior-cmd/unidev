@@ -262,14 +262,18 @@ async function copierFichier(request, env) {
   secretOutils(request, env);
   const { source, cle } = await request.json().catch(() => ({}));
   if (!cleValide(String(cle || ""))) throw erreur("Clé invalide");
-  if (!/^https:\/\/res\.cloudinary\.com\//.test(String(source || ""))) throw erreur("Source non autorisée");
+  if (!/^https:\/\/(res|api)\.cloudinary\.com\//.test(String(source || ""))) throw erreur("Source non autorisée");
   const url = new URL(request.url);
   const deja = await stockage(env).head(cle);
   if (deja) return { url: lienFichier(url, cle), cle, bytes: deja.size, deja: true };
-  const r = await fetch(source);
-  if (!r.ok) throw erreur(`Cloudinary : ${r.status}`, r.status === 404 ? 404 : 502);
+  const r = await fetch(source, { headers: { "Accept-Encoding": "identity" } });
+  if (!r.ok) throw erreur(`Cloudinary répond ${r.status}${r.headers.get("x-cld-error") ? ` (${r.headers.get("x-cld-error")})` : ""}`, r.status === 404 ? 404 : 502);
   const type = (r.headers.get("Content-Type") || "application/octet-stream").split(";")[0];
-  const obj = await ranger(env, cle, r.body, Number(r.headers.get("Content-Length") || 0), type);
+  // Fichier compressé pendant le transfert : sa taille annoncée n'est pas la vraie, on le lit en entier
+  const taille = r.headers.get("Content-Encoding") ? 0 : Number(r.headers.get("Content-Length") || 0);
+  let obj;
+  try { obj = await ranger(env, cle, r.body, taille, type); }
+  catch (e) { throw erreur(`Rangement dans R2 impossible : ${String(e.message || e).slice(0, 120)}`, 500); }
   return { url: lienFichier(url, cle), cle, bytes: obj?.size || 0 };
 }
 

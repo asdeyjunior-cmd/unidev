@@ -41,6 +41,7 @@ jobs:
         env:
           R2_URL: ${{ secrets.R2_URL }}
           OUTILS_SECRET: ${{ secrets.OUTILS_SECRET }}
+          CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
         run: |
           set -o pipefail
           CIBLE="${{ inputs.compte }}"
@@ -49,4 +50,4 @@ jobs:
       - name: Résumé
         if: always()
         run: |
-          { echo "### Déménagement vers R2"; echo '```'; grep -E "^(Fichiers|Images|Opportunités|Terminé|Relance|Tout est|ERREUR)" resultat.txt | head -n 60; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+          { echo "### Déménagement vers R2"; echo '```'; grep -E "^(Fichiers|Images|Opportunités|Terminé|Relance|Tout est|ERREUR|ARRÊT|Raisons)" resultat.txt | head -n 30; echo "Premières erreurs :"; grep -m 5 "ERREUR" resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true

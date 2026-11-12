@@ -19,6 +19,8 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
 import { lireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
+import { v2 as cloudinary } from "cloudinary";
+import { comptes, compteDeUrl, choisirCompte, apercuPdfR2, deposerR2 } from "./stockage.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -41,6 +43,15 @@ const etat = await fetch(R2).then((r) => r.json()).catch(() => ({}));
 if (!etat.stockage || !etat.outils) {
   console.error(`ERREUR : le serveur ${R2} n'est pas prêt (stockage R2 : ${!!etat.stockage}, secret des outils : ${!!etat.outils}). Vérifie la liaison FICHIERS et OUTILS_SECRET dans Cloudflare.`);
   process.exit(1);
+}
+
+/* Le mot de passe des outils doit être le même dans Cloudflare et dans GitHub : test avant de commencer */
+{
+  const r = await fetch(`${R2}/copier`, { method: "POST", headers: { "Content-Type": "application/json", "X-Secret": SECRET }, body: "{}" }).catch(() => null);
+  if (r?.status === 401) {
+    console.error("ERREUR : le mot de passe OUTILS_SECRET de GitHub n'est pas le même que celui de Cloudflare. Recopie exactement le même dans les deux (sans espace ni guillemets).");
+    process.exit(1);
+  }
 }
 
 const aMigrer = (u) => {
@@ -72,6 +83,45 @@ async function copier(source, cleR2) {
   throw derniere;
 }
 
+/* ---------- Secours : compte Cloudinary qui ne livre plus ses fichiers (401/403) ----------
+   On passe alors par l'API de Cloudinary (avec la clé du compte, secret CLOUDINARY_COMPTES), qui reste ouverte jusqu'à la fermeture. */
+const peutSecourir = comptes().length > 0;
+if (peutSecourir) await choisirCompte(cloudinary, { afficher: false }).catch(() => {}); // compte encore libre, pour refaire les aperçus
+function lienApi(u) {
+  const m = /^https:\/\/res\.cloudinary\.com\/([^/]+)\/(raw|image|video)\/upload\/(.+)$/.exec(String(u).split("?")[0]);
+  const c = m && compteDeUrl(u);
+  if (!c) return null;
+  const morceaux = m[3].split("/");
+  let i = 0, transfo = false;
+  // Transformations (pg_1,w_800…) et version (v123) au début du chemin
+  while (i < morceaux.length - 1 && (/^[a-z]{1,4}_[^/]*$/.test(morceaux[i]) || /^v\d+$/.test(morceaux[i]))) { if (!/^v\d+$/.test(morceaux[i])) transfo = true; i++; }
+  const chemin = decodeURIComponent(morceaux.slice(i).join("/"));
+  const point = chemin.lastIndexOf(".");
+  const brut = m[2] === "raw";
+  const id = brut || point < 0 ? chemin : chemin.slice(0, point), format = brut || point < 0 ? "" : chemin.slice(point + 1);
+  const url = cloudinary.utils.private_download_url(id, transfo ? "pdf" : format, {
+    resource_type: m[2], type: "upload", cloud_name: c.cloud_name, api_key: c.api_key, api_secret: c.api_secret,
+  });
+  return { url, transfo };
+}
+const refuse = (e) => /Cloudinary répond (401|403|420|429)|Cloudinary : (401|403)/.test(String(e?.message));
+/** Copie, et si Cloudinary ne livre plus : passe par son API. Un aperçu (pg_1…) est alors refait depuis le PDF. */
+async function copierSecours(source, cleR2, { apercu = false } = {}) {
+  try { return await copier(source, cleR2); }
+  catch (e) {
+    if (!peutSecourir || !refuse(e)) throw e;
+    const s = lienApi(source);
+    if (!s) throw e;
+    if (!s.transfo) return copier(s.url, cleR2);
+    if (!apercu) throw e;
+    const r = await fetch(s.url, { signal: AbortSignal.timeout(5 * 60 * 1000) });
+    if (!r.ok) throw new Error(`API Cloudinary ${r.status}`);
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (buf.subarray(0, 4).toString() === "%PDF") return apercuPdfR2(cloudinary, buf);
+    return (await deposerR2(buf, { dossier: "images", nom: "apercu.jpg" })).secure_url;
+  }
+}
+
 /** Fait tourner les tâches EN_PARALLELE à la fois */
 async function enParallele(taches) {
   let i = 0;
@@ -79,6 +129,18 @@ async function enParallele(taches) {
 }
 
 const bilan = { fichiers: 0, images: 0, opps: 0, erreurs: 0, introuvables: 0 };
+const raisons = new Map();
+let reussites = 0;
+function echec(e) {
+  const r = String(e?.message || e).slice(0, 160);
+  raisons.set(r, (raisons.get(r) || 0) + 1);
+  bilan.erreurs++;
+  // Les 25 premiers essais échouent tous : inutile de continuer, le problème est général
+  if (!reussites && bilan.erreurs >= 25) {
+    console.error(`\nARRÊT : les 25 premières copies ont toutes échoué. Raison : ${[...raisons.entries()].sort((a, b) => b[1] - a[1])[0][0]}`);
+    process.exit(1);
+  }
+}
 
 /* ---------- 1. Fichiers des documents (documents/<id>/prive/fichier) ---------- */
 const prives = await db.collectionGroup("prive").get();
@@ -117,16 +179,16 @@ await enParallele(aFaire.map((s) => async () => {
     const nouvelles = [];
     if (parts) {
       for (let i = 0; i < parts.length; i++) {
-        nouvelles.push({ ...parts[i], url: aMigrer(parts[i].url) ? await copier(parts[i].url, `documents/migre/${id}/${i}-${nomDe(parts[i].url)}`) : parts[i].url });
+        nouvelles.push({ ...parts[i], url: aMigrer(parts[i].url) ? await copierSecours(parts[i].url, `documents/migre/${id}/${i}-${nomDe(parts[i].url)}`) : parts[i].url });
       }
     }
-    const fileUrl = parts ? nouvelles[0].url : aMigrer(f.fileUrl) ? await copier(f.fileUrl, `documents/migre/${id}/0-${nomDe(f.fileUrl)}`) : f.fileUrl;
+    const fileUrl = parts ? nouvelles[0].url : aMigrer(f.fileUrl) ? await copierSecours(f.fileUrl, `documents/migre/${id}/0-${nomDe(f.fileUrl)}`) : f.fileUrl;
     await s.ref.update({ fileUrl, ...(parts ? { parts: nouvelles } : {}), ancien: { fileUrl: f.fileUrl, parts: f.parts || null } });
-    noter(`f:${id}`); bilan.fichiers++;
+    noter(`f:${id}`); bilan.fichiers++; reussites++;
     avance(`fichier ${id} copié`);
   } catch (e) {
     if (/404/.test(e.message)) { bilan.introuvables++; avance(`fichier ${id} : déjà absent de Cloudinary`); }
-    else { bilan.erreurs++; avance(`ERREUR fichier ${id} : ${e.message}`); }
+    else { echec(e); avance(`ERREUR fichier ${id} : ${e.message}`); }
   }
 }));
 
@@ -134,12 +196,12 @@ await enParallele(aFaire.map((s) => async () => {
 const nouvellesImages = {};
 await enParallele(images.map(([id, u]) => async () => {
   try {
-    const nu = await copier(u, `images/migre/${id}.jpg`);
+    const nu = await copierSecours(u, `images/migre/${id}.jpg`, { apercu: true });
     await db.collection("documents").doc(id).update({ imageUrl: nu, ancienneImage: u });
     if (catalogue[id]) nouvellesImages[id] = nu;
-    noter(`i:${id}`); bilan.images++;
+    noter(`i:${id}`); bilan.images++; reussites++;
     avance(`aperçu ${id} copié`);
-  } catch (e) { bilan.erreurs++; avance(`ERREUR aperçu ${id} : ${e.message}`); }
+  } catch (e) { echec(e); avance(`ERREUR aperçu ${id} : ${e.message}`); }
 }));
 const ids = Object.keys(nouvellesImages);
 for (let i = 0; i < ids.length; i += 300) {
@@ -150,22 +212,23 @@ for (let i = 0; i < ids.length; i += 300) {
 
 await enParallele([
   ...oppsAFaire.map((s) => async () => {
-    try { await s.ref.update({ image: await copier(s.data().image, `opportunites/migre/${s.id}/carte.jpg`) }); noter(`o:${s.id}`); bilan.opps++; avance(`opportunité ${s.id}`); }
-    catch (e) { bilan.erreurs++; avance(`ERREUR opportunité ${s.id} : ${e.message}`); }
+    try { await s.ref.update({ image: await copierSecours(s.data().image, `opportunites/migre/${s.id}/carte.jpg`) }); noter(`o:${s.id}`); bilan.opps++; avance(`opportunité ${s.id}`); }
+    catch (e) { echec(e); avance(`ERREUR opportunité ${s.id} : ${e.message}`); }
   }),
   ...detailsAFaire.map((s) => async () => {
     const id = s.ref.parent.parent.id;
     try {
       const imgs = s.data().images || [], nouvelles = [];
-      for (let i = 0; i < imgs.length; i++) nouvelles.push(aMigrer(imgs[i]) ? await copier(imgs[i], `opportunites/migre/${id}/${i}.jpg`) : imgs[i]);
+      for (let i = 0; i < imgs.length; i++) nouvelles.push(aMigrer(imgs[i]) ? await copierSecours(imgs[i], `opportunites/migre/${id}/${i}.jpg`) : imgs[i]);
       await s.ref.update({ images: nouvelles });
       noter(`d:${id}`); bilan.opps++; avance(`affiches de l'opportunité ${id}`);
-    } catch (e) { bilan.erreurs++; avance(`ERREUR opportunité ${id} : ${e.message}`); }
+    } catch (e) { echec(e); avance(`ERREUR opportunité ${id} : ${e.message}`); }
   }),
 ]);
 
 const reste = aFaire.length - bilan.fichiers - bilan.introuvables;
 console.log(`\nTerminé : ${bilan.fichiers} fichier(s), ${bilan.images} aperçu(s), ${bilan.opps} opportunité(s) copiés dans R2.`
   + ` ${bilan.introuvables} fichier(s) déjà absents de Cloudinary, ${bilan.erreurs} erreur(s).`);
+if (raisons.size) console.log(`Raisons des erreurs : ${[...raisons.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([r, n]) => `${r} (${n})`).join(" | ")}`);
 console.log(bilan.erreurs || reste > 0 ? "Relance l'outil : il reprendra seulement ce qui manque." : "Tout est copié pour ce compte.");
 process.exit(0);
