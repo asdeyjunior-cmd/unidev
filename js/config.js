@@ -22,6 +22,13 @@ export const cloudinaryConfig = {
   imageFolder: "unidev/couvertures",
 };
 
+// Stockage des fichiers sur Cloudflare R2, via le serveur unidev (voir serveur/LISEZMOI.md).
+// Si le serveur ne répond pas, les envois repartent sur Cloudinary. « pleins » : comptes Cloudinary où l'on n'envoie plus rien.
+export const stockageConfig = {
+  serveur: "https://unidev-paiement.asdeyjunior40.workers.dev",
+  pleins: ["iugeyztf"],
+};
+
 export const MAX_FILE_MB = 100; // au-delà de 9 Mo, le fichier est envoyé en morceaux (plan gratuit Cloudinary : 10 Mo par fichier)
 export const MAX_IMAGE_MB = 10;
 export const IMAGE_EXT = ["jpg", "jpeg", "png", "webp"];

@@ -13,7 +13,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
-import { comptes, choisirCompte, basculer, comptePlein } from "./stockage.js";
+import { comptes, choisirCompte, basculer, comptePlein, r2Actif, envoyerR2, MAX_R2 } from "./stockage.js";
 import admin from "firebase-admin";
 import { v2 as cloudinary } from "cloudinary";
 import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF } from "./outils.js";
@@ -39,6 +39,7 @@ const envoyerUneFois = (buffer, options) => avecRelance(() => new Promise((ok, k
 }), { nom: "envoi Cloudinary" });
 // Compte plein : on passe au compte suivant et on renvoie
 const envoyer = async (buffer, options) => {
+  if (r2Actif()) return envoyerR2(buffer, options); // stockage principal : Cloudflare R2
   for (;;) {
     try { return await envoyerUneFois(buffer, options); }
     catch (e) { if (comptePlein(e) && basculer(cloudinary)) continue; throw e; }
@@ -78,7 +79,7 @@ for (let i = 0; i < lot.length; i += 50) {
       const pdf = t.buffer;
 
       let nouveau = null, imageUrl = null;
-      if (pdf.length <= MAX_IMAGE_PDF) {
+      if (pdf.length <= MAX_IMAGE_PDF && !r2Actif()) {
         try {
           const res = await envoyer(pdf, { resource_type: "image", folder: "unidev/documents" });
           nouveau = { fileUrl: res.secure_url, publicId: res.public_id };
@@ -86,7 +87,7 @@ for (let i = 0; i < lot.length; i += 50) {
         } catch {}
       }
       if (!nouveau) {
-        if (pdf.length <= TAILLE_MORCEAU) {
+        if (pdf.length <= (r2Actif() ? MAX_R2 : TAILLE_MORCEAU)) {
           const res = await envoyer(pdf, { resource_type: "raw", folder: "unidev/documents" });
           nouveau = { fileUrl: res.secure_url, publicId: res.public_id };
         } else {

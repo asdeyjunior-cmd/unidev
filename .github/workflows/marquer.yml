@@ -34,6 +34,8 @@ jobs:
           CK: ${{ secrets.CLOUDINARY_API_KEY }}
           CS: ${{ secrets.CLOUDINARY_API_SECRET }}
           CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
+          R2_URL: ${{ secrets.R2_URL }}
+          OUTILS_SECRET: ${{ secrets.OUTILS_SECRET }}
           MAX: ${{ inputs.max || '300' }}
           NODE_OPTIONS: --max-old-space-size=5120
         run: |

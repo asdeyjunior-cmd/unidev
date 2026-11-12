@@ -5,12 +5,20 @@
  *   POST /verifier  { idToken, paiement }        -> au retour de l'étudiant : vérifie chez Jèko et crédite si payé
  *   POST /jeko      (appelé par Jèko)            -> avis de paiement signé : crédite l'étudiant
  *
+ * Stockage des fichiers (Cloudflare R2, liaison « FICHIERS ») :
+ *   GET  /f/<clé>                                -> le fichier (public, comme avant sur Cloudinary ; clé introuvable à deviner)
+ *   POST /envoyer?genre=doc|image&nom=…          -> envoi par un étudiant connecté (en-tête Authorization: Bearer <jeton>)
+ *   POST /copier   { source, cle }               -> outils : copie un fichier Cloudinary dans R2 (en-tête X-Secret)
+ *   POST /deposer?cle=…                          -> outils : dépose un fichier dans R2 (en-tête X-Secret)
+ *
  * Les crédits ne sont donnés qu'après confirmation de Jèko (avis signé, puis vérification directe chez Jèko),
  * une seule fois par paiement. Rien n'est jamais crédité sur la seule parole du navigateur.
  *
  * Réglages (Cloudflare > le Worker > Settings > Variables and Secrets) :
  *   Secrets : JEKO_API_KEY, JEKO_API_KEY_ID, JEKO_STORE_ID, JEKO_WEBHOOK_SECRET, FIREBASE_CLE_JSON
  *   Texte   : SITE (https://unidev-2026.web.app), FIREBASE_API_KEY, PRIX_PACK (100), CREDITS_PACK (5)
+ *   Secret  : OUTILS_SECRET (mot de passe des outils GitHub pour /copier et /deposer)
+ *   Liaison R2 : FICHIERS -> le bucket « unidev-fichiers »
  */
 const JEKO = "https://api.jeko.africa/partner_api";
 const METHODES = ["wave", "orange", "mtn", "moov", "djamo"];
@@ -29,14 +37,18 @@ export default {
     const cors = {
       "Access-Control-Allow-Origin": sites.includes(origine) ? origine : sites[0] || "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
       "Vary": "Origin",
     };
     const json = (data, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json", ...cors } });
+    // Fichiers : lus par tout le monde (le lien n'est donné qu'aux étudiants qui ont débloqué le document)
+    if (url.pathname.startsWith("/f/") && (request.method === "GET" || request.method === "HEAD")) return lireFichier(request, env, url);
+    if (url.pathname.startsWith("/f/") && request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS_FICHIERS });
     if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
     // Page d'état (aucun secret affiché) : dit ce qui manque encore
     if (request.method === "GET") {
-      const etat = { ok: true, service: "unidev-paiement", jeko: !!env.JEKO_API_KEY, site: !!env.SITE, firebase: !!env.FIREBASE_CLE_JSON, webhook: !!env.JEKO_WEBHOOK_SECRET };
+      const etat = { ok: true, service: "unidev-paiement", jeko: !!env.JEKO_API_KEY, site: !!env.SITE, firebase: !!env.FIREBASE_CLE_JSON, webhook: !!env.JEKO_WEBHOOK_SECRET,
+        stockage: !!env.FICHIERS, outils: !!env.OUTILS_SECRET };
       if (env.JEKO_API_KEY && url.pathname === "/etat") {
         try { etat.magasin = !!(await magasin(env)); } catch (e) { etat.magasin = false; etat.probleme = e.message; }
       }
@@ -44,6 +56,9 @@ export default {
     }
     try {
       if (url.pathname === "/jeko") return await avisJeko(request, env);
+      if (url.pathname === "/envoyer") return json(await envoyerFichier(request, env, url));
+      if (url.pathname === "/deposer") return json(await deposerFichier(request, env, url));
+      if (url.pathname === "/copier") return json(await copierFichier(request, env));
       const corps = await request.json().catch(() => ({}));
       if (url.pathname === "/payer") return json(await payer(corps, env));
       if (url.pathname === "/verifier") return json(await verifier(corps, env));
@@ -157,6 +172,105 @@ async function crediterSiPaye(env, id, p) {
     return { statut: apres?.champs.statut || "jeko", credits: c.credits };
   }
   return { statut: "confirme", credits: c.credits };
+}
+
+/* ---------- Stockage des fichiers (R2) ---------- */
+const CORS_FICHIERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+  "Access-Control-Allow-Headers": "Range",
+  "Access-Control-Expose-Headers": "Content-Length, Content-Range, Content-Type, ETag",
+};
+const MAX_DOC = 100 * 1024 * 1024, MAX_IMAGE = 15 * 1024 * 1024;
+const nomPropre = (n) => String(n || "fichier").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").slice(-90) || "fichier";
+const cleValide = (c) => /^(documents|images|opportunites)\/[\w./-]{3,200}$/.test(c) && !c.includes("..");
+const lienFichier = (url, cle) => `${url.origin}/f/${cle.split("/").map(encodeURIComponent).join("/")}`;
+function stockage(env) {
+  if (!env.FICHIERS) throw erreur("Stockage R2 non relié au serveur (liaison FICHIERS).", 503);
+  return env.FICHIERS;
+}
+function secretOutils(request, env) {
+  const s = request.headers.get("X-Secret") || "";
+  if (!env.OUTILS_SECRET || !memeTexte(s, String(env.OUTILS_SECRET).trim())) throw erreur("Accès refusé", 401);
+}
+/** Range « bytes=a-b » -> option R2 */
+function plage(h) {
+  const m = /^bytes=(\d*)-(\d*)$/.exec(h || "");
+  if (!m || (!m[1] && !m[2])) return undefined;
+  if (!m[1]) return { suffix: Number(m[2]) };
+  return m[2] ? { offset: Number(m[1]), length: Number(m[2]) - Number(m[1]) + 1 } : { offset: Number(m[1]) };
+}
+async function lireFichier(request, env, url) {
+  const cle = decodeURIComponent(url.pathname.slice(3));
+  if (!cleValide(cle) || !env.FICHIERS) return new Response("Introuvable", { status: 404, headers: CORS_FICHIERS });
+  const range = plage(request.headers.get("Range"));
+  const obj = request.method === "HEAD" ? await env.FICHIERS.head(cle) : await env.FICHIERS.get(cle, range ? { range } : {});
+  if (!obj) return new Response("Introuvable", { status: 404, headers: CORS_FICHIERS });
+  const h = new Headers(CORS_FICHIERS);
+  obj.writeHttpMetadata(h);
+  h.set("ETag", obj.httpEtag);
+  h.set("Cache-Control", "public, max-age=31536000, immutable");
+  h.set("Accept-Ranges", "bytes");
+  if (request.method === "HEAD") { h.set("Content-Length", String(obj.size)); return new Response(null, { headers: h }); }
+  if (range && obj.range) {
+    const debut = obj.range.offset ?? (obj.size - obj.range.suffix);
+    const longueur = obj.range.length ?? (obj.size - debut);
+    h.set("Content-Range", `bytes ${debut}-${debut + longueur - 1}/${obj.size}`);
+    h.set("Content-Length", String(longueur));
+    return new Response(obj.body, { status: 206, headers: h });
+  }
+  h.set("Content-Length", String(obj.size));
+  return new Response(obj.body, { headers: h });
+}
+/** Met un corps de requête/réponse dans R2 (taille connue : envoi en continu ; sinon en mémoire) */
+async function ranger(env, cle, corps, taille, type) {
+  const opts = { httpMetadata: { contentType: type || "application/octet-stream" } };
+  if (taille > 0 && corps) {
+    const { readable, writable } = new FixedLengthStream(taille);
+    const copie = corps.pipeTo(writable);
+    const obj = await stockage(env).put(cle, readable, opts);
+    await copie;
+    return obj;
+  }
+  return stockage(env).put(cle, await new Response(corps).arrayBuffer(), opts);
+}
+/** Envoi par un étudiant connecté (document ou image de couverture) */
+async function envoyerFichier(request, env, url) {
+  if (request.method !== "POST") throw erreur("Méthode non autorisée", 405);
+  const user = await quiEstCe((request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, ""), env);
+  const genre = url.searchParams.get("genre") === "image" ? "image" : "doc";
+  const taille = Number(request.headers.get("Content-Length") || 0);
+  if (!taille) throw erreur("Fichier vide");
+  if (taille > (genre === "image" ? MAX_IMAGE : MAX_DOC)) throw erreur(genre === "image" ? "Image trop lourde (15 Mo maximum)." : "Fichier trop lourd (100 Mo maximum).", 413);
+  const type = (request.headers.get("Content-Type") || "application/octet-stream").split(";")[0].slice(0, 120);
+  if (genre === "image" && !/^image\//.test(type)) throw erreur("Ce n'est pas une image.");
+  const cle = `${genre === "image" ? "images" : "documents"}/${user.uid}/${idAleatoire()}/${nomPropre(url.searchParams.get("nom"))}`;
+  const obj = await ranger(env, cle, request.body, taille, type);
+  return { url: lienFichier(url, cle), cle, bytes: obj?.size || taille };
+}
+/** Outils : dépose un fichier (corps brut) */
+async function deposerFichier(request, env, url) {
+  secretOutils(request, env);
+  const cle = String(url.searchParams.get("cle") || "");
+  if (!cleValide(cle)) throw erreur("Clé invalide");
+  const type = (request.headers.get("Content-Type") || "application/octet-stream").split(";")[0];
+  const obj = await ranger(env, cle, request.body, Number(request.headers.get("Content-Length") || 0), type);
+  return { url: lienFichier(url, cle), cle, bytes: obj?.size || 0 };
+}
+/** Outils : copie un fichier Cloudinary dans R2 (rien n'est recopié s'il y est déjà) */
+async function copierFichier(request, env) {
+  secretOutils(request, env);
+  const { source, cle } = await request.json().catch(() => ({}));
+  if (!cleValide(String(cle || ""))) throw erreur("Clé invalide");
+  if (!/^https:\/\/res\.cloudinary\.com\//.test(String(source || ""))) throw erreur("Source non autorisée");
+  const url = new URL(request.url);
+  const deja = await stockage(env).head(cle);
+  if (deja) return { url: lienFichier(url, cle), cle, bytes: deja.size, deja: true };
+  const r = await fetch(source);
+  if (!r.ok) throw erreur(`Cloudinary : ${r.status}`, r.status === 404 ? 404 : 502);
+  const type = (r.headers.get("Content-Type") || "application/octet-stream").split(";")[0];
+  const obj = await ranger(env, cle, r.body, Number(r.headers.get("Content-Length") || 0), type);
+  return { url: lienFichier(url, cle), cle, bytes: obj?.size || 0 };
 }
 
 /* ---------- Qui appelle ? (jeton de connexion Firebase vérifié chez Google) ---------- */

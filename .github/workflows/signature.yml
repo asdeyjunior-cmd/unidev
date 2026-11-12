@@ -33,6 +33,8 @@ jobs:
           CK: ${{ secrets.CLOUDINARY_API_KEY }}
           CS: ${{ secrets.CLOUDINARY_API_SECRET }}
           CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
+          R2_URL: ${{ secrets.R2_URL }}
+          OUTILS_SECRET: ${{ secrets.OUTILS_SECRET }}
           SITE: ${{ inputs.site }}
           REMP: ${{ inputs.remplacer }}
           REF: ${{ inputs.refaire && '--refaire' || '' }}

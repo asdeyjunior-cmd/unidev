@@ -1,6 +1,6 @@
 // Service worker unidev : ouverture rapide, icônes et images en cache, page hors connexion.
 // Changer VERSION à chaque mise en ligne force la mise à jour du cache.
-const VERSION = "unidev-v100";
+const VERSION = "unidev-v101";
 const SHELL = [
   "./", "index.html", "publier.html", "connexion.html", "credits.html", "acheter.html", "apropos.html", "opportunites.html", "emploi.html", "offline.html",
   "css/style.css?v=44", "manifest.webmanifest",
@@ -53,7 +53,8 @@ self.addEventListener("fetch", (e) => {
   const statique =
     url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com" ||
     (url.hostname === "www.gstatic.com" && url.pathname.startsWith("/firebasejs/")) ||
-    (url.hostname === "res.cloudinary.com" && url.pathname.includes("/image/upload/"));
+    (url.hostname === "res.cloudinary.com" && url.pathname.includes("/image/upload/")) ||
+    (url.hostname.endsWith(".workers.dev") && url.pathname.startsWith("/f/images/"));
   if (statique) {
     e.respondWith(
       caches.match(req).then((hit) => hit || fetch(req).then((res) => {

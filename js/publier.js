@@ -184,7 +184,7 @@ $("form").onsubmit = async (e) => {
       if (file.size > MAX_FILE_MB * 1048576) throw new Error(`PDF trop lourd (max ${MAX_FILE_MB} Mo). Retire quelques pages.`);
     }
     let image;
-    if (cover) image = coverAuto || coverAConvertir ? await photoLegere(cover) : cover;
+    if (cover) image = await photoLegere(cover, 800); // toujours allégée : elle s'affiche sur toutes les cartes
     else { btn.textContent = "Création de l'image…"; image = await couvertureAuto(file, $("titre").value.trim()); }
     const img = await uploadFile(image, (p) => setBar(10 + p * 0.1), "image");
     btn.textContent = "Envoi du fichier…";

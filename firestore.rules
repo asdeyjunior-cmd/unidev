@@ -12,6 +12,8 @@ service cloud.firestore {
     function comptesCloudinary() { return '(iugeyztf|qxh2bmzt|jbqiyzzu|gxmx1dsh|nis5hqzo)'; }
     function cloudinaryRaw() { return 'https://res\\.cloudinary\\.com/' + comptesCloudinary() + '/raw/upload/.+'; }
     function cloudinaryImage() { return 'https://res\\.cloudinary\\.com/' + comptesCloudinary() + '/image/upload/.+'; }
+    // Stockage Cloudflare R2 (serveur unidev) : fichiers envoyés par les étudiants
+    function stockageR2(dossier) { return 'https://unidev-paiement\\.asdeyjunior40\\.workers\\.dev/f/' + dossier + '/.+'; }
     function texte(champ, max) {
       return !(champ in request.resource.data)
         || (request.resource.data[champ] is string && request.resource.data[champ].size() <= max);
@@ -127,7 +129,7 @@ service cloud.firestore {
         && request.resource.data.titre is string && request.resource.data.titre.size() > 0
         && request.resource.data.titre.size() <= 140
         && request.resource.data.imageUrl is string
-        && request.resource.data.imageUrl.matches(cloudinaryImage());
+        && (request.resource.data.imageUrl.matches(cloudinaryImage()) || request.resource.data.imageUrl.matches(stockageR2('images')));
 
       allow update: if isAdmin()
         // Compteur +1 seulement lors d'un vrai déblocage
@@ -150,7 +152,7 @@ service cloud.firestore {
           && request.resource.data.auteurId == request.auth.uid
           && getAfter(/databases/$(database)/documents/documents/$(docId)).data.auteurId == request.auth.uid
           && request.resource.data.fileUrl is string
-          && request.resource.data.fileUrl.matches(cloudinaryRaw())
+          && (request.resource.data.fileUrl.matches(cloudinaryRaw()) || request.resource.data.fileUrl.matches(stockageR2('documents')))
           && (!('parts' in request.resource.data)
               || (request.resource.data.parts is list && request.resource.data.parts.size() <= 12));
         allow update: if false;

@@ -18,7 +18,7 @@ import crypto from "node:crypto";
 import "dotenv/config";
 import { tamponUnidev, sansModification } from "./marque.js";
 import { motsPourFiliere, FILIERES, niveauDe, typeDe } from "./outils.js";
-import { comptes, choisirCompte, basculer, comptePlein } from "./stockage.js";
+import { comptes, choisirCompte, basculer, comptePlein, r2Actif, envoyerR2, apercuPdfR2, MAX_R2 } from "./stockage.js";
 import {
   TYPES, NIVEAUX, EXTENSIONS, TAILLE_MORCEAU, MAX_IMAGE_PDF, MAX_FICHIER,
   infosDepuisChemin, lireCsv, normaliserNiveau, normaliserType, licenceAutorisee,
@@ -102,6 +102,7 @@ const envoyerUneFois = (buffer, options) => avecRelance(() => new Promise((ok, k
 }), { nom: "envoi Cloudinary" });
 // Compte plein : on passe au compte suivant et on renvoie
 const envoyer = async (buffer, options) => {
+  if (r2Actif()) return envoyerR2(buffer, options); // stockage principal : Cloudflare R2
   for (;;) {
     try { return await envoyerUneFois(buffer, options); }
     catch (e) { if (comptePlein(e) && basculer(cloudinary)) continue; throw e; }
@@ -166,7 +167,7 @@ async function publier(buffer, nomFichier, infos, imageChemin = null) {
   }
 
   // PDF de 10 Mo max sans image : un seul envoi sert à la fois de fichier et d'image (1re page)
-  if (!imageUrl && ext === "pdf" && buffer.length <= MAX_IMAGE_PDF) {
+  if (!imageUrl && ext === "pdf" && buffer.length <= MAX_IMAGE_PDF && !r2Actif()) {
     try {
       const res = await envoyer(buffer, { resource_type: "image", folder: "unidev/documents" });
       fichier = { fileUrl: res.secure_url, publicId: res.public_id };
@@ -179,7 +180,7 @@ async function publier(buffer, nomFichier, infos, imageChemin = null) {
     }
   }
   if (!fichier) {
-    if (buffer.length <= TAILLE_MORCEAU) {
+    if (buffer.length <= (r2Actif() ? MAX_R2 : TAILLE_MORCEAU)) {
       const res = await envoyer(buffer, { resource_type: "raw", folder: "unidev/documents" });
       fichier = { fileUrl: res.secure_url, publicId: res.public_id };
     } else {
@@ -190,6 +191,10 @@ async function publier(buffer, nomFichier, infos, imageChemin = null) {
       }
       fichier = { fileUrl: parts[0].url, publicId: parts[0].publicId, parts };
     }
+  }
+  // Avec R2 : aperçu de la 1re page fabriqué à part (le PDF n'est plus envoyé sur Cloudinary)
+  if (!imageUrl && ext === "pdf" && r2Actif()) {
+    try { imageUrl = await apercuPdfR2(cloudinary, buffer); } catch (e) { console.warn(`   (aperçu impossible : ${e.message})`); }
   }
   if (!imageUrl) imageUrl = await couvertureGenerique({ ...infos, format: ext });
 

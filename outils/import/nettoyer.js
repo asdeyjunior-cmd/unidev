@@ -45,11 +45,14 @@ console.log("Lecture des documents d'unidev…");
 const utilises = new Set();
 const garder = (type, id) => id && utilises.add(`${type}:${id}`);
 const docs = await db.collection("documents").get();
-docs.forEach((s) => { const r = depuisUrl(s.data().imageUrl); if (r) garder(r.type, r.id); });
+// Image actuelle, et ancienne image gardée par le déménagement vers R2 (tant qu'on n'a pas tout vérifié)
+docs.forEach((s) => { for (const u of [s.data().imageUrl, s.data().ancienneImage]) { const r = depuisUrl(u); if (r) garder(r.type, r.id); } });
+// Images des opportunités (carte + affiches)
+(await db.collection("opportunites").get().catch(() => ({ docs: [] }))).docs.forEach((s) => { const r = depuisUrl(s.data().image); if (r) garder(r.type, r.id); });
 const fichiers = await db.collectionGroup("prive").get();
 fichiers.forEach((s) => {
   const f = s.data();
-  for (const u of [f.fileUrl, ...(f.parts || []).map((p) => p.url)]) {
+  for (const u of [f.fileUrl, ...(f.parts || []).map((p) => p.url), ...(f.images || []), f.ancien?.fileUrl, ...(f.ancien?.parts || []).map((p) => p.url)]) {
     const r = depuisUrl(u);
     if (r) { garder(r.type, r.id); if (r.type === "image") garder("image", r.id); }
   }

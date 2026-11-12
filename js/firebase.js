@@ -500,10 +500,11 @@ export async function debloquerOpportunite(uid, id) {
   await batch.commit();
 }
 /** Admin : publie une opportunité */
-export async function creerOpportunite({ titre, type, organisme, lieu, dateLimite, apercu, description, lien, contact, images = [] }) {
+export async function creerOpportunite({ titre, type, organisme, lieu, dateLimite, apercu, description, lien, contact, image = "", images = [] }) {
   const ref = doc(oppsCol);
   const batch = writeBatch(db);
-  batch.set(ref, { titre, type, organisme, lieu, dateLimite, apercu, nbImages: images.length, createdAt: serverTimestamp() });
+  // image : visible par tous sur la carte ; images : affiches, visibles après déblocage
+  batch.set(ref, { titre, type, organisme, lieu, dateLimite, apercu, image, nbImages: images.length, createdAt: serverTimestamp() });
   batch.set(doc(db, "opportunites", ref.id, "prive", "detail"), { description, lien, contact, images, nbImages: images.length });
   await batch.commit();
   return ref.id;
@@ -639,6 +640,8 @@ async function appelServeur(chemin, corps) {
   if (!r.ok) throw new Error(j.erreur || "Le paiement automatique ne répond pas.");
   return j;
 }
+/** Jeton de connexion de l'étudiant (pour envoyer un fichier au serveur unidev) */
+export const jetonConnexion = async () => (auth.currentUser ? auth.currentUser.getIdToken() : "");
 /** Lance un paiement : renvoie l'adresse de la page de paiement Jèko */
 export const payerAuto = (packs, methode) => appelServeur("/payer", { packs, methode });
 /** Au retour du paiement : { statut: "confirme" | "jeko" (pas encore reçu) | "rejete", credits } */

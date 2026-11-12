@@ -40,6 +40,8 @@ jobs:
       - name: Recherche
         env:
           CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
+          R2_URL: ${{ secrets.R2_URL }}
+          OUTILS_SECRET: ${{ secrets.OUTILS_SECRET }}
           NODE_OPTIONS: --max-old-space-size=5120
         run: |
           set -o pipefail

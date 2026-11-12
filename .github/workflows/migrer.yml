@@ -1,0 +1,52 @@
+# Déménagement des fichiers de Cloudinary vers Cloudflare R2.
+# Actions > « Déménager les fichiers vers R2 » > Run workflow. Relance-le autant de fois que nécessaire : il reprend où il s'est arrêté.
+name: Déménager les fichiers vers R2
+
+on:
+  workflow_dispatch:
+    inputs:
+      compte:
+        description: "Compte Cloudinary à vider (iugeyztf = le plus urgent), ou « tous »"
+        default: "iugeyztf"
+      essai:
+        description: "Essai : compter sans rien copier"
+        type: boolean
+        default: false
+
+concurrency: { group: unidev-migration, cancel-in-progress: false }
+
+jobs:
+  migrer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    defaults: { run: { working-directory: outils/import } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Fichiers déjà copiés
+        uses: actions/cache@v4
+        with:
+          path: outils/import/migre.json
+          key: migre-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: migre-
+      - name: Installation et clés
+        env:
+          CLE: ${{ secrets.FIREBASE_CLE_JSON }}
+        run: |
+          npm install --no-audit --no-fund
+          printf '%s' "$CLE" > cle-firebase.json
+          printf 'FIREBASE_CLE=./cle-firebase.json\n' > .env
+      - name: Copie vers R2
+        env:
+          R2_URL: ${{ secrets.R2_URL }}
+          OUTILS_SECRET: ${{ secrets.OUTILS_SECRET }}
+        run: |
+          set -o pipefail
+          CIBLE="${{ inputs.compte }}"
+          if [ "$CIBLE" = "tous" ]; then OPTION="--tous"; else OPTION="--compte ${CIBLE:-iugeyztf}"; fi
+          node migrer.js $OPTION ${{ inputs.essai && '--essai' || '' }} 2>&1 | tee resultat.txt
+      - name: Résumé
+        if: always()
+        run: |
+          { echo "### Déménagement vers R2"; echo '```'; grep -E "^(Fichiers|Images|Opportunités|Terminé|Relance|Tout est|ERREUR)" resultat.txt | head -n 60; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true

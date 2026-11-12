@@ -1,4 +1,4 @@
-import { cloudinaryConfig } from "./config.js";
+import { cloudinaryConfig, stockageConfig } from "./config.js";
 
 const CHUNK = 6 * 1024 * 1024; // morceaux de 6 Mo (envoi fiable sur connexion mobile)
 
@@ -12,17 +12,56 @@ const CHUNK = 6 * 1024 * 1024; // morceaux de 6 Mo (envoi fiable sur connexion m
    Le compte le plus libre est indiqué chaque jour par l'outil « Choisir le compte Cloudinary » (parametres/stockage).
    Si un compte est plein, l'envoi repart tout seul sur le suivant. */
 const COMPTES = (cloudinaryConfig.comptes || [cloudinaryConfig.cloudName]).filter((c) => c && !/^COMPTE_/.test(c));
+// Comptes où l'on envoie encore (les comptes pleins restent lisibles, mais ne reçoivent plus rien)
+const COMPTES_ENVOI = COMPTES.filter((c) => !(stockageConfig?.pleins || []).includes(c));
 let comptePrefere = null;
 async function ordreDesComptes() {
   if (!comptePrefere) {
     try { const { compteDeStockage } = await import("./firebase.js"); comptePrefere = await compteDeStockage(); } catch {}
-    if (!COMPTES.includes(comptePrefere)) comptePrefere = COMPTES[0];
+    if (!COMPTES_ENVOI.includes(comptePrefere)) comptePrefere = COMPTES_ENVOI[0] || COMPTES[0];
   }
-  return [comptePrefere, ...COMPTES.filter((c) => c !== comptePrefere)];
+  return [comptePrefere, ...COMPTES_ENVOI.filter((c) => c !== comptePrefere)];
+}
+
+/* ---------- Stockage principal : Cloudflare R2, via le serveur unidev ----------
+   Téléchargements gratuits et sans limite. Si le serveur n'est pas prêt, on repasse par Cloudinary. */
+const SERVEUR = String(stockageConfig?.serveur || "").replace(/\/$/, "");
+let r2EnPanne = false;
+function envoyerSurR2(file, onProgress, genre) {
+  return new Promise(async (resolve, reject) => {
+    let jeton = "";
+    try { const { jetonConnexion } = await import("./firebase.js"); jeton = await jetonConnexion(); } catch {}
+    if (!jeton) return reject(Object.assign(new Error("Connecte-toi d'abord."), { r2: true }));
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${SERVEUR}/envoyer?genre=${genre}&nom=${encodeURIComponent(file.name || "fichier")}`);
+    xhr.setRequestHeader("Authorization", `Bearer ${jeton}`);
+    xhr.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    xhr.upload.onprogress = (e) => e.lengthComputable && onProgress(Math.round((e.loaded / e.total) * 100));
+    xhr.onload = () => {
+      let res = {};
+      try { res = JSON.parse(xhr.responseText); } catch {}
+      if (xhr.status >= 200 && xhr.status < 300 && res.url) return resolve({ url: res.url, publicId: "", bytes: res.bytes || file.size });
+      // 413 = trop lourd, 4xx = refus : on le dit ; 5xx = serveur pas prêt : on repassera par Cloudinary
+      reject(Object.assign(new Error(res.erreur || `Échec de l'envoi (${xhr.status})`), { definitif: xhr.status >= 400 && xhr.status < 500 && xhr.status !== 401 }));
+    };
+    xhr.onerror = () => reject(Object.assign(new Error("Connexion impossible. Vérifie ta connexion internet."), { reseau: true }));
+    xhr.send(file);
+  });
+}
+async function essayerR2(file, onProgress, genre) {
+  if (!SERVEUR || r2EnPanne) return null;
+  try { return await envoyerSurR2(file, onProgress, genre); }
+  catch (e) {
+    if (e.definitif || e.reseau) throw e;
+    r2EnPanne = true; // serveur pas prêt : la suite de la visite passe par Cloudinary
+    return null;
+  }
 }
 const comptePlein = (e) => /limit|quota|exceed|storage|credits|suspend|disabled/i.test(e?.message || "");
 
 export async function uploadFile(file, onProgress = () => {}, kind = "raw") {
+  const r2 = await essayerR2(file, onProgress, kind === "image" ? "image" : "doc");
+  if (r2) return r2;
   const ordre = await ordreDesComptes();
   for (let i = 0; ; i++) {
     try { return await uploadSurCompte(ordre[i], file, onProgress, kind); }
@@ -88,6 +127,9 @@ function sendChunk(url, form, headers, onLoaded) {
 export const TAILLE_MORCEAU = 9 * 1024 * 1024;
 
 export async function uploadDocument(file, onProgress = () => {}) {
+  // R2 : un seul envoi, jusqu'à 100 Mo, sans morceaux
+  const r2 = await essayerR2(file, onProgress, "doc");
+  if (r2) return { ...r2, parts: null };
   if (file.size <= TAILLE_MORCEAU) {
     const up = await uploadFile(file, onProgress, "raw");
     return { ...up, parts: null };
@@ -108,7 +150,9 @@ export async function uploadDocument(file, onProgress = () => {}) {
 
 /** Vrai seulement pour un fichier de TON compte Cloudinary (protège contre un lien piégé) */
 export function lienSur(url, genre = "raw") {
-  return typeof url === "string" && COMPTES.some((c) => url.startsWith(`https://res.cloudinary.com/${c}/${genre}/upload/`));
+  if (typeof url !== "string") return false;
+  if (SERVEUR && url.startsWith(`${SERVEUR}/f/`)) return true;
+  return COMPTES.some((c) => url.startsWith(`https://res.cloudinary.com/${c}/${genre}/upload/`));
 }
 
 /** Télécharge les morceaux et les recolle en un seul fichier (Blob) */
@@ -172,7 +216,10 @@ export async function assembleParts(urls, onProgress = () => {}, type = "applica
 
 /** Miniature recadrée et compressée par Cloudinary */
 export function thumb(url, w = 400, h = 300) {
-  return url ? url.replace("/image/upload/", `/image/upload/c_fill,g_north,w_${w},h_${h},q_auto:eco,f_auto,dpr_auto/`) : "";
+  if (!url) return "";
+  // Image sur R2 : déjà allégée à l'envoi, servie telle quelle
+  if (!url.startsWith("https://res.cloudinary.com/")) return url;
+  return url.replace("/image/upload/", `/image/upload/c_fill,g_north,w_${w},h_${h},q_auto:eco,f_auto,dpr_auto/`);
 }
 
 /**

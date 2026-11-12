@@ -50,3 +50,21 @@ Le paiement manuel reste disponible en dessous, replié, en secours.
 - Les clés ne sont que dans Cloudflare : jamais dans le site, jamais dans GitHub, jamais dans une discussion.
 - Les crédits ne sont donnés qu'après confirmation de Jèko, une seule fois par paiement.
 - `PRIX_PACK` et `CREDITS_PACK` doivent être les mêmes que dans `js/config.js`.
+
+# Stockage des fichiers sur Cloudflare R2
+
+Les fichiers (documents, images, affiches) sont rangés sur Cloudflare R2 et servis par ce même serveur :
+téléchargements gratuits et illimités, 10 Go de stockage offerts (au-delà : environ 0,015 $ par Go et par mois).
+
+1. Cloudflare > **R2 Object Storage** > activer (un moyen de paiement est demandé, rien n'est prélevé dans l'offre gratuite).
+2. **Create bucket** : nom `unidev-fichiers`, emplacement automatique.
+3. Workers & Pages > `unidev-paiement` > **Settings > Bindings > Add > R2 bucket** :
+   nom de la variable `FICHIERS`, bucket `unidev-fichiers`, puis Deploy.
+4. **Edit code** : colle le nouveau `serveur/worker.js`, puis Deploy.
+5. **Settings > Variables and Secrets** : ajoute `OUTILS_SECRET` (Secret) = un long mot de passe inventé (30 caractères ou plus).
+6. Vérifie l'adresse du serveur dans le navigateur : `"stockage":true` et `"outils":true`.
+7. GitHub > Settings > Secrets and variables > Actions : ajoute `R2_URL` (adresse du serveur, sans / à la fin)
+   et `OUTILS_SECRET` (le même mot de passe qu'à l'étape 5).
+8. Actions > **Déménager les fichiers vers R2** : d'abord avec « Essai » coché, puis sans. Relance jusqu'à « Tout est copié ».
+
+Les envois du site et des outils vont sur R2 dès que le serveur est prêt ; sinon ils repartent sur Cloudinary (jamais sur iugeyztf).
