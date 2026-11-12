@@ -1330,8 +1330,9 @@ body.lecteur-page { padding-bottom: 0; background: #eef4f0; min-height: 100dvh; 
   border: 1px solid var(--line, #d7e6dc); background: #fff; color: var(--ink, #0d3b26); text-decoration: none; }
 .lien-opps span { color: var(--muted, #667); font-size: .88rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .lien-opps::after { content: "›"; margin-left: auto; font-size: 1.2rem; color: var(--muted, #667); }
-.opp-liste { display: grid; gap: 12px; }
-.opp { background: #fff; border: 1px solid var(--line, #d7e6dc); border-radius: 14px; padding: 16px; }
+.opp-liste { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); align-items: start; }
+.opp { background: #fff; border: 1px solid var(--line, #d7e6dc); border-radius: 14px; padding: 16px; overflow: hidden; display: flex; flex-direction: column; }
+.opp .btn { align-self: flex-start; margin-top: auto; }
 .opp-tete { display: flex; justify-content: space-between; gap: 10px; align-items: center; font-size: .82rem; }
 .opp-type { font-weight: 800; text-transform: uppercase; letter-spacing: .04em; font-size: .74rem; color: var(--accent-dark, #14633a);
   background: var(--tint, #eef6f1); padding: 3px 8px; border-radius: 6px; }
@@ -1344,5 +1345,20 @@ body.lecteur-page { padding-bottom: 0; background: #eef4f0; min-height: 100dvh; 
 .opp-image { display: block; width: 100%; height: auto; margin-top: 12px; border-radius: 10px; border: 1px solid var(--line, #d7e6dc); }
 .o-apercus { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .o-apercus img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line, #d7e6dc); }
-.opp-img { display: block; width: calc(100% + 32px); margin: -16px -16px 12px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 14px 14px 0 0; background: var(--tint, #eef6f1); }
+.opp-img { display: block; max-width: none; width: calc(100% + 32px); margin: -16px -16px 12px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 14px 14px 0 0; background: var(--tint, #eef6f1); }
 .opp-affiche { display: block; width: 100%; margin-top: 12px; border-radius: 10px; border: 1px solid var(--line, #d7e6dc); }
+
+/* Compte, en haut à droite */
+.compte-btn { flex: none; margin-left: auto; display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: #fff; color: var(--accent-dark); font: 700 .88rem Inter, sans-serif; text-decoration: none; }
+.compte-btn svg { width: 20px; height: 20px; }
+.compte-btn:hover, .compte-btn.active { background: var(--tint); }
+@media (max-width: 600px) {
+  .compte-btn { padding: 6px 10px; font-size: .8rem; gap: 4px; }
+  .compte-btn svg { width: 18px; height: 18px; }
+  /* Sur téléphone, « Compte » n'apparaît que dans la page Crédits */
+  .compte-btn:not(.compte-ici) { display: none; }
+}
+.cr-compte { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.cr-compte p { margin: 0; overflow-wrap: anywhere; }
+.bottomnav #nav-opps > span { font-size: .9em; letter-spacing: -.02em; }

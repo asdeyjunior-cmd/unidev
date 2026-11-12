@@ -1,5 +1,5 @@
 import { listMyPaiements, getCredits, renvoyerVerification, verifierPaiementAuto, lienParrainage } from "./firebase.js";
-import { initLayout, esc, formatDate, setNavCredits, toast } from "./ui.js";
+import { initLayout, esc, formatDate, setNavCredits, toast, seDeconnecter } from "./ui.js";
 import { paymentConfig } from "./config.js";
 
 const $ = (id) => document.getElementById(id);
@@ -24,6 +24,9 @@ initLayout("credits", async (state) => {
   const attente = !!profile?.bonusEnAttente;
   $("verif").classList.toggle("hidden", !attente);
   if (attente) $("verif-texte").textContent = `Un lien a été envoyé à ${me.email}. Pense à regarder dans les spams.`;
+  // Compte : e-mail et déconnexion (le bouton « Compte » en haut mène ici)
+  $("compte-email").textContent = [state.profile?.nom, me.email].filter(Boolean).join(" · ");
+  $("compte-sortir").onclick = seDeconnecter;
   // Parrainage : le lien personnel de l'étudiant
   const lien = lienParrainage(me.uid);
   $("parrain-lien").value = lien;

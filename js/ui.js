@@ -30,6 +30,9 @@ export const fillSelect = (sel, values, first) =>
   (sel.innerHTML = (first ? `<option value="">${first}</option>` : "") +
     values.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join(""));
 
+/** Déconnexion (bouton de la page Crédits) */
+export async function seDeconnecter() { await logout(); location.href = "index.html"; }
+
 export function setNavCredits(n) {
   const el = document.getElementById("nav-credits");
   if (el) el.textContent = n === null || n === undefined ? "" : n;
@@ -53,6 +56,7 @@ const ICONS = {
   admin: svg('<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>'),
   emploi: svg('<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h2M14 14h2M8 17.5h2"/>'),
   compte: svg('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),
+  opps: svg('<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18M11 13v2h2v-2"/>'),
 };
 
 /** En-tête commun + suivi de session. onUser({user, profile}) appelé à chaque changement. */
@@ -76,10 +80,23 @@ export function initLayout(active, onUser = () => {}) {
       <a href="emploi.html" data-k="emploi">${ICONS.emploi}<span>Planning</span></a>
       <a href="credits.html" data-k="credits">${ICONS.credits}<span>Crédits</span><span class="pill" id="nav-credits"></span></a>
       <a href="admin.html" data-k="admin" class="hidden" id="nav-admin">${ICONS.admin}<span>Modération</span></a>
-      <span id="nav-user"></span>`;
+      <a href="opportunites.html" data-k="opportunites" id="nav-opps">${ICONS.opps}<span>Opportunités</span></a>`;
     document.body.append(nav);
     nav.querySelector(`[data-k="${active}"]`)?.classList.add("active");
   }
+  // Compte : en haut à droite (connexion, ou page Crédits avec la déconnexion)
+  let compte = header.querySelector(".compte-btn");
+  if (!compte) {
+    compte = document.createElement("a");
+    compte.className = "compte-btn";
+    header.querySelector(".topbar-in")?.append(compte);
+  }
+  const majCompte = (connecte) => {
+    compte.href = connecte ? "credits.html#compte" : `connexion.html${active && active !== "credits" ? `?next=${encodeURIComponent(location.pathname.split("/").pop() || "index.html")}` : ""}`;
+    compte.innerHTML = `${ICONS.compte}<span>${connecte ? "Compte" : "Connexion"}</span>`;
+    compte.classList.toggle("compte-ici", active === "credits");
+  };
+
   if (!document.querySelector(".footer")) {
     const footer = document.createElement("footer");
     footer.className = "footer";
@@ -92,19 +109,13 @@ export function initLayout(active, onUser = () => {}) {
   if (memo) {
     nav.querySelector("#nav-admin").classList.toggle("hidden", !memo.isAdmin);
     setNavCredits(memo.credits);
-    nav.querySelector("#nav-user").innerHTML = `<button id="btn-logout">${ICONS.compte}<span>Déconnexion</span></button>`;
   }
+  majCompte(!!memo);
 
   watchUser((state) => {
-    const slot = nav.querySelector("#nav-user");
     nav.querySelector("#nav-admin").classList.toggle("hidden", !state.profile?.isAdmin);
     setNavCredits(state.user ? state.profile?.credits || 0 : null);
-    if (state.user) {
-      slot.innerHTML = `<button id="btn-logout">${ICONS.compte}<span>Déconnexion</span></button>`;
-      slot.querySelector("#btn-logout").onclick = async () => { await logout(); location.href = "index.html"; };
-    } else {
-      slot.innerHTML = `<a href="connexion.html" class="${active === "" ? "active" : ""}">${ICONS.compte}<span>Connexion</span></a>`;
-    }
+    majCompte(!!state.user);
     onUser(state);
   });
 }

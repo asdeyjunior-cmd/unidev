@@ -33,7 +33,8 @@ export default {
     // Réglages nettoyés : espaces et guillemets collés par erreur autour d'une valeur sont retirés
     const propre = (v) => String(v || "").trim().replace(/^["']+|["']+$/g, "");
     env = { ...env, SITE: sites[0] || "", FIREBASE_API_KEY: propre(env.FIREBASE_API_KEY), JEKO_API_KEY: propre(env.JEKO_API_KEY),
-      JEKO_API_KEY_ID: propre(env.JEKO_API_KEY_ID), JEKO_STORE_ID: propre(env.JEKO_STORE_ID), JEKO_WEBHOOK_SECRET: propre(env.JEKO_WEBHOOK_SECRET) };
+      JEKO_API_KEY_ID: propre(env.JEKO_API_KEY_ID), JEKO_STORE_ID: propre(env.JEKO_STORE_ID), JEKO_WEBHOOK_SECRET: propre(env.JEKO_WEBHOOK_SECRET),
+      OUTILS_SECRET: propre(env.OUTILS_SECRET) };
     const cors = {
       "Access-Control-Allow-Origin": sites.includes(origine) ? origine : sites[0] || "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -48,7 +49,9 @@ export default {
     // Page d'état (aucun secret affiché) : dit ce qui manque encore
     if (request.method === "GET") {
       const etat = { ok: true, service: "unidev-paiement", jeko: !!env.JEKO_API_KEY, site: !!env.SITE, firebase: !!env.FIREBASE_CLE_JSON, webhook: !!env.JEKO_WEBHOOK_SECRET,
-        stockage: !!env.FICHIERS, outils: !!env.OUTILS_SECRET };
+        stockage: !!env.FICHIERS, outils: !!env.OUTILS_SECRET,
+        // Empreinte du mot de passe des outils (4 caractères, ne révèle rien) : doit être la même que celle affichée par GitHub
+        empreinte: env.OUTILS_SECRET ? (await empreinte(env.OUTILS_SECRET)) : "" };
       if (env.JEKO_API_KEY && url.pathname === "/etat") {
         try { etat.magasin = !!(await magasin(env)); } catch (e) { etat.magasin = false; etat.probleme = e.message; }
       }
@@ -191,7 +194,7 @@ function stockage(env) {
 }
 function secretOutils(request, env) {
   const s = request.headers.get("X-Secret") || "";
-  if (!env.OUTILS_SECRET || !memeTexte(s, String(env.OUTILS_SECRET).trim())) throw erreur("Accès refusé", 401);
+  if (!env.OUTILS_SECRET || !memeTexte(s.trim().replace(/^["']+|["']+$/g, ""), env.OUTILS_SECRET)) throw erreur("Accès refusé", 401);
 }
 /** Range « bytes=a-b » -> option R2 */
 function plage(h) {
@@ -339,6 +342,10 @@ async function hmacHex(secret, texte) {
   const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const s = await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(texte));
   return [...new Uint8Array(s)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function empreinte(t) {
+  const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+  return [...new Uint8Array(h)].slice(0, 2).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 function memeTexte(a, b) { // comparaison à temps constant
   if (a.length !== b.length) return false;

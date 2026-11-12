@@ -29,7 +29,7 @@ const ESSAI = args.includes("--essai");
 const TOUS = args.includes("--tous");
 const COMPTE = opt("compte", "iugeyztf");
 const R2 = String(process.env.R2_URL || "").trim().replace(/\/$/, "");
-const SECRET = String(process.env.OUTILS_SECRET || "").trim();
+const SECRET = String(process.env.OUTILS_SECRET || "").trim().replace(/^["']+|["']+$/g, "");
 const EN_PARALLELE = 4;
 
 if (!R2 || !SECRET) { console.error("ERREUR : il manque R2_URL ou OUTILS_SECRET (secrets GitHub)."); process.exit(1); }
@@ -49,7 +49,10 @@ if (!etat.stockage || !etat.outils) {
 {
   const r = await fetch(`${R2}/copier`, { method: "POST", headers: { "Content-Type": "application/json", "X-Secret": SECRET }, body: "{}" }).catch(() => null);
   if (r?.status === 401) {
-    console.error("ERREUR : le mot de passe OUTILS_SECRET de GitHub n'est pas le même que celui de Cloudflare. Recopie exactement le même dans les deux (sans espace ni guillemets).");
+    const { createHash } = await import("node:crypto");
+    const chez = createHash("sha256").update(SECRET).digest("hex").slice(0, 4);
+    console.error(`ERREUR : le mot de passe OUTILS_SECRET de GitHub n'est pas le même que celui de Cloudflare.`);
+    console.error(`ERREUR : empreinte GitHub = ${chez} (${SECRET.length} caractères) ; empreinte Cloudflare = ${etat.empreinte || "?"}. Elles doivent être identiques.`);
     process.exit(1);
   }
 }

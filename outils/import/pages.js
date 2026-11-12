@@ -85,7 +85,7 @@ ${corps}
     <a href="../emploi.html" data-k="emploi">${svg("emploi")}<span>Planning</span></a>
     <a href="../credits.html" data-k="credits">${svg("credits")}<span>Crédits</span><span class="pill" id="nav-credits"></span></a>
     <a href="../admin.html" data-k="admin" class="hidden" id="nav-admin">${svg("admin")}<span>Modération</span></a>
-    <span id="nav-user"><a href="../connexion.html">${svg("compte")}<span>Connexion</span></a></span>
+    <a href="../opportunites.html" data-k="opportunites" id="nav-opps"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18M11 13v2h2v-2"/></svg><span>Opportunités</span></a>
   </nav>
   <script src="../js/nav.js"></script>
 </body>

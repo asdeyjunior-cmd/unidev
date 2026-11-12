@@ -67,7 +67,7 @@ export function compteDeUrl(url) {
 /* ---------- Stockage principal : Cloudflare R2, via le serveur unidev ----------
    Réglages : R2_URL (adresse du serveur) et OUTILS_SECRET. Sans eux, tout reste sur Cloudinary comme avant. */
 const R2 = () => String(process.env.R2_URL || "").trim().replace(/\/$/, "");
-const SECRET = () => String(process.env.OUTILS_SECRET || "").trim();
+const SECRET = () => String(process.env.OUTILS_SECRET || "").trim().replace(/^["']+|["']+$/g, "");
 export const r2Actif = () => !!(R2() && SECRET());
 export const MAX_R2 = 95 * 1024 * 1024; // un seul envoi jusqu'à 95 Mo (limite du serveur : 100 Mo)
 
