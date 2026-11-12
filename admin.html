@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Modération — unidev</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/favicon-32.png" sizes="32x32" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="unidev" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="preconnect" href="https://www.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+  <link rel="preconnect" href="https://res.cloudinary.com" crossorigin />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
+  <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
+  <link rel="stylesheet" href="css/style.css?v=60" />
+  <script type="speculationrules">
+    { "prefetch": [{ "source": "document", "where": { "href_matches": "/*.html" }, "eagerness": "moderate" }] }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-in">
+      <a href="index.html" class="logo"><span class="logo-mark">u</span>unidev</a>
+      <div id="header-tools" class="header-tools"></div>
+    </div>
+  </header>
+  <main class="page">
+    <div class="wrap">
+      <div id="login-zone" class="narrow hidden">
+        <h1 class="page-title">Espace admin</h1>
+        <p class="muted" style="margin-bottom:20px">Réservé à l'administrateur du site.</p>
+        <form class="panel" id="admin-login">
+          <div class="field">
+            <label for="a-email">E-mail</label>
+            <input id="a-email" type="email" required autocomplete="username" />
+          </div>
+          <div class="field">
+            <label for="a-pwd">Identifiant (mot de passe)</label>
+            <input id="a-pwd" type="password" required autocomplete="current-password" />
+          </div>
+          <button class="btn btn-block" id="a-submit">Se connecter</button>
+        </form>
+      </div>
+
+      <div id="diag" class="narrow hidden"></div>
+
+      <div id="zone" class="hidden">
+        <h1 class="page-title">Modération</h1>
+        <div class="stats-admin" id="stats-admin"></div>
+        <div class="tabs tabs-wrap" style="margin-top:16px">
+          <button class="active" data-s="doc:en_attente">Documents à valider <span id="n-doc"></span></button>
+          <button data-s="pay:en_attente">Paiements à confirmer <span id="n-pay"></span></button>
+          <button data-s="doc:publie">Publiés</button>
+          <button data-s="doc:rejete">Refusés</button>
+          <button data-s="pay:confirme">Paiements confirmés</button>
+          <button data-s="fil:demandes">Filières demandées <span id="n-fil"></span></button>
+          <button data-s="opp:liste">Opportunités</button>
+        </div>
+        <p style="margin:-6px 0 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center"><button class="btn btn-sm btn-ghost-ink" id="notif-btn">Activer les notifications</button><button class="btn btn-sm btn-ghost-ink" id="rebuild">Mettre à jour l'index de recherche</button><button class="btn btn-sm btn-ghost-ink" id="harmo">Corriger les filières</button><button class="btn btn-sm btn-ghost-ink" id="doublons">Supprimer les doublons</button>
+          <span class="muted" id="rebuild-etat"></span></p>
+        <div id="reclasser" class="field" hidden style="margin:0 0 12px">
+          <input id="cherche-pub" type="search" placeholder="Retrouver un document mal placé (titre, filière, matière…)" autocomplete="off" />
+        </div>
+        <div class="cards" id="list"><div class="loader"></div></div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer"><div class="wrap footer-copy">©UNIDEV ASSOCIATION 2026 · <a href="apropos.html">À propos</a></div></footer>
+  <nav class="bottomnav">
+    <a href="index.html" data-k="docs"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><span>Documents</span></a>
+    <a href="publier.html" data-k="publier"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg><span>Publier</span></a>
+    <a href="emploi.html" data-k="emploi"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h2M14 14h2M8 17.5h2"/></svg><span>Planning</span></a>
+    <a href="credits.html" data-k="credits"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2 0 0 1 2.5-2h.5a2 2 0 0 1 0 4h-1a2 2 0 0 0 0 4h.5a2.5 2 0 0 0 2.5-2"/></svg><span>Crédits</span><span class="pill" id="nav-credits"></span></a>
+    <a href="admin.html" data-k="admin" class="hidden active" id="nav-admin"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Modération</span></a>
+    <a href="opportunites.html" data-k="opportunites" id="nav-opps"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18M11 13v2h2v-2"/></svg><span>Opportunités</span></a>
+    <span id="nav-user"><a href="connexion.html"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span>Connexion</span></a></span>
+  </nav>
+  <script src="js/nav.js"></script>
+
+  <script type="module">
+    import {
+      listByStatus, setStatus, removeDocument, publishDocument, getFileInfo,
+      listPaiements, confirmPaiement, modifierClassement, listOpportunites, creerOpportunite, supprimerOpportunite, rejectPaiement, login, logout, checkAdmin, rebuildIndex, watchEnAttente, harmoniserFilieres, trouverDoublons, supprimerDocuments,
+      listDemandes, ajouterFiliereOfficielle, supprimerDemandes, filieresPretes, getSearchIndex,
+    } from "./js/firebase.js";
+    import { toutesLesFilieres } from "./js/filieres.js";
+    import { uploadFile } from "./js/cloudinary.js";
+    import { photoLegere, estImage, ACCEPT_IMAGES } from "./js/photos-pdf.js";
+    import { CATEGORIES } from "./js/config.js";
+    import { initLayout, docCard, toast, esc, modal, formatDate, fileModal } from "./js/ui.js";
+
+    const $ = (id) => document.getElementById(id);
+    let current = "doc:en_attente";
+    // Ouvert depuis la notification d'un paiement : onglet Paiements, ce paiement en premier
+    const paiementVise = new URLSearchParams(location.search).get("paiement");
+    if (paiementVise) current = "pay:en_attente";
+    let items = [];
+
+    // Seul le compte admin (UID dans parametres/admin) voit la modération.
+    // Tout autre compte est déconnecté de cette page et voit le formulaire de connexion admin.
+    const RAISONS = {
+      absent: "Le document <b>parametres/admin</b> n'existe pas dans Firestore. Crée la collection <b>parametres</b>, le document <b>admin</b> et le champ <b>uid</b>.",
+      vide: "Le document <b>parametres/admin</b> existe mais son champ <b>uid</b> est vide ou mal nommé (il doit s'appeler exactement <b>uid</b>, en minuscules).",
+      espaces: "Le champ <b>uid</b> contient un espace au début ou à la fin. Supprime-le dans Firestore.",
+      autre: "Ce compte n'est pas celui enregistré comme admin : l'UID ne correspond pas.",
+      lecture: "Impossible de lire <b>parametres/admin</b>. Les règles de sécurité ne sont peut-être pas à jour : relance <b>firebase deploy</b>.",
+    };
+
+    function showDiagnostic(user, res) {
+      $("zone").classList.add("hidden");
+      $("login-zone").classList.add("hidden");
+      $("diag").classList.remove("hidden");
+      $("diag").innerHTML = `
+        <h1 class="page-title">Accès admin refusé</h1>
+        <div class="panel">
+          <p style="margin-bottom:12px">${RAISONS[res.raison] || "Accès refusé."}</p>
+          <p class="muted">Compte connecté : <b>${esc(user.email || "")}</b></p>
+          <p class="muted" style="margin-top:6px">Son UID (à copier dans le champ <b>uid</b>) :</p>
+          <input id="my-uid" readonly value="${esc(user.uid)}" style="margin:6px 0 4px;font-family:monospace" />
+          ${res.uidEnregistre ? `<p class="muted">UID actuellement enregistré : <code>${esc(res.uidEnregistre)}</code></p>` : ""}
+          ${res.erreur ? `<p class="muted">Erreur : <code>${esc(res.erreur)}</code></p>` : ""}
+          <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+            <button class="btn btn-sm" id="copy-uid">Copier mon UID</button>
+            <button class="btn btn-sm btn-ghost-ink" id="retry-admin">Réessayer</button>
+            <button class="btn btn-sm btn-ghost-ink" id="logout-admin">Changer de compte</button>
+          </div>
+        </div>`;
+      $("copy-uid").onclick = async () => {
+        try { await navigator.clipboard.writeText(user.uid); toast("UID copié."); }
+        catch { $("my-uid").select(); toast("Sélectionné : copie-le avec Ctrl+C."); }
+      };
+      $("retry-admin").onclick = () => location.reload();
+      $("logout-admin").onclick = async () => { await logout(); location.reload(); };
+    }
+
+    // Seul le compte admin (UID dans parametres/admin) voit la modération.
+    initLayout("admin", async ({ user }) => {
+      $("diag").classList.add("hidden");
+      if (!user) {
+        $("zone").classList.add("hidden");
+        $("login-zone").classList.remove("hidden");
+        return;
+      }
+      const res = await checkAdmin(user);
+      if (!res.ok) return showDiagnostic(user, res);
+      $("login-zone").classList.add("hidden");
+      $("zone").classList.remove("hidden");
+      if (paiementVise) document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("active", x.dataset.s === current));
+      load(); suivre(); statistiques();
+    });
+
+    /* ---------- Notifications : suivi en direct de ce qui attend ---------- */
+    let vus = null; // identifiants déjà connus (null = premier chargement)
+    let arret = null;
+    const titreBase = document.title;
+    function bip() {
+      try {
+        const c = new AudioContext(), o = c.createOscillator(), g = c.createGain();
+        o.frequency.value = 880; g.gain.setValueAtTime(.15, c.currentTime); g.gain.exponentialRampToValueAtTime(.001, c.currentTime + .4);
+        o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + .4);
+      } catch {}
+    }
+    function notifier(titre, texte) {
+      bip();
+      toast(`${titre} : ${texte}`);
+      if ("Notification" in window && Notification.permission === "granted") {
+        try { const n = new Notification(titre, { body: texte, icon: "icons/icon-192.png", tag: "unidev-admin" }); n.onclick = () => { focus(); n.close(); }; } catch {}
+      }
+    }
+    function majBoutonNotif() {
+      const b = $("notif-btn");
+      if (!("Notification" in window)) { b.classList.add("hidden"); return; }
+      const p = Notification.permission;
+      b.textContent = p === "granted" ? "Notifications activées" : p === "denied" ? "Notifications bloquées (réglages du navigateur)" : "Activer les notifications";
+      b.disabled = p !== "default";
+    }
+    $("notif-btn").onclick = async () => { await Notification.requestPermission(); majBoutonNotif(); };
+    majBoutonNotif();
+
+    function suivre() {
+      if (arret) arret();
+      arret = watchEnAttente(({ pay, doc }) => {
+        $("n-doc").textContent = doc.length ? `(${doc.length})` : "";
+        const sa = document.getElementById("stat-attente"); if (sa) sa.textContent = doc.length;
+        $("n-pay").textContent = pay.length ? `(${pay.length})` : "";
+        const total = pay.length + doc.length;
+        document.title = total ? `(${total}) ${titreBase}` : titreBase;
+        const ids = new Set([...pay, ...doc].map((x) => x.id));
+        if (vus) {
+          const np = pay.filter((x) => !vus.has(x.id)), nd = doc.filter((x) => !vus.has(x.id));
+          if (np.length) notifier("Paiement à confirmer", np.length === 1 ? `${np[0].montant} FCFA · ${np[0].nom || ""} · réf. ${np[0].reference}` : `${np.length} nouveaux paiements`);
+          if (nd.length) notifier("Document à valider", nd.length === 1 ? nd[0].titre : `${nd.length} nouveaux documents`);
+          if ((np.length && current.startsWith("pay:en_attente")) || (nd.length && current.startsWith("doc:en_attente"))) load();
+        } else if (pay.length) {
+          notifier("En attente", `${pay.length} paiement(s) à confirmer`);
+        }
+        vus = ids;
+      });
+    }
+
+    $("admin-login").onsubmit = async (e) => {
+      e.preventDefault();
+      const btn = $("a-submit");
+      btn.disabled = true;
+      try {
+        await login($("a-email").value.trim(), $("a-pwd").value);
+        // la suite (vérification admin) est faite par initLayout quand la session change
+      } catch (err) {
+        const msg = {
+          "auth/invalid-credential": "E-mail ou identifiant incorrect.",
+          "auth/user-not-found": "Aucun compte avec cet e-mail.",
+          "auth/wrong-password": "Identifiant incorrect.",
+          "auth/too-many-requests": "Trop de tentatives. Réessaie plus tard.",
+          "auth/operation-not-allowed": "La connexion par e-mail n'est pas activée dans Firebase (Authentication > Sign-in method).",
+        }[err.code];
+        toast(msg || err.message, "err");
+        btn.disabled = false;
+      }
+    };
+
+    const btn = (act, id, label, cls) => `<button class="btn btn-sm ${cls}" data-act="${act}" data-id="${id}">${label}</button>`;
+
+    function docActions(d, statut) {
+      const voir = btn("voir", d.id, "Voir", "btn-ghost");
+      const ok = btn("publier", d.id, "Publier", "btn-ok");
+      const no = btn("refuser", d.id, "Refuser", "btn-danger");
+      const del = btn("supprimer", d.id, "Supprimer", "btn-danger");
+      const mod = btn("modifier", d.id, "Modifier", "btn-ghost");
+      const agent = d.propose === "agent" ? `<p class="muted" style="margin:6px 0 0;font-weight:700;color:#1f8f4e">Trouvé par l'agent automatique · vérifie avant de publier</p>` : "";
+      const COUL = { ok: "#1f8f4e", douteux: "#b7791f", refuser: "#c0392b" };
+      const NOM = { ok: "IA : semble bon", douteux: "IA : à regarder de près", refuser: "IA : conseille de refuser" };
+      const ia = d.ia && statut === "en_attente"
+        ? `<div style="margin:6px 0 0;padding:8px 10px;border-radius:10px;border-left:4px solid ${COUL[d.ia.avis] || "#888"};background:var(--tint)">
+             <b style="color:${COUL[d.ia.avis] || "#555"}">${NOM[d.ia.avis] || "IA"}</b>
+             ${d.ia.resume ? `<div class="muted" style="margin-top:2px">${esc(d.ia.resume)}</div>` : ""}
+             ${(d.ia.raisons || []).length ? `<ul style="margin:4px 0 0;padding-left:18px">${d.ia.raisons.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}
+           </div>` : "";
+      return `${agent}${ia}<div class="card-actions">${{ en_attente: [voir, mod, ok, no], publie: [voir, mod, no, del], rejete: [voir, ok, del] }[statut].join("")}</div>`;
+    }
+
+    // Références déjà vues (tous statuts) : une même référence déclarée deux fois est suspecte
+    let refsConnues = new Map();
+    async function chargerRefs() {
+      const lots = await Promise.all(["en_attente", "confirme", "rejete"].map((st) => listPaiements(st).catch(() => [])));
+      const tous = lots.flat();
+      refsConnues = new Map();
+      tous.forEach((x) => { const r = (x.reference || "").trim().toLowerCase(); if (r) refsConnues.set(r, (refsConnues.get(r) || 0) + 1); });
+    }
+
+    function payCard(p, statut) {
+      const doublon = (refsConnues.get((p.reference || "").trim().toLowerCase()) || 0) > 1;
+      const actions = statut === "en_attente"
+        ? `<div class="card-actions">${btn("confirmer", p.id, `Confirmer (+${p.credits})`, "btn-ok")}${btn("rejeter", p.id, "Refuser", "btn-danger")}</div>`
+        : `<span class="status status-${p.statut}">${p.statut === "confirme" ? "Confirmé" : "Refusé"}</span>`;
+      return `
+        <article class="card"${p.id === paiementVise && statut === "en_attente" ? ` style="outline:3px solid var(--accent);outline-offset:2px"` : ""}>
+          <div class="card-top"><span class="badge">${esc(p.operateur)}</span><span class="ext">${formatDate(p.createdAt)}</span></div>
+          <h3>${p.montant} FCFA</h3>
+          <p class="subject">${p.credits} crédits · ${p.packs} pack(s)</p>
+          <p class="meta">${esc(p.nom)} — ${esc(p.email)}</p>
+          <p class="meta">Numéro : <strong>${esc(p.numero)}</strong></p>
+          <p class="meta">Référence : <strong>${esc(p.reference)}</strong></p>
+          ${doublon ? `<p class="meta" style="color:var(--danger);font-weight:700">Attention : cette référence a déjà été déclarée.</p>` : ""}
+          <div class="card-foot">${actions}</div>
+        </article>`;
+    }
+
+    // Les compteurs sont tenus à jour par le suivi en direct (watchEnAttente) : pas de lecture en plus
+    function counts() {}
+
+    /* ---------- Chiffres du site (1 seule lecture : le catalogue) ---------- */
+    async function statistiques() {
+      try {
+        const docs = await getSearchIndex();
+        const filieres = new Set(docs.map((d) => d.filiere).filter((f) => f && f !== "Autre"));
+        const pdf = docs.filter((d) => String(d.format).toLowerCase() === "pdf").length;
+        const bloc = (n, t) => `<div class="stat"><b>${n.toLocaleString("fr-FR")}</b><span>${t}</span></div>`;
+        $("stats-admin").innerHTML = bloc(docs.length, "documents publiés") + bloc(filieres.size, "filières") + bloc(pdf, "PDF")
+          + `<div class="stat"><b id="stat-attente">${$("n-doc").textContent.replace(/[()]/g, "") || 0}</b><span>en attente</span></div>`;
+      } catch (e) { $("stats-admin").innerHTML = `<p class="muted">Chiffres indisponibles (${esc(e.message)})</p>`; }
+    }
+
+    /* ---------- Filières demandées ---------- */
+    let groupes = [];
+    function filCard(g, i) {
+      const connue = toutesLesFilieres().includes(g.filiere);
+      const n = g.demandes.length;
+      const detail = (cle) => [...new Set(g.demandes.map((d) => d[cle]).filter(Boolean))];
+      const niveaux = detail("niveau"), ecoles = detail("universite"), contacts = detail("contact");
+      return `
+        <article class="card">
+          <div class="card-top"><span class="badge">${n} demande${n > 1 ? "s" : ""}</span><span class="ext">${formatDate(g.demandes[0].createdAt)}</span></div>
+          <h3>${esc(g.filiere)}</h3>
+          <p class="subject">${connue ? "Déjà dans la liste : il manque des documents" : "Nouvelle filière"}</p>
+          ${niveaux.length ? `<p class="meta">Niveaux : ${esc(niveaux.join(", "))}</p>` : ""}
+          ${ecoles.length ? `<p class="meta">Écoles : ${esc(ecoles.join(", "))}</p>` : ""}
+          ${contacts.length ? `<p class="meta">Contacts : <strong>${esc(contacts.join(" · "))}</strong></p>` : ""}
+          <div class="card-foot"><div class="card-actions">
+            ${connue ? "" : btn("fil-ajouter", i, "Ajouter à la liste", "btn-ok")}
+            ${btn("fil-suppr", i, "Traité", "btn-ghost")}
+          </div></div>
+        </article>`;
+    }
+
+    /* ---------- Opportunités : formulaire de publication + liste ---------- */
+    const TYPES_OPP = ["Stage", "Emploi", "Bourse", "Concours", "Formation", "Autre"];
+    async function chargerOpportunites() {
+      let liste = [];
+      try { liste = (await listOpportunites(null, 60)).items; } catch (e) { toast(/permission/i.test(e.message) ? "Lance d'abord : firebase deploy --only firestore" : e.message, "err"); }
+      $("list").innerHTML = `
+        <form class="panel" id="opp-form" style="grid-column:1/-1">
+          <h2 class="section-title" style="margin-top:0">Publier une opportunité</h2>
+          <div class="field"><label for="o-titre">Titre *</label><input id="o-titre" required maxlength="140" placeholder="Ex : Stage en comptabilité, 3 mois" /></div>
+          <div class="grid-2">
+            <div class="field"><label for="o-type">Type *</label><select id="o-type">${TYPES_OPP.map((t) => `<option>${t}</option>`).join("")}</select></div>
+            <div class="field"><label for="o-date">Date limite</label><input id="o-date" type="date" /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label for="o-org">Entreprise ou organisme</label><input id="o-org" maxlength="100" /></div>
+            <div class="field"><label for="o-lieu">Lieu</label><input id="o-lieu" maxlength="80" placeholder="Ex : Abidjan, Cocody" /></div>
+          </div>
+          <div class="field"><label for="o-apercu">Aperçu visible par tous (1 ou 2 phrases, sans le contact) *</label><input id="o-apercu" required maxlength="220" /></div>
+          <div class="field"><label for="o-desc">Description complète, visible après déblocage *</label><textarea id="o-desc" required maxlength="4000" rows="6"></textarea></div>
+          <div class="grid-2">
+            <div class="field"><label for="o-lien">Lien pour postuler</label><input id="o-lien" type="url" maxlength="300" placeholder="https://…" /></div>
+            <div class="field"><label for="o-contact">Contact (e-mail, téléphone)</label><input id="o-contact" maxlength="150" /></div>
+          </div>
+          <div class="field"><label for="o-videos">Liens : YouTube, Telegram, WhatsApp, Google Drive, site… un par ligne. Visibles après déblocage.</label>
+            <textarea id="o-videos" rows="3" maxlength="3000" placeholder="https://youtube.com/playlist?list=…&#10;https://t.me/+…&#10;https://chat.whatsapp.com/…"></textarea></div>
+          <div class="field"><label for="o-img">Image visible par tous, sur la carte (facultatif, sans contact ni détail important)</label>
+            <input id="o-img" type="file" accept="${ACCEPT_IMAGES}" /></div>
+          <div class="field"><label for="o-images">Images (affiche, flyer…), visibles après déblocage. Facultatif, 6 au plus</label>
+            <input id="o-images" type="file" accept="${ACCEPT_IMAGES}" multiple />
+            <div id="o-apercus" class="o-apercus"></div></div>
+          <button class="btn btn-block" id="o-ok">Publier</button>
+        </form>
+        ${liste.map((o) => `<article class="card">${o.image ? `<img src="${esc(o.image)}" alt="" loading="lazy" style="width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px 12px 0 0">` : ""}<div class="card-body">
+            <p class="card-cat">${esc(o.type || "")}${o.dateLimite ? ` · jusqu'au ${esc(o.dateLimite.split("-").reverse().join("/"))}` : ""}</p>
+            <h3>${esc(o.titre)}</h3>
+            <p class="muted">${esc([o.organisme, o.lieu].filter(Boolean).join(" · "))}</p>
+            <p class="muted">${esc(o.apercu || "")}</p>
+            <div class="card-actions"><button class="btn btn-danger" data-opp-suppr="${esc(o.id)}">Retirer</button></div>
+          </div></article>`).join("") || `<div class="empty">Aucune opportunité publiée.</div>`}`;
+      $("o-images").onchange = () => {
+        const f = [...$("o-images").files].filter(estImage).slice(0, 6);
+        $("o-apercus").innerHTML = f.map((x) => `<img src="${URL.createObjectURL(x)}" alt="" />`).join("");
+        if ($("o-images").files.length > 6) toast("6 images au plus : les premières sont gardées.", "err");
+      };
+      $("opp-form").onsubmit = async (e) => {
+        e.preventDefault();
+        const v = (id) => $(id).value.replace(/[ \t]+/g, " ").trim();
+        // Liens (tous types), 10 au plus ; « www.… » sans https est complété
+        const videos = $("o-videos").value.split(/\s+/).map((x) => x.trim()).filter(Boolean).map((u) => (/^www\./i.test(u) ? `https://${u}` : u));
+        const refuses = videos.filter((u) => { try { return !/^https?:$/.test(new URL(u).protocol); } catch { return true; } });
+        if (refuses.length) return toast(`Lien invalide : ${refuses[0]} (il doit commencer par https://)`, "err");
+        if (videos.length > 10) return toast("10 liens au maximum.", "err");
+        $("o-ok").disabled = true;
+        try {
+          // Images allégées (1600 px) puis envoyées sur Cloudinary, une par une
+          const fichiers = [...$("o-images").files].filter(estImage).slice(0, 6), images = [];
+          let image = "";
+          if ($("o-img").files[0] && estImage($("o-img").files[0])) {
+            $("o-ok").textContent = "Envoi de l'image de la carte…";
+            image = (await uploadFile(await photoLegere($("o-img").files[0], 1200), () => {}, "image")).url;
+          }
+          for (let i = 0; i < fichiers.length; i++) {
+            $("o-ok").textContent = `Envoi de l'image ${i + 1}/${fichiers.length}…`;
+            images.push((await uploadFile(await photoLegere(fichiers[i], 1600), () => {}, "image")).url);
+          }
+          $("o-ok").textContent = "Publication…";
+          await creerOpportunite({ titre: v("o-titre"), type: $("o-type").value, organisme: v("o-org"), lieu: v("o-lieu"), dateLimite: $("o-date").value || "",
+            apercu: v("o-apercu"), description: $("o-desc").value.trim(), lien: v("o-lien"), contact: v("o-contact"), image, images, videos });
+          toast("Opportunité publiée.");
+          chargerOpportunites();
+        } catch (err) { toast(err.message, "err"); $("o-ok").disabled = false; $("o-ok").textContent = "Publier"; }
+      };
+      $("list").querySelectorAll("[data-opp-suppr]").forEach((b) => b.onclick = async () => {
+        if (!confirm("Retirer cette opportunité ?")) return;
+        b.disabled = true;
+        try { await supprimerOpportunite(b.dataset.oppSuppr); toast("Opportunité retirée."); chargerOpportunites(); }
+        catch (err) { toast(err.message, "err"); b.disabled = false; }
+      });
+    }
+
+    async function load() {
+      const [kind, statut] = current.split(":");
+      $("list").innerHTML = `<div class="loader"></div>`;
+      if (kind === "opp") { $("reclasser").hidden = true; return chargerOpportunites(); }
+      if (kind === "fil") {
+        try {
+          await filieresPretes.catch(() => {});
+          groupes = await listDemandes();
+          const n = groupes.reduce((a, x) => a + x.demandes.length, 0);
+          $("n-fil").textContent = n ? `(${n})` : "";
+          $("list").innerHTML = groupes.length ? groupes.map(filCard).join("") : `<div class="empty">Aucune filière demandée pour le moment.</div>`;
+        } catch (e) { toast(e.message, "err"); }
+        return;
+      }
+      $("reclasser").hidden = current !== "doc:publie";
+      if (current === "doc:publie" && $("cherche-pub").value.trim().length >= 2) return chercherPublies();
+      try {
+        if (kind === "pay") await chargerRefs().catch(() => {});
+        items = kind === "doc" ? await listByStatus(statut) : await listPaiements(statut);
+        // Le paiement de la notification en haut, les plus anciens ensuite (premier arrivé, premier servi)
+        if (kind === "pay" && statut === "en_attente") items.sort((a, b) => (b.id === paiementVise) - (a.id === paiementVise) || (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
+        $("list").innerHTML = !items.length
+          ? `<div class="empty">Rien ici pour le moment.</div>`
+          : kind === "doc"
+            ? items.map((d) => docCard(d, docActions(d, statut)).replace("</h3>", `</h3><p class="muted">Par ${esc(d.auteurNom || "?")}</p>`)).join("")
+            : items.map((p) => payCard(p, statut)).join("");
+      } catch (e) { toast(e.message, "err"); }
+    }
+
+    // Publiés : recherche dans tout le catalogue (1 lecture), pour reclasser un document mal placé
+    const sansAcc = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    let catalogueAdmin = null;
+    async function chercherPublies() {
+      const mots = sansAcc($("cherche-pub").value).split(/\s+/).filter(Boolean);
+      try {
+        const tous = await (catalogueAdmin ||= getSearchIndex());
+        items = tous.filter((d) => { const t = sansAcc(`${d.titre} ${d.filiere} ${d.matiere} ${d.type} ${d.niveau}`); return mots.every((m) => t.includes(m)); })
+          .slice(0, 60).map((d) => ({ ...d, statut: "publie" }));
+        $("list").innerHTML = items.length
+          ? items.map((d) => docCard(d, docActions(d, "publie")).replace("</h3>", `</h3><p class="muted">${esc(d.filiere || "?")} · ${esc(d.matiere || "?")} · ${esc(d.type || "?")} · ${esc(d.niveau || "?")}</p>`)).join("")
+          : `<div class="empty">Aucun document trouvé.</div>`;
+      } catch (e) { toast(e.message, "err"); }
+    }
+    let attente;
+    $("cherche-pub").oninput = () => { clearTimeout(attente); attente = setTimeout(() => ($("cherche-pub").value.trim().length >= 2 ? chercherPublies() : load()), 300); };
+
+    document.querySelectorAll(".tabs button").forEach((b) => b.onclick = () => {
+      current = b.dataset.s;
+      document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("active", x === b));
+      load();
+    });
+
+    const confirmMsg = {
+      supprimer: "Supprimer définitivement ce document de la base ?",
+      confirmer: "As-tu bien reçu ce paiement sur ton compte (Wave, Orange…) ?",
+      rejeter: "Refuser ce paiement ?",
+    };
+    const doneMsg = {
+      publier: "Document publié, auteur crédité.", refuser: "Document refusé.", supprimer: "Document supprimé.",
+      confirmer: "Paiement confirmé.", rejeter: "Paiement refusé.",
+    };
+
+    $("rebuild").onclick = async (e) => {
+      if (!confirm("Reconstruire l'index lit TOUS les documents publiés (1 lecture par document, sur ton quota du jour). L'index se met déjà à jour tout seul à chaque publication. Continuer ?")) return;
+      e.target.disabled = true;
+      $("rebuild-etat").textContent = "Mise à jour…";
+      try { const n = await rebuildIndex(); $("rebuild-etat").textContent = `${n} document(s) indexé(s).`; }
+      catch (err) { toast(err.message, "err"); $("rebuild-etat").textContent = ""; }
+      e.target.disabled = false;
+    };
+
+    $("harmo").onclick = async (e) => {
+      if (!confirm("Corriger les filières lit TOUS les documents (1 lecture par document, sur ton quota du jour). Continuer ?")) return;
+      e.target.disabled = true;
+      $("rebuild-etat").textContent = "Correction des filières…";
+      try { const n = await harmoniserFilieres(); $("rebuild-etat").textContent = `${n} document(s) corrigé(s), index mis à jour.`; load(); }
+      catch (err) { toast(err.message, "err"); $("rebuild-etat").textContent = ""; }
+      e.target.disabled = false;
+    };
+
+    $("doublons").onclick = async (e) => {
+      e.target.disabled = true;
+      $("rebuild-etat").textContent = "Recherche des doublons…";
+      try {
+        const { surs, douteux } = await trouverDoublons();
+        $("rebuild-etat").textContent = "";
+        // Même titre = doublon : on garde un exemplaire par titre (publié, le plus téléchargé, le plus ancien)
+        const groupes = [...surs, ...douteux];
+        const aSuppr = groupes.flatMap((g) => g.slice(1).map((d) => d.id));
+        const ligne = (g) => `<li><b>${esc(g[0].titre)}</b> <span class="muted">· ${g.length} exemplaires, on en garde 1</span></li>`;
+        const m = modal(`<h3>Doublons</h3>
+          ${groupes.length ? `<p style="margin:8px 0">${aSuppr.length} doublon(s) trouvé(s) (même titre). Pour chaque titre, on garde l'exemplaire publié, le plus téléchargé ou le plus ancien.</p>
+            <ul class="liste-doublons">${groupes.map(ligne).join("")}</ul>
+            <button class="btn btn-danger btn-block" id="doublons-ok" style="margin-top:12px">Supprimer ${aSuppr.length} doublon(s)</button>` : `<p style="margin:8px 0">Aucun doublon : chaque titre n'existe qu'une fois.</p>`}
+          <button class="btn btn-ghost-ink btn-block" data-close style="margin-top:12px">Fermer</button>`);
+        m.querySelector("#doublons-ok")?.addEventListener("click", async (ev) => {
+          if (!confirm(`Supprimer définitivement ${aSuppr.length} copie(s) ?`)) return;
+          ev.target.disabled = true; ev.target.textContent = "Suppression…";
+          try { await supprimerDocuments(aSuppr); toast(`${aSuppr.length} doublon(s) supprimé(s).`); m.remove(); load(); counts(); }
+          catch (err) { toast(err.message, "err"); ev.target.disabled = false; }
+        });
+      } catch (err) { toast(err.message, "err"); $("rebuild-etat").textContent = ""; }
+      e.target.disabled = false;
+    };
+
+    $("list").addEventListener("click", async (e) => {
+      const { act, id } = e.target.dataset;
+      if (!act) return;
+      if (act.startsWith("fil-")) {
+        const g = groupes[Number(id)];
+        if (!g) return;
+        e.target.disabled = true;
+        try {
+          if (act === "fil-ajouter") {
+            await ajouterFiliereOfficielle(g.filiere);
+            toast(`« ${g.filiere} » ajoutée : elle est maintenant proposée sur le site.`);
+          } else {
+            if (!confirm(`Marquer comme traitées les ${g.demandes.length} demande(s) pour « ${g.filiere} » ?`)) { e.target.disabled = false; return; }
+            await supprimerDemandes(g.demandes.map((d) => d.id));
+            toast("Demandes retirées.");
+          }
+          load();
+        } catch (err) { toast(err.message, "err"); e.target.disabled = false; }
+        return;
+      }
+      if (confirmMsg[act] && !confirm(confirmMsg[act])) return;
+      const item = items.find((x) => x.id === id);
+      e.target.disabled = true;
+      try {
+        if (act === "modifier") {
+          e.target.disabled = false;
+          const options = (liste, actuel) => [...new Set([actuel, ...liste].filter(Boolean))].map((v) => `<option${v === actuel ? " selected" : ""}>${esc(v)}</option>`).join("");
+          const m = modal(`
+            <h2 style="margin:0 0 4px">Classer le document</h2>
+            <p class="muted" style="margin:0 0 14px">${esc(item.titre || "")}</p>
+            <form id="classer">
+              <div class="field"><label>Filière</label><select id="c-fil">${options(toutesLesFilieres(), item.filiere)}</select></div>
+              <div class="field"><label>Matière</label><input id="c-mat" maxlength="80" value="${esc(item.matiere || "")}" /></div>
+              <div class="field"><label>Type</label><select id="c-type">${options(CATEGORIES.types, item.type)}</select></div>
+              <div class="field"><label>Niveau</label><select id="c-niv">${options(CATEGORIES.niveaux, item.niveau)}</select></div>
+              <div class="modal-actions"><button type="button" class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-ok">Enregistrer</button></div>
+            </form>`);
+          m.querySelector("#classer").onsubmit = async (ev) => {
+            ev.preventDefault();
+            const b = ev.submitter; if (b) b.disabled = true;
+            try {
+              const n = await modifierClassement(item, {
+                filiere: m.querySelector("#c-fil").value, matiere: m.querySelector("#c-mat").value.trim(),
+                type: m.querySelector("#c-type").value, niveau: m.querySelector("#c-niv").value,
+              });
+              Object.assign(item, n); catalogueAdmin = null;
+              m.remove(); toast("Document reclassé."); load();
+            } catch (err) { toast(err.message, "err"); if (b) b.disabled = false; }
+          };
+          return;
+        }
+        if (act === "voir") {
+          const info = await getFileInfo(id);
+          const n = info.parts?.length || 1;
+          fileModal(item, info, { texte: esc(item.nomFichier || "") + (n > 1 ? ` — envoyé en ${n} morceaux` : ""), bouton: "Ouvrir le fichier" });
+          e.target.disabled = false;
+          return;
+        }
+        if (act === "publier") await publishDocument(item);
+        if (act === "refuser") await setStatus(id, "rejete");
+        if (act === "supprimer") await removeDocument(id);
+        if (act === "confirmer") await confirmPaiement(item);
+        if (act === "rejeter") await rejectPaiement(id);
+        toast(doneMsg[act]);
+        load(); counts();
+      } catch (err) { toast(err.message, "err"); e.target.disabled = false; }
+    });
+  </script>
+</body>
+</html>
