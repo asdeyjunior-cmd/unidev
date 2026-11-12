@@ -1404,3 +1404,11 @@ body.lecteur-page { padding-bottom: 0; background: #eef4f0; min-height: 100dvh; 
   .opp-apercu { font-size: .88rem; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .opp .btn { grid-column: 1 / -1; padding-block: 9px; font-size: .9rem; }
 }
+/* Liens d'une opportunité (après déblocage), ouverts hors d'unidev */
+.opp-liens { display: grid; gap: 8px; margin-top: 14px; }
+.opp-lien { margin: 0; border: 0; color: #fff; }
+.opp-l-youtube { background: #c4302b; }
+.opp-l-telegram { background: #229ed9; }
+.opp-l-whatsapp { background: #1f9d55; }
+.opp-l-autre { background: var(--accent-dark, #14633a); }
+.opp-nbvid { font-weight: 700; color: var(--accent-dark, #14633a); }

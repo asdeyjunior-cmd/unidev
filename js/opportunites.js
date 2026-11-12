@@ -32,12 +32,13 @@ const bandeau = (o) => `<div class="opp-bandeau opp-t-${cleType(o.type).toLowerC
 
 function carte(o) {
   const infos = [o.organisme, o.lieu].filter(Boolean).map(esc).join(" · ");
+  const vids = o.nbVideos ? `<span class="opp-nbvid">${o.nbVideos} lien${o.nbVideos > 1 ? "s" : ""}</span>` : "";
   return `<article class="opp${passee(o) ? " opp-passee" : ""}">
     ${lienSur(o.image || "", "image") ? `<img class="opp-img" src="${esc(o.image)}" alt="" loading="lazy" />` : bandeau(o)}
     <div class="opp-tete"><span class="opp-type">${esc(o.type || "Opportunité")}</span>
       ${o.dateLimite ? `<span class="opp-date">${passee(o) ? "Terminée le" : "Jusqu'au"} ${jour(o.dateLimite)}</span>` : ""}</div>
     <h2 class="opp-titre">${esc(o.titre)}</h2>
-    ${infos ? `<p class="opp-infos">${infos}</p>` : ""}
+    ${infos || vids ? `<p class="opp-infos">${infos}${infos && vids ? " · " : ""}${vids}</p>` : ""}
     ${o.apercu ? `<p class="opp-apercu">${esc(o.apercu)}</p>` : ""}
     ${o.nbImages ? `<p class="opp-infos">${o.nbImages} image${o.nbImages > 1 ? "s" : ""} jointe${o.nbImages > 1 ? "s" : ""}</p>` : ""}
     <button type="button" class="btn ${ouverte(o) ? "btn-ghost-ink" : ""}" data-opp="${esc(o.id)}">${ouverte(o) ? "Ouvrir" : `Voir l'opportunité · ${COUT_OPPORTUNITE} crédits`}</button>
@@ -80,12 +81,36 @@ $("opp-types").addEventListener("click", (e) => {
   montrees = PAR_PAGE; afficher();
 });
 
+/* Liens d'une opportunité (YouTube, Telegram, WhatsApp, tout site) : ouverts à l'extérieur d'unidev */
+function libelleLien(u) {
+  let h = "";
+  try { h = new URL(u).hostname.replace(/^(www\.|m\.)/, ""); } catch { return null; }
+  if (/(^|\.)youtube\.com$|^youtu\.be$/.test(h)) return ["Voir sur YouTube", "opp-l-youtube"];
+  if (/^(t\.me|telegram\.me|telegram\.org)$/.test(h)) return ["Rejoindre sur Telegram", "opp-l-telegram"];
+  if (/(^|\.)whatsapp\.com$|^wa\.me$/.test(h)) return ["Rejoindre sur WhatsApp", "opp-l-whatsapp"];
+  if (/^(drive|docs)\.google\.com$/.test(h)) return ["Ouvrir sur Google Drive", "opp-l-autre"];
+  return [`Ouvrir ${h}`, "opp-l-autre"];
+}
+function blocLiens(liens = []) {
+  const ok = liens.filter((u) => /^https?:\/\//i.test(u)).map((u) => [u, libelleLien(u)]).filter(([, l]) => l);
+  // Plusieurs liens du même genre : numérotés (« Voir sur YouTube 1 », « 2 »…)
+  const total = {}, rang = {};
+  ok.forEach(([, l]) => (total[l[0]] = (total[l[0]] || 0) + 1));
+  const boutons = ok.map(([u, l]) => {
+    rang[l[0]] = (rang[l[0]] || 0) + 1;
+    const nom = total[l[0]] > 1 ? `${l[0]} ${rang[l[0]]}` : l[0];
+    return `<a class="btn btn-block opp-lien ${l[1]}" href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(nom)}</a>`;
+  }).join("");
+  return boutons ? `<div class="opp-liens">${boutons}</div>` : "";
+}
+
 function montrer(o, d) {
   const lien = /^https?:\/\//i.test(d.lien || "") ? d.lien : "";
   modal(`<p class="opp-type" style="display:inline-block">${esc(o.type || "Opportunité")}</p>
     <h3 style="margin-top:8px">${esc(o.titre)}</h3>
     <p class="muted" style="margin:4px 0 12px">${[o.organisme, o.lieu, o.dateLimite ? `jusqu'au ${jour(o.dateLimite)}` : ""].filter(Boolean).map(esc).join(" · ")}</p>
     <div class="opp-texte">${esc(d.description || "").replace(/\n/g, "<br>")}</div>
+    ${blocLiens(d.videos || [])}
     ${(d.images || []).filter((u) => lienSur(u, "image")).map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener"><img class="opp-image" src="${esc(u)}" alt="" loading="lazy" /></a>`).join("")}
     ${d.contact ? `<p style="margin-top:12px"><b>Contact :</b> ${esc(d.contact)}</p>` : ""}
     <div class="modal-actions"><button class="btn btn-ghost-ink" data-close>Fermer</button>

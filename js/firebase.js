@@ -500,12 +500,13 @@ export async function debloquerOpportunite(uid, id) {
   await batch.commit();
 }
 /** Admin : publie une opportunité */
-export async function creerOpportunite({ titre, type, organisme, lieu, dateLimite, apercu, description, lien, contact, image = "", images = [] }) {
+export async function creerOpportunite({ titre, type, organisme, lieu, dateLimite, apercu, description, lien, contact, image = "", images = [], videos = [] }) {
   const ref = doc(oppsCol);
   const batch = writeBatch(db);
   // image : visible par tous sur la carte ; images : affiches, visibles après déblocage
-  batch.set(ref, { titre, type, organisme, lieu, dateLimite, apercu, image, nbImages: images.length, createdAt: serverTimestamp() });
-  batch.set(doc(db, "opportunites", ref.id, "prive", "detail"), { description, lien, contact, images, nbImages: images.length });
+  batch.set(ref, { titre, type, organisme, lieu, dateLimite, apercu, image, nbImages: images.length, nbVideos: videos.length, createdAt: serverTimestamp() });
+  // videos : liens YouTube / Telegram propres à cette opportunité (jamais visibles sans déblocage)
+  batch.set(doc(db, "opportunites", ref.id, "prive", "detail"), { description, lien, contact, images, nbImages: images.length, videos });
   await batch.commit();
   return ref.id;
 }
