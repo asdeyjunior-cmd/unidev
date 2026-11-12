@@ -24,7 +24,7 @@ import {
   infosDepuisChemin, lireCsv, normaliserNiveau, normaliserType, licenceAutorisee,
   filiereDepuisDomaines, couper, decouper, couvertureSvg, avecRelance, telecharger,
 } from "./outils.js";
-import { canonFiliere, ajouterFilieres, filiereConnue, nomComplet } from "../../js/filieres.js";
+import { canonFiliere, ajouterFilieres, filiereConnue, nomComplet, toutesLesFilieres } from "../../js/filieres.js";
 import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
 
 /* ---------- Arguments ---------- */
@@ -44,7 +44,7 @@ const ATTENTE = args.includes("--attente");
 // --partenaires : cherche aussi sur les sites de sites-partenaires.json (sites qui ont donné leur accord)
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
-if (!["dossier", "hal", "wiki", "zenodo", "tout", "filiere", "romans", "site"].includes(mode)) {
+if (!["dossier", "hal", "wiki", "zenodo", "tout", "filiere", "recolte", "romans", "site"].includes(mode)) {
   console.log(`Utilisation :
   node importer.js filiere --filiere "Finance-Comptabilité" [--max 50] [--essai]   (vide = toutes les filières)
   node importer.js dossier <chemin> [--csv infos.csv] [--essai]
@@ -68,6 +68,8 @@ let cloudinary, db, FieldValue, ADMIN_UID;
 let FILIERE_FORCEE = "";
 // Recherche par filière : un document n'y est rangé que s'il en parle vraiment (sinon il était mal placé)
 let PERTINENT = null;
+// Récolte quotidienne : nombre de documents encore voulus par filière
+let RECOLTE = null;
 let LOGOS = new Set(); // logos de sites partenaires reconnus par signature.js (parametres/logos)
 async function connecter() {
   if (!process.env.FIREBASE_CLE) throw new Error("Variable manquante dans .env : FIREBASE_CLE");
@@ -386,16 +388,22 @@ async function importerSource(nom, generateur, max, rechercheAffichee = null) {
   try {
   for await (const d of it) {
     const infos = { ...d.infos, filiere: canonFiliere(d.infos.filiere) || "Autre" };
+    // Récolte : la filière visée par le filtre (et plus de place pour elle aujourd'hui ? on saute)
+    if (d.cible) {
+      if (RECOLTE && !RECOLTE.reste(d.cible)) { ecartes["filière déjà remplie aujourd'hui"] = (ecartes["filière déjà remplie aujourd'hui"] || 0) + 1; continue; }
+      infos.filiere = d.cible;
+    }
     if (PERTINENT && !PERTINENT(`${d.titre} ${d.infos.matiere || ""} ${d.nomFichier || ""}`, infos.filiere)) {
       ecartes["hors de la filière"] = (ecartes["hors de la filière"] || 0) + 1; continue;
     }
     console.log(`[${ok + erreurs + 1}] ${d.titre}  ·  ${infos.filiere} · ${d.licence} · ${(d.buffer.length / 1048576).toFixed(1)} Mo`);
-    if (ESSAI) { ok++; continue; }
+    if (ESSAI) { ok++; if (d.cible && RECOLTE) RECOLTE.compter(d.cible); continue; }
     try {
       if (d.buffer.length > MAX_FICHIER) throw new Error("fichier de plus de 100 Mo");
       const id = await publier(d.buffer, d.nomFichier, infos);
       noter(d.cle, { id, source: d.source, licence: d.licence, date: new Date().toISOString() });
       ok++;
+      if (d.cible && RECOLTE) RECOLTE.compter(d.cible);
     } catch (e) {
       if (e.doublon) { noter(d.cle, { doublon: true }); doublons++; console.log("   doublon : déjà sur unidev, ignoré"); continue; }
       erreurs++;
@@ -425,6 +433,49 @@ try {
   if (!ESSAI) await connecter();
   if (mode === "dossier") await importerDossier();
   else if (mode === "hal") await importerHal();
+  else if (mode === "recolte") {
+    // Récolte quotidienne : on parcourt chaque site partenaire UNE fois, et chaque document trouvé
+    // est rangé dans la filière dont il parle, jusqu'à N documents par filière (--par-filiere, 15 par défaut).
+    const parFiliere = Math.max(1, Number(opt("par-filiere", "15")) || 15);
+    const pagesParSite = Math.max(50, Number(opt("pages", "600")) || 600);
+    const filieres = toutesLesFilieres().filter((f) => f && f !== "Autre");
+    const voulus = new Map(filieres.map((f) => [f, parFiliere]));
+    const faits = new Map();
+    RECOLTE = {
+      reste: (f) => (voulus.get(f) || 0) > 0,
+      compter: (f) => { voulus.set(f, Math.max(0, (voulus.get(f) || 0) - 1)); faits.set(f, (faits.get(f) || 0) + 1); },
+    };
+    // Mots de chaque filière : son nom et ses matières (« comptabilité générale », « fiscalité »…)
+    // (sans doublon ; le nom complet de la filière compte double : « informatique de gestion » l'emporte sur « informatique »)
+    const mots = filieres.map((f) => [f, sansAcc(nomComplet(f)), [...new Set([...motsPourFiliere(f), ...nomComplet(f).split(/[\s,-]+/)].map(sansAcc))].filter((m) => m.length >= 4 && !MOTS_VIDES.has(m))]);
+    // Filière visée : celle dont le document cite le plus de mots (les mots longs comptent plus), parmi celles qui ont encore de la place
+    const laFiliere = (texte) => {
+      const t = sansAcc(texte);
+      let meilleure = null, score = 0;
+      for (const [f, nom, cles] of mots) {
+        if (!RECOLTE.reste(f)) continue;
+        let sc = 0;
+        for (const c of cles) if (t.includes(c)) sc += c === nom ? 2 * c.length : c.length;
+        if (sc > score) { score = sc; meilleure = f; }
+      }
+      return meilleure;
+    };
+    const sites = partenaires();
+    const total = () => [...voulus.values()].reduce((a, b) => a + b, 0);
+    console.log(`Récolte : ${filieres.length} filières × ${parFiliere} documents, sur ${sites.length} site(s) : ${sites.map((p) => p.nom).join(", ")}\n`);
+    const { documentsDuSite } = await import("./sources.js");
+    for (const p of sites) {
+      if (!total()) break;
+      console.log(`\n========== ${p.nom} ==========`);
+      try {
+        await importerSource(p.nom, (o) => documentsDuSite({ url: p.url, profondeur: p.profondeur || 4, max: total(), essai: ESSAI, remplacer: p.remplacer || [],
+          logos: LOGOS, filtre: laFiliere, maxPages: pagesParSite, hasard: true, ...o }), total(), "toutes les filières");
+      } catch (e) { console.log(`${p.nom} indisponible : ${e.message}`); }
+    }
+    const remplies = filieres.filter((f) => (faits.get(f) || 0) >= parFiliere).length;
+    console.log(`\n=== Récolte : ${[...faits.values()].reduce((a, b) => a + b, 0)} document(s) ${ESSAI ? "trouvé(s)" : "ajouté(s)"}, ${remplies}/${filieres.length} filière(s) à ${parFiliere} ===`);
+    console.log(`=> Par filière : ${filieres.map((f) => `${f} ${faits.get(f) || 0}`).join(" · ")}`);
+  }
   else if (mode === "filiere") {
     // Une filière -> on cherche son nom et ses matières dans toutes les sources libres, jusqu'au nombre demandé
     const { coursWiki, coursZenodo } = await import("./sources.js");

@@ -1,5 +1,6 @@
-# Agent automatique : chaque jour, cherche des documents pour les filières demandées par les étudiants
-# et les propose à l'admin (Modération > Documents à valider). Rien n'est publié sans validation.
+# Agent automatique, chaque jour :
+#  1. filières demandées par les étudiants : documents proposés à l'admin (Modération > Documents à valider) ;
+#  2. récolte : parcourt les sites partenaires (sites-partenaires.json) et publie jusqu'à 15 documents par filière.
 # Lancement à la main : Actions > « Agent des filières demandées » > Run workflow.
 name: Agent des filières demandées
 
@@ -12,8 +13,14 @@ on:
         description: "Nombre de filières traitées par passage"
         default: "3"
       max:
-        description: "Documents cherchés par filière (10 au moins)"
+        description: "Documents cherchés par filière demandée (10 au moins)"
         default: "10"
+      par_filiere:
+        description: "Récolte : documents à ajouter par filière (sites partenaires)"
+        default: "15"
+      pages:
+        description: "Récolte : pages lues au plus par site"
+        default: "600"
 
 concurrency: { group: unidev-import, cancel-in-progress: false }
 permissions: { contents: write }
@@ -21,7 +28,7 @@ permissions: { contents: write }
 jobs:
   agent:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 340
     defaults: { run: { working-directory: outils/import } }
     steps:
       - uses: actions/checkout@v4
@@ -46,13 +53,24 @@ jobs:
         run: |
           set -o pipefail
           node agent.js --filieres "${{ inputs.filieres || '3' }}" --max "${{ inputs.max || '10' }}" 2>&1 | tee resultat.txt
+      - name: Récolte sur les sites partenaires
+        if: always()
+        env:
+          CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
+          R2_URL: ${{ secrets.R2_URL }}
+          OUTILS_SECRET: ${{ secrets.OUTILS_SECRET }}
+          NODE_OPTIONS: --max-old-space-size=5120
+        run: |
+          set -o pipefail
+          node importer.js recolte --par-filiere "${{ inputs.par_filiere || '15' }}" --pages "${{ inputs.pages || '600' }}" 2>&1 | tee recolte.txt
+          grep -E "^(Récolte|=== Récolte|=> Par filière)|^==========|^Terminé" recolte.txt >> resultat.txt || true
       - name: Classer par niveau et type (documents déjà publiés)
         if: always()
         run: node niveaux.js 2>&1 | tail -n 12 | tee -a resultat.txt
       - name: Résumé
         if: always()
         run: |
-          { echo "### Agent des filières demandées"; echo '```'; grep -E "Terminé|Aujourd.hui|#####|ERREUR|ATTENTION|=>|sans niveau|Niveaux :|Types   :|Sites partenaires|=========="  resultat.txt | tail -n 40; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+          { echo "### Agent des filières demandées"; echo '```'; grep -E "Terminé|Aujourd.hui|#####|ERREUR|ATTENTION|=>|sans niveau|Niveaux :|Types   :|Sites partenaires|==========|Récolte" resultat.txt | tail -n 60; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
       - name: Garder le journal (pour ne rien proposer deux fois)
         if: always()
         run: |

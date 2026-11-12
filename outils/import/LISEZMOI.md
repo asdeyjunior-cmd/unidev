@@ -266,3 +266,9 @@ Elle ne publie et ne supprime jamais rien. Clé : secret GitHub GEMINI_API_KEY (
   Elle calcule aussi le classement des contributeurs affiché sur la page Publier.
 - **Catalogue en 4 morceaux** : `index/catalogue`, `catalogue-1`, `-2`, `-3` (limite de 1 Mo par document). Tout passe par `catalogue.js`.
 - **Paiement automatique Jèko** : voir `serveur/LISEZMOI.md`.
+
+## Récolte quotidienne sur les sites partenaires
+L'agent (Actions > « Agent des filières demandées », chaque jour à 9h23) parcourt aussi les sites de `sites-partenaires.json`
+(ceux avec `"accord": true`) et **publie** jusqu'à 15 documents par filière (réglable : « par_filiere »).
+Chaque document est rangé dans la filière dont il parle (titre, dossier du site, page). Les liens sont explorés dans un ordre
+différent chaque jour, et ce qui est déjà importé n'est jamais repris (import-journal.json). Le Résumé donne le compte par filière.
