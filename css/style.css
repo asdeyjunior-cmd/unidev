@@ -1324,3 +1324,20 @@ body.lecteur-page { padding-bottom: 0; background: #eef4f0; min-height: 100dvh; 
 .vitrine { margin-top: 22px; }
 .vitrine ol, .vitrine ul { margin: 8px 0 0; padding-left: 20px; }
 .vitrine li { margin: 4px 0; }
+
+/* Opportunités */
+.lien-opps { display: flex; align-items: baseline; gap: 10px; margin: 14px 0 4px; padding: 11px 14px; border-radius: 12px;
+  border: 1px solid var(--line, #d7e6dc); background: #fff; color: var(--ink, #0d3b26); text-decoration: none; }
+.lien-opps span { color: var(--muted, #667); font-size: .88rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lien-opps::after { content: "›"; margin-left: auto; font-size: 1.2rem; color: var(--muted, #667); }
+.opp-liste { display: grid; gap: 12px; }
+.opp { background: #fff; border: 1px solid var(--line, #d7e6dc); border-radius: 14px; padding: 16px; }
+.opp-tete { display: flex; justify-content: space-between; gap: 10px; align-items: center; font-size: .82rem; }
+.opp-type { font-weight: 800; text-transform: uppercase; letter-spacing: .04em; font-size: .74rem; color: var(--accent-dark, #14633a);
+  background: var(--tint, #eef6f1); padding: 3px 8px; border-radius: 6px; }
+.opp-date { color: var(--muted, #667); }
+.opp-titre { font-size: 1.08rem; margin: 10px 0 4px; line-height: 1.3; }
+.opp-infos { color: var(--muted, #667); font-size: .92rem; margin: 0 0 8px; }
+.opp-apercu { margin: 0 0 12px; }
+.opp-passee { opacity: .6; }
+.opp-texte { line-height: 1.55; overflow-wrap: anywhere; }

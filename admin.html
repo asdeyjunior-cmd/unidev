@@ -19,7 +19,7 @@
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js" />
   <link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js" />
-  <link rel="stylesheet" href="css/style.css?v=56" />
+  <link rel="stylesheet" href="css/style.css?v=57" />
   <script type="speculationrules">
     { "prefetch": [{ "source": "document", "where": { "href_matches": "/*.html" }, "eagerness": "moderate" }] }
   </script>
@@ -61,6 +61,7 @@
           <button data-s="doc:rejete">Refusés</button>
           <button data-s="pay:confirme">Paiements confirmés</button>
           <button data-s="fil:demandes">Filières demandées <span id="n-fil"></span></button>
+          <button data-s="opp:liste">Opportunités</button>
         </div>
         <p style="margin:-6px 0 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center"><button class="btn btn-sm btn-ghost-ink" id="notif-btn">Activer les notifications</button><button class="btn btn-sm btn-ghost-ink" id="rebuild">Mettre à jour l'index de recherche</button><button class="btn btn-sm btn-ghost-ink" id="harmo">Corriger les filières</button><button class="btn btn-sm btn-ghost-ink" id="doublons">Supprimer les doublons</button>
           <span class="muted" id="rebuild-etat"></span></p>
@@ -72,7 +73,7 @@
     </div>
   </main>
 
-  <footer class="footer"><div class="wrap footer-copy">©UNIDEV ASSOCIATION 2026 · <a href="apropos.html">À propos</a></div></footer>
+  <footer class="footer"><div class="wrap footer-copy">©UNIDEV ASSOCIATION 2026 · <a href="opportunites.html">Opportunités</a> · <a href="apropos.html">À propos</a></div></footer>
   <nav class="bottomnav">
     <a href="index.html" data-k="docs"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg><span>Documents</span></a>
     <a href="publier.html" data-k="publier"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg><span>Publier</span></a>
@@ -86,7 +87,7 @@
   <script type="module">
     import {
       listByStatus, setStatus, removeDocument, publishDocument, getFileInfo,
-      listPaiements, confirmPaiement, modifierClassement, rejectPaiement, login, logout, checkAdmin, rebuildIndex, watchEnAttente, harmoniserFilieres, trouverDoublons, supprimerDocuments,
+      listPaiements, confirmPaiement, modifierClassement, listOpportunites, creerOpportunite, supprimerOpportunite, rejectPaiement, login, logout, checkAdmin, rebuildIndex, watchEnAttente, harmoniserFilieres, trouverDoublons, supprimerDocuments,
       listDemandes, ajouterFiliereOfficielle, supprimerDemandes, filieresPretes, getSearchIndex,
     } from "./js/firebase.js";
     import { toutesLesFilieres } from "./js/filieres.js";
@@ -306,9 +307,61 @@
         </article>`;
     }
 
+    /* ---------- Opportunités : formulaire de publication + liste ---------- */
+    const TYPES_OPP = ["Stage", "Emploi", "Bourse", "Concours", "Formation", "Autre"];
+    async function chargerOpportunites() {
+      let liste = [];
+      try { liste = (await listOpportunites(null, 60)).items; } catch (e) { toast(/permission/i.test(e.message) ? "Lance d'abord : firebase deploy --only firestore" : e.message, "err"); }
+      $("list").innerHTML = `
+        <form class="panel" id="opp-form" style="grid-column:1/-1">
+          <h2 class="section-title" style="margin-top:0">Publier une opportunité</h2>
+          <div class="field"><label for="o-titre">Titre *</label><input id="o-titre" required maxlength="140" placeholder="Ex : Stage en comptabilité, 3 mois" /></div>
+          <div class="grid-2">
+            <div class="field"><label for="o-type">Type *</label><select id="o-type">${TYPES_OPP.map((t) => `<option>${t}</option>`).join("")}</select></div>
+            <div class="field"><label for="o-date">Date limite</label><input id="o-date" type="date" /></div>
+          </div>
+          <div class="grid-2">
+            <div class="field"><label for="o-org">Entreprise ou organisme</label><input id="o-org" maxlength="100" /></div>
+            <div class="field"><label for="o-lieu">Lieu</label><input id="o-lieu" maxlength="80" placeholder="Ex : Abidjan, Cocody" /></div>
+          </div>
+          <div class="field"><label for="o-apercu">Aperçu visible par tous (1 ou 2 phrases, sans le contact) *</label><input id="o-apercu" required maxlength="220" /></div>
+          <div class="field"><label for="o-desc">Description complète, visible après déblocage *</label><textarea id="o-desc" required maxlength="4000" rows="6"></textarea></div>
+          <div class="grid-2">
+            <div class="field"><label for="o-lien">Lien pour postuler</label><input id="o-lien" type="url" maxlength="300" placeholder="https://…" /></div>
+            <div class="field"><label for="o-contact">Contact (e-mail, téléphone)</label><input id="o-contact" maxlength="150" /></div>
+          </div>
+          <button class="btn btn-block" id="o-ok">Publier</button>
+        </form>
+        ${liste.map((o) => `<article class="card"><div class="card-body">
+            <p class="card-cat">${esc(o.type || "")}${o.dateLimite ? ` · jusqu'au ${esc(o.dateLimite.split("-").reverse().join("/"))}` : ""}</p>
+            <h3>${esc(o.titre)}</h3>
+            <p class="muted">${esc([o.organisme, o.lieu].filter(Boolean).join(" · "))}</p>
+            <p class="muted">${esc(o.apercu || "")}</p>
+            <div class="card-actions"><button class="btn btn-danger" data-opp-suppr="${esc(o.id)}">Retirer</button></div>
+          </div></article>`).join("") || `<div class="empty">Aucune opportunité publiée.</div>`}`;
+      $("opp-form").onsubmit = async (e) => {
+        e.preventDefault();
+        const v = (id) => $(id).value.replace(/[ \t]+/g, " ").trim();
+        $("o-ok").disabled = true;
+        try {
+          await creerOpportunite({ titre: v("o-titre"), type: $("o-type").value, organisme: v("o-org"), lieu: v("o-lieu"), dateLimite: $("o-date").value || "",
+            apercu: v("o-apercu"), description: $("o-desc").value.trim(), lien: v("o-lien"), contact: v("o-contact") });
+          toast("Opportunité publiée.");
+          chargerOpportunites();
+        } catch (err) { toast(err.message, "err"); $("o-ok").disabled = false; }
+      };
+      $("list").querySelectorAll("[data-opp-suppr]").forEach((b) => b.onclick = async () => {
+        if (!confirm("Retirer cette opportunité ?")) return;
+        b.disabled = true;
+        try { await supprimerOpportunite(b.dataset.oppSuppr); toast("Opportunité retirée."); chargerOpportunites(); }
+        catch (err) { toast(err.message, "err"); b.disabled = false; }
+      });
+    }
+
     async function load() {
       const [kind, statut] = current.split(":");
       $("list").innerHTML = `<div class="loader"></div>`;
+      if (kind === "opp") { $("reclasser").hidden = true; return chargerOpportunites(); }
       if (kind === "fil") {
         try {
           await filieresPretes.catch(() => {});

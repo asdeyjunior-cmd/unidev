@@ -472,6 +472,50 @@ export async function demanderFiliere({ filiere, niveau = "", universite = "", c
   }
   prevenirAdmin(document ? "Document demandé" : "Filière demandée", [document, filiere, niveau, universite].filter(Boolean).join(" · "), "admin.html");
 }
+/* ---------- Opportunités (stages, emplois, bourses, concours…) ----------
+   opportunites/{id}                : résumé public (titre, type, organisme, lieu, date limite, aperçu)
+   opportunites/{id}/prive/detail   : description complète, lien et contact, lisibles après déblocage (2 crédits)
+   users/{uid}/opps/{id}            : opportunités débloquées par l'étudiant */
+export const COUT_OPPORTUNITE = 2;
+const oppsCol = collection(db, "opportunites");
+/** Une page d'opportunités, les plus récentes d'abord. Renvoie { items, cursor, done }. */
+export async function listOpportunites(cursor = null, taille = 6) {
+  const snap = await getDocs(query(oppsCol, orderBy("createdAt", "desc"), ...(cursor ? [startAfter(cursor)] : []), limit(taille)));
+  return { items: snap.docs.map((s) => ({ id: s.id, ...s.data() })), cursor: snap.docs[snap.docs.length - 1] || null, done: snap.size < taille };
+}
+export async function listOppsDebloquees(uid) {
+  try { return new Set((await getDocs(collection(db, "users", uid, "opps"))).docs.map((d) => d.id)); } catch { return new Set(); }
+}
+/** Détail complet (réservé à ceux qui l'ont débloquée, et à l'admin) */
+export async function getOpportuniteDetail(id) {
+  const s = await getDoc(doc(db, "opportunites", id, "prive", "detail"));
+  if (!s.exists()) throw new Error("Détail introuvable.");
+  return s.data();
+}
+/** Débloque une opportunité : 2 crédits, une seule fois */
+export async function debloquerOpportunite(uid, id) {
+  const batch = writeBatch(db);
+  batch.set(doc(db, "users", uid, "opps", id), { createdAt: serverTimestamp() });
+  batch.update(doc(db, "users", uid), { credits: increment(-COUT_OPPORTUNITE), derniereOpp: id });
+  await batch.commit();
+}
+/** Admin : publie une opportunité */
+export async function creerOpportunite({ titre, type, organisme, lieu, dateLimite, apercu, description, lien, contact }) {
+  const ref = doc(oppsCol);
+  const batch = writeBatch(db);
+  batch.set(ref, { titre, type, organisme, lieu, dateLimite, apercu, createdAt: serverTimestamp() });
+  batch.set(doc(db, "opportunites", ref.id, "prive", "detail"), { description, lien, contact });
+  await batch.commit();
+  return ref.id;
+}
+/** Admin : retire une opportunité */
+export async function supprimerOpportunite(id) {
+  const batch = writeBatch(db);
+  batch.delete(doc(db, "opportunites", id, "prive", "detail"));
+  batch.delete(doc(db, "opportunites", id));
+  await batch.commit();
+}
+
 /** Signalement d'un document : notification immédiate de l'admin + trace dans la base (si les règles l'autorisent) */
 export async function signalerDocument(d, motif, detail = "") {
   prevenirAdmin("Document signalé", `${d.titre} : ${motif}${detail ? ` (${detail})` : ""}`, `admin.html`);

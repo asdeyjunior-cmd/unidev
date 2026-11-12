@@ -64,6 +64,12 @@ service cloud.firestore {
                   && request.resource.data.credits == resource.data.get('credits', 0) - 1
                   && existsAfter(achatPath(uid, request.resource.data.dernierAchat))
                   && !exists(achatPath(uid, request.resource.data.dernierAchat)))
+              // Dépense de 2 crédits : uniquement en même temps que le déblocage d'une opportunité
+              || (onlyKeys(['credits', 'derniereOpp'])
+                  && resource.data.get('credits', 0) >= 2
+                  && request.resource.data.credits == resource.data.get('credits', 0) - 2
+                  && existsAfter(/databases/$(database)/documents/users/$(uid)/opps/$(request.resource.data.derniereOpp))
+                  && !exists(/databases/$(database)/documents/users/$(uid)/opps/$(request.resource.data.derniereOpp)))
             ));
       allow delete: if isAdmin();
 
@@ -75,6 +81,27 @@ service cloud.firestore {
           && getAfter(userPath(uid)).data.dernierAchat == docId
           && getAfter(userPath(uid)).data.credits == get(userPath(uid)).data.get('credits', 0) - 1;
         allow update, delete: if false;
+      }
+
+      // Opportunités débloquées par l'utilisateur (2 crédits)
+      match /opps/{oppId} {
+        allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+        allow create: if signedIn() && request.auth.uid == uid
+          && exists(/databases/$(database)/documents/opportunites/$(oppId))
+          && getAfter(userPath(uid)).data.derniereOpp == oppId
+          && getAfter(userPath(uid)).data.credits == get(userPath(uid)).data.get('credits', 0) - 2;
+        allow update, delete: if false;
+      }
+    }
+
+    /* ---------- Opportunités : résumé public, détail réservé à ceux qui l'ont débloquée ---------- */
+    match /opportunites/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+      match /prive/{piece} {
+        allow read: if isAdmin()
+          || (signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)/opps/$(id)));
+        allow write: if isAdmin();
       }
     }
 

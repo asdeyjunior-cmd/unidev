@@ -78,7 +78,7 @@ function gabarit({ titre, description, canonical, ogImage, jsonld, corps }) {
 ${corps}
     </div>
   </main>
-  <footer class="footer"><div class="wrap footer-copy">©UNIDEV ASSOCIATION 2026 · <a href="../apropos.html">À propos</a> · <a href="index.html">Tous les documents</a></div></footer>
+  <footer class="footer"><div class="wrap footer-copy">©UNIDEV ASSOCIATION 2026 · <a href="../opportunites.html">Opportunités</a> · <a href="../apropos.html">À propos</a> · <a href="index.html">Tous les documents</a></div></footer>
   <nav class="bottomnav">
     <a href="../index.html" data-k="docs" class="active">${svg("docs")}<span>Documents</span></a>
     <a href="../publier.html" data-k="publier">${svg("publier")}<span>Publier</span></a>
