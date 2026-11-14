@@ -60,6 +60,13 @@
       "profondeur": 50,
       "remplacer": [],
       "accord": true
+    },
+    {
+      "nom": "zlibrary",
+      "url": "https://www.zlibrary.biz/",
+      "profondeur": 50,
+      "remplacer": [],
+      "accord": true
     }
   ]
 }
