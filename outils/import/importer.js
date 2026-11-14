@@ -44,7 +44,7 @@ const ATTENTE = args.includes("--attente");
 // --partenaires : cherche aussi sur les sites de sites-partenaires.json (sites qui ont donné leur accord)
 const pause = (ms) => new Promise((r) => setTimeout(r, ms));
 
-if (!["dossier", "hal", "wiki", "zenodo", "tout", "filiere", "recolte", "romans", "site"].includes(mode)) {
+if (!["dossier", "hal", "wiki", "zenodo", "tout", "filiere", "recolte", "romans", "divertissement", "site"].includes(mode)) {
   console.log(`Utilisation :
   node importer.js filiere --filiere "Finance-Comptabilité" [--max 50] [--essai]   (vide = toutes les filières)
   node importer.js dossier <chemin> [--csv infos.csv] [--essai]
@@ -53,6 +53,7 @@ if (!["dossier", "hal", "wiki", "zenodo", "tout", "filiere", "recolte", "romans"
   node importer.js zenodo [--recherche "mots"] [--max 50] [--types lesson,presentation] [--essai]
   node importer.js tout --recherche "mots" [--max 20] [--essai]   (HAL + Wikiversité + Wikilivres + Zenodo)
   node importer.js romans [--recherche "titre ou auteur"] [--max 20] [--essai]   (Wikisource, domaine public)
+  node importer.js divertissement [--recherche "titre ou auteur"] [--max 20] [--essai]   (aventures, policiers, contes… domaine public)
   node importer.js site --url "https://..." [--profondeur 2] [--max 50] [--remplacer "mot1,mot2"] [--essai]   (site qui t'a donné son accord)`);
   process.exit(1);
 }
@@ -77,7 +78,7 @@ async function connecter() {
   const cle = path.resolve(process.env.FIREBASE_CLE);
   if (!fs.existsSync(cle)) throw new Error(`Clé Firebase introuvable : ${cle}`);
 
-  ({ v2: cloudinary } = await import("cloudinary"));
+  cloudinary = (await import("cloudinary")).default.v2; // module CommonJS : objet entier (toutes versions de Node)
   await choisirCompte(cloudinary); // le compte Cloudinary le plus libre
 
   const admin = (await import("firebase-admin")).default;
@@ -145,7 +146,8 @@ async function publier(buffer, nomFichier, infos, imageChemin = null) {
       || (/wiki|zenodo|hal/i.test(String(infos.universite || "")) ? "Cours" : "Autre");
   }
   // Toujours un niveau : d'abord ce que disent le titre, la matière et la filière, sinon d'après la source
-  if (!NIVEAUX.includes(infos.niveau) || infos.niveau === "Autre") {
+  // (sauf les livres de lecture : un roman ou un conte n'a pas de niveau d'études)
+  if ((!NIVEAUX.includes(infos.niveau) || infos.niveau === "Autre") && infos.type !== "Roman") {
     const src = String(infos.universite || "");
     infos.niveau = niveauDe(`${infos.titre} ${infos.matiere} ${infos.filiere} ${nomFichier}`)
       || (/wiki/i.test(src) ? "Licence 1" : /zenodo/i.test(src) ? "Licence 3" : /hal/i.test(src) ? "Master 1" : "Autre");
@@ -578,9 +580,9 @@ try {
     }
   }
   else {
-    const { coursWiki, coursZenodo, romansWikisource, documentsDuSite } = await import("./sources.js");
+    const { coursWiki, coursZenodo, romansWikisource, CATEGORIES_DIVERTISSEMENT, documentsDuSite } = await import("./sources.js");
     const max = Number(opt("max", "50"));
-    const recherche = opt("recherche", mode === "romans" ? "" : "cours");
+    const recherche = opt("recherche", mode === "romans" || mode === "divertissement" ? "" : "cours");
     if (mode === "site") {
       const url = opt("url");
       if (!url || !/^https?:\/\//.test(url)) throw new Error('Indique la page de départ : --url "https://..."');
@@ -591,6 +593,8 @@ try {
       await importerSource(`Site ${new URL(url).hostname}`, (o) => documentsDuSite({ url, profondeur, max, essai: ESSAI, remplacer, logos: LOGOS, ...o }), max);
     } else if (mode === "romans") {
       await importerSource("Romans (Wikisource)", (o) => romansWikisource({ recherche, max, essai: ESSAI, ...o }), max);
+    } else if (mode === "divertissement") {
+      await importerSource("Divertissement (Wikisource)", (o) => romansWikisource({ recherche, max, essai: ESSAI, categories: CATEGORIES_DIVERTISSEMENT, filiere: "Divertissement", genre: "livre", ...o }), max);
     } else if (mode === "wiki") {
       const projet = (opt("projet", "wikiversite") || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       await importerSource(projet === "wikilivres" ? "Wikilivres" : "Wikiversité", (o) => coursWiki({ projet, recherche, max, ...o }), max);

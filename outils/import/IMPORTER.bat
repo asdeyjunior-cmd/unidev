@@ -18,11 +18,8 @@ if errorlevel 1 (
   exit /b
 )
 
-if not exist node_modules\pdfjs-dist (
-  echo  Premiere utilisation : installation des composants ^(1 a 2 minutes^)...
-  call npm install --silent
-  if errorlevel 1 ( echo  L'installation a echoue. Verifie ta connexion internet. & pause & exit /b )
-)
+call composants.bat
+if errorlevel 1 ( pause & exit /b )
 
 if not exist .env (
   copy .env.exemple .env >nul

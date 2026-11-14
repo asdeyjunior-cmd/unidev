@@ -15,7 +15,8 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import { comptes } from "./stockage.js";
 import admin from "firebase-admin";
-import { v2 as cloudinary } from "cloudinary";
+import cloudinaryPkg from "cloudinary";
+const cloudinary = cloudinaryPkg.v2; // module CommonJS : objet entier puis sa partie v2 (toutes versions de Node)
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const ESSAI = process.argv.includes("--essai");

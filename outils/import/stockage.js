@@ -110,7 +110,7 @@ export function envoyerR2(buffer, options = {}) {
 
 /** Aperçu (1re page en JPEG) d'un PDF : rendu par Cloudinary le temps d'une seconde, puis rangé dans R2 et effacé de Cloudinary */
 export async function apercuPdfR2(cloudinary, pdf) {
-  const { PDFDocument } = await import("pdf-lib");
+  const { PDFDocument } = (await import("pdf-lib")).default;
   const src = await PDFDocument.load(pdf, { ignoreEncryption: true });
   const une = await PDFDocument.create();
   const [p] = await une.copyPages(src, [0]);

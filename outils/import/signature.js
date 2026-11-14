@@ -16,7 +16,8 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import { comptes, choisirCompte, basculer, comptePlein, r2Actif, envoyerR2, MAX_R2 } from "./stockage.js";
 import admin from "firebase-admin";
-import { v2 as cloudinary } from "cloudinary";
+import cloudinaryPkg from "cloudinary";
+const cloudinary = cloudinaryPkg.v2; // module CommonJS : objet entier puis sa partie v2 (toutes versions de Node)
 import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF, titreAReparer, sansCodeDevant } from "./outils.js";
 import { remplacerSignature, tamponUnidev, sansModification, annulerAnciennesMarques } from "./marque.js";
 import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";

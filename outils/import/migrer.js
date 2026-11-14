@@ -19,7 +19,8 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
 import { lireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
-import { v2 as cloudinary } from "cloudinary";
+import cloudinaryPkg from "cloudinary";
+const cloudinary = cloudinaryPkg.v2; // module CommonJS : objet entier puis sa partie v2 (toutes versions de Node)
 import { comptes, compteDeUrl, choisirCompte, apercuPdfR2, deposerR2 } from "./stockage.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));

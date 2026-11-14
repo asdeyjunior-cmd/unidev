@@ -13,7 +13,9 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
-import { PDFDocument, PDFName, PDFString, PDFArray, PDFDict, PDFRawStream, PDFRef, decodePDFRawStream, rgb, StandardFonts, setTextRenderingMode, TextRenderingMode, pushGraphicsState, popGraphicsState, concatTransformationMatrix } from "pdf-lib";
+// pdf-lib est un module CommonJS : on prend l'objet entier puis ses parties (marche avec toutes les versions de Node)
+import pdfLib from "pdf-lib";
+const { PDFDocument, PDFName, PDFString, PDFArray, PDFDict, PDFRawStream, PDFRef, decodePDFRawStream, rgb, StandardFonts, setTextRenderingMode, TextRenderingMode, pushGraphicsState, popGraphicsState, concatTransformationMatrix } = pdfLib;
 
 const SITE = "https://unidev-2026.web.app";
 const TEXTE = "unidev-2026.web.app";

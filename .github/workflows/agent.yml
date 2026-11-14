@@ -47,6 +47,7 @@ jobs:
       - name: Recherche
         env:
           CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
+          SITES_CONNEXIONS: ${{ secrets.SITES_CONNEXIONS }}
           R2_URL: ${{ secrets.R2_URL }}
           OUTILS_SECRET: ${{ secrets.OUTILS_SECRET }}
           NODE_OPTIONS: --max-old-space-size=5120
@@ -57,6 +58,7 @@ jobs:
         if: always()
         env:
           CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
+          SITES_CONNEXIONS: ${{ secrets.SITES_CONNEXIONS }}
           R2_URL: ${{ secrets.R2_URL }}
           OUTILS_SECRET: ${{ secrets.OUTILS_SECRET }}
           NODE_OPTIONS: --max-old-space-size=5120

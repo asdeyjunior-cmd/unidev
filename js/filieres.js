@@ -28,6 +28,7 @@ export const FILIERES = [
   "Industries agroalimentaires et chimiques",
   "Langues",
   "Littérature",
+  "Divertissement",
   "Autre",
 ];
 
@@ -59,6 +60,7 @@ const ALIAS = {
   "Physique-Chimie": ["physique chimie", "pc"],
   "Électrotechnique": ["electrotechnique"],
   "Électronique": ["electronique"],
+  "Divertissement": ["divertissement", "divertissements", "loisirs", "lecture loisir", "livres divertissants", "romans divertissants", "contes", "bandes dessinees", "bd"],
   "Littérature": ["litterature", "lettres", "lettres modernes", "romans", "roman", "litterature francaise"],
 };
 

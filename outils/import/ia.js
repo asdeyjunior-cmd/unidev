@@ -15,7 +15,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
-import { PDFDocument } from "pdf-lib";
+// pdf-lib est un module CommonJS : on prend l'objet entier puis ses parties (marche avec toutes les versions de Node)
+import pdfLib from "pdf-lib";
+const { PDFDocument } = pdfLib;
 import { telecharger } from "./outils.js";
 import { toutesLesFilieres, canonFiliere } from "../../js/filieres.js";
 import { CATEGORIES } from "../../js/config.js";

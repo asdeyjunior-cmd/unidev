@@ -272,3 +272,25 @@ L'agent (Actions > « Agent des filières demandées », chaque jour à 9h23) pa
 (ceux avec `"accord": true`) et **publie** jusqu'à 15 documents par filière (réglable : « par_filiere »).
 Chaque document est rangé dans la filière dont il parle (titre, dossier du site, page). Les liens sont explorés dans un ordre
 différent chaque jour, et ce qui est déjà importé n'est jamais repris (import-journal.json). Le Résumé donne le compte par filière.
+
+## Sites partenaires qui demandent un compte
+
+Certains sites partenaires ne donnent leurs documents qu'à un compte connecté, même quand ils ont donné leur accord.
+Pendant la récolte, le journal l'indique par la ligne « CONNEXION DEMANDÉE par nom-du-site ».
+
+**Solution 1 (la meilleure) : demander au site un accès direct.** Au choix :
+- un dossier (Google Drive, ZIP) ou une liste de liens directs vers les fichiers : à importer avec IMPORTER.bat, mode dossier ;
+- une page publique (même non référencée) qui liste tous les documents : à mettre comme `url` dans sites-partenaires.json ;
+- une clé d'accès pour le robot unidev (« Bearer ... »).
+Cela ne dépend d'aucun mot de passe et ne s'arrête pas quand une session expire.
+
+**Solution 2 : utiliser ton propre compte sur ce site.**
+1. Connecte-toi au site dans Chrome.
+2. Appuie sur F12 > onglet Réseau (Network) > recharge la page > clique sur la première ligne > En-têtes de la requête > copie toute la valeur de `cookie`.
+3. GitHub > Settings > Secrets and variables > Actions > New repository secret, nom `SITES_CONNEXIONS`, valeur sur une seule ligne :
+   `{"nomdusite.com":"la valeur cookie copiée"}`
+   Plusieurs sites : `{"site1.com":"...","site2.com":"..."}`. Une clé fournie par le site : `{"site.com":"Bearer la-clé"}`.
+4. En local, mets la même ligne dans le `.env` : `SITES_CONNEXIONS={"nomdusite.com":"..."}`.
+
+Le cookie d'une session expire souvent au bout de quelques jours ou semaines : quand « CONNEXION DEMANDÉE » revient, recopie-le.
+Ce cookie donne accès à ton compte : ne le mets jamais ailleurs que dans le secret GitHub ou le `.env`, et seulement pour des sites qui t'ont donné leur accord écrit.

@@ -12100,5 +12100,574 @@
     "source": "https://www.aidexam.com/annales/bts-commerce-international-ci/all/all/27/all",
     "licence": "autorisation de www.aidexam.com",
     "date": "2026-11-12T15:33:08.955Z"
+  },
+  "fichier:b7a48116c42bb660fef50472607285af66cf8380": {
+    "id": "ZSsAQzxwCcsAhc1WfA3P",
+    "source": "Autre\\AnyScanner_06_19_2026(1)-1.pdf",
+    "date": "2026-11-14T15:35:36.853Z"
+  },
+  "fichier:f0503b1517aa4a72b6796514500692e7ce3dc991": {
+    "id": "abSv6PmeXniILrZIt31U",
+    "source": "Autre\\BTS 2\\bts 2013.pdf",
+    "date": "2026-11-14T15:35:38.895Z"
+  },
+  "fichier:437e5676952a70f6024b7eb7ca1cbcd80eec7834": {
+    "id": "hNt99FR6CcaigqQC48aw",
+    "source": "Autre\\BTS 2\\BTS 2017.pdf",
+    "date": "2026-11-14T15:35:45.872Z"
+  },
+  "fichier:0aa1992568b5ec46ca0b556ffba1221b7de1cf83": {
+    "id": "LUy5e4IAxeCE7nat4ucW",
+    "source": "Autre\\BTS 2\\BTS 2018.pdf",
+    "date": "2026-11-14T15:35:48.754Z"
+  },
+  "fichier:f061c8e067a5152e1e9083acea7a2c73385c1926": {
+    "id": "chUO9kI7fGgVCkyZDN2g",
+    "source": "Autre\\BTS 2\\BTS 2019.pdf",
+    "date": "2026-11-14T15:35:52.151Z"
+  },
+  "fichier:9e870f05e1aba0d3bc681420531121cbb23ec042": {
+    "id": "zLYbkQjmyWPbqZgx6zgr",
+    "source": "Autre\\BTS 2\\BTS 2020.pdf",
+    "date": "2026-11-14T15:35:54.182Z"
+  },
+  "fichier:b86c2a3020dac6913b85be807627fadcc0c75b75": {
+    "id": "g4Tzl7hUk8a8EHBInZYm",
+    "source": "Autre\\BTS 2\\BTS 2021 EC.pdf",
+    "date": "2026-11-14T15:35:56.556Z"
+  },
+  "fichier:e92e2d52e53def8332a5a62569f0485c4c9ff101": {
+    "id": "lkXHzQd2K2tNHs77quJX",
+    "source": "Autre\\BTS 2\\BTS_gr_B_2020_FH.pdf",
+    "date": "2026-11-14T15:35:57.656Z"
+  },
+  "fichier:1f3ceeb11c7ed19c7daf7baba8abdc3374db6507": {
+    "id": "ZNPdQ8D7WJL24E736mMd",
+    "source": "Autre\\BTS 2\\BTS_MathG_2014.pdf",
+    "date": "2026-11-14T15:36:05.030Z"
+  },
+  "fichier:17379370e3522bb5a0739803fca7fb81c5da24cf": {
+    "id": "EaiIxDoul0xhXOP6ScIQ",
+    "source": "Autre\\BTS 2\\BTS_Math_2013.pdf",
+    "date": "2026-11-14T15:36:08.997Z"
+  },
+  "fichier:71dc46953e18ac4ef66bf9450850b2e9eaf472f1": {
+    "id": "6rVdwbaO8CNaHyzRchcI",
+    "source": "Autre\\BTS 2\\Cours\\Cours_proba_bts.pdf",
+    "date": "2026-11-14T15:36:11.246Z"
+  },
+  "fichier:269e1de34d308ec6a5eedfe7f93c3fbc7d3246c8": {
+    "id": "AW1zAeujOPNQ4p6mK0GT",
+    "source": "Autre\\BTS 2\\Examen\\2014 sujet3 BTS IDA Etude de cas 2014 .pdf",
+    "date": "2026-11-14T15:36:15.811Z"
+  },
+  "fichier:acc32891daf7f107e5ff0d70c9d67ccf8402e89f": {
+    "id": "aow73Z2NpJOVNFiYGM7m",
+    "source": "Autre\\BTS 2\\Examen\\2021 sujet2 BTS IDA Etude de cas 2021 .pdf",
+    "date": "2026-11-14T15:36:18.071Z"
+  },
+  "fichier:85e1308d7f0c7ff2d8d56b56512b2fb33ce9e286": {
+    "id": "hkjFOj9kEiem6IAAupXG",
+    "source": "Autre\\BTS 2\\Examen\\2022 Sujet complet BTS IDA.pdf",
+    "date": "2026-11-14T15:36:22.930Z"
+  },
+  "fichier:0b440f8520593b83846fa0f288fdfa5bf89133c8": {
+    "id": "er6vmqWLCgLrwyhoN0SJ",
+    "source": "Autre\\BTS 2\\Examen\\2025 Sujet complet BTS 2025.pdf",
+    "date": "2026-11-14T15:36:31.954Z"
+  },
+  "fichier:c442d6abd89e0444d75e2ee4fb38f4fe0c4a4bd1": {
+    "id": "6rdHplLg4Ql8dh9xtr1L",
+    "source": "Autre\\BTS 2\\Examen\\BREVET DE TECHNICIEN SUPERIEUR  bts blanc.pdf",
+    "date": "2026-11-14T15:36:33.212Z"
+  },
+  "fichier:8922a3f0d718ade342788a9716a58ee818b29a1a": {
+    "doublon": true
+  },
+  "fichier:9f6b64a246e182972550d582c2928bc4546abaa9": {
+    "id": "pJOMHlIaI1rMzjc7oApW",
+    "source": "Autre\\BTS 2\\Examen\\BTS_2026_Sujet_Complet.pdf",
+    "date": "2026-11-14T15:36:53.781Z"
+  },
+  "fichier:30f9874164f2e988c8f17312025f5d600d02c812": {
+    "id": "LeOhihHORxzCOkKQ5qJe",
+    "source": "Autre\\BTS 2\\Examen\\etude de cas BTS 2017.pdf",
+    "date": "2026-11-14T15:36:55.665Z"
+  },
+  "fichier:3fd9cc70b931d96e5e424e59daa26751c3473aa3": {
+    "id": "TnT9uyZVYU5sofKw8aE0",
+    "source": "Autre\\BTS 2\\Examen\\Sujet BTS IDA algo (2).pdf",
+    "date": "2026-11-14T15:37:00.197Z"
+  },
+  "fichier:f461f622dc5ac9aeaf4239a377c1fb57efa6a901": {
+    "id": "n9Rqaud0TFMya2efgWk5",
+    "source": "Autre\\BTS 2\\Examen\\Sujet BTS IDA ALGO.pdf",
+    "date": "2026-11-14T15:37:02.079Z"
+  },
+  "fichier:e5fd0792456b29141cbb167c5eebfc8e357ae696": {
+    "id": "IKsHUX20nyWPsn5DORj2",
+    "source": "Autre\\BTS 2\\Examen\\SUJET ETUDE DE CAS BTS BLANC ESETEC.pdf",
+    "date": "2026-11-14T15:37:03.582Z"
+  },
+  "fichier:f443f5296826207c24d1bf6902647e7a7503cb4c": {
+    "id": "RntEFkWCVZfNEPCn2gFa",
+    "source": "Autre\\BTS 2\\Examen\\Sujet français BTS 2021.pdf",
+    "date": "2026-11-14T15:37:06.532Z"
+  },
+  "fichier:3b6473b13fafda8025e0a12a6692c18ebc7d1798": {
+    "id": "6Be74copYiyoxyLJXh5f",
+    "source": "Autre\\BTS 2\\Examen\\sujet1 BTS blanc IDA algo .pdf",
+    "date": "2026-11-14T15:37:07.545Z"
+  },
+  "fichier:d0a254743cf062bcdf2b50f3ffde61064c5f3e54": {
+    "id": "Gf2KUtErlQFR1KG5XNtr",
+    "source": "Autre\\BTS 2\\Examen\\sujet1 BTS IDA Etude de cas.pdf",
+    "date": "2026-11-14T15:37:11.717Z"
+  },
+  "fichier:774bb8a69fdf3bd82a8b3913102c5c1d5074bc6f": {
+    "id": "aMH37WH1p3L0Nrc3tIeA",
+    "source": "Autre\\BTS 2\\Examen\\Sujets_BTS_ALGO.pdf",
+    "date": "2026-11-14T15:37:13.149Z"
+  },
+  "fichier:65e57d6e74b99121f296da9790fa2dfc321f614f": {
+    "id": "Gp1j8h6acm0sRYWAtghq",
+    "source": "Autre\\BTS 2\\exo algo bts.pdf",
+    "date": "2026-11-14T15:37:18.312Z"
+  },
+  "fichier:dc32c0f95766e14acf8ee7e3ce188ecab5e62796": {
+    "id": "zYMp81aUk0VQboT0ncpa",
+    "source": "Autre\\BTS 2\\PREPA BTS.pdf",
+    "date": "2026-11-14T15:37:20.266Z"
+  },
+  "fichier:d127b516e90266fc09d47501edaccbd122104a00": {
+    "doublon": true
+  },
+  "fichier:4c990f59e15380168ecd59cec661f03e12cb725e": {
+    "id": "pda3kivQjG8q7NXCSiyq",
+    "source": "Autre\\BTS 2\\TD\\recueil d'exercices BTS.pdf",
+    "date": "2026-11-14T15:37:22.165Z"
+  },
+  "fichier:6a0beaa3aff425ed6363ea417ddaff4faeec237f": {
+    "id": "8ZagOZU4NjDHY3gnlbcw",
+    "source": "Autre\\bts2022.pdf",
+    "date": "2026-11-14T15:37:24.260Z"
+  },
+  "fichier:7a7ce2be5bb27b30eb320e4810c3678cd69892f7": {
+    "id": "kSIho2gCYMyDpBxqaCk9",
+    "source": "Autre\\CamScanner 03-07-2026 11.24.pdf",
+    "date": "2026-11-14T15:37:26.465Z"
+  },
+  "fichier:1994bc03d4d8c20dde2addf6120e9e696cae1ac0": {
+    "id": "DXnAM3YaEGPR7wTZg5xE",
+    "source": "Autre\\Corrigé\\University of Technologies and Solutions Integrator.pdf",
+    "date": "2026-11-14T15:37:27.853Z"
+  },
+  "fichier:906c2510a226c6ceed7fa99afcc5975b01d1c687": {
+    "id": "nx5CD1osVmXaOaTKMdG0",
+    "source": "Autre\\Cours\\Chapitre 1 _Comprendre l'adressage IPV4.pdf",
+    "date": "2026-11-14T15:37:30.065Z"
+  },
+  "fichier:9774504d3864f3c295d8723740bc38a97eb0e6ad": {
+    "id": "vPk15mQte0lbufSuUxJ4",
+    "source": "Autre\\Cours\\Chapitre 1_Notions de base de transmission.pdf",
+    "date": "2026-11-14T15:37:31.686Z"
+  },
+  "fichier:9db21132fad01f83c7167a5132c2910cf01c2b62": {
+    "id": "IgEI2A0UMTK8GLQQ66kd",
+    "source": "Autre\\Cours\\Chapitre 2_Les supports de transmission_revisé.pdf",
+    "date": "2026-11-14T15:37:35.170Z"
+  },
+  "fichier:3f0b3a58b8c648917b78ac377a19bb931aebe7a4": {
+    "id": "8GMK3ahuuD9RIWyVA40g",
+    "source": "Autre\\Cours\\Chapitre 4_  types de transmission.pdf",
+    "date": "2026-11-14T15:37:37.767Z"
+  },
+  "fichier:c58b744e09d21c863cf007fd4b0aee3c705645dc": {
+    "id": "4EWDZDzwhRVYO0C8lUdi",
+    "source": "Autre\\Cours\\Cours math fin Dr. TIEMELE.pdf",
+    "date": "2026-11-14T15:37:41.153Z"
+  },
+  "fichier:d4bf368804ae3a2e71976170b0e66aa9c47151db": {
+    "id": "FpC1NeAuYEnzUcESEQyk",
+    "source": "Autre\\Cours\\Module 1_Notions de base de transmission.pdf",
+    "date": "2026-11-14T15:37:42.635Z"
+  },
+  "fichier:127f82bfa4f67116752a69cdaf01e827fb611857": {
+    "id": "EqvCax31W0ydkrODjOyD",
+    "source": "Autre\\Cours\\Module 2_Les supports de transmission_revisé.pdf",
+    "date": "2026-11-14T15:37:44.125Z"
+  },
+  "fichier:580f98c46bab65aa1c6045b2bfa47d909cab0d3a": {
+    "id": "JbnqqAcS8DMLtfkyIcmi",
+    "source": "Autre\\Cours\\Module 4_  types de transmission.pdf",
+    "date": "2026-11-14T15:37:45.459Z"
+  },
+  "fichier:5d393e75b9669f9a42ff418ff84febc69d72b686": {
+    "id": "t5nGUQP97IwZyCq3D6IV",
+    "source": "Autre\\Cours\\Module _3_Les Medias de connection.pdf",
+    "date": "2026-11-14T15:37:48.008Z"
+  },
+  "fichier:3b8a31e13bb84c641112645017f7acd550e67028": {
+    "id": "l8Kv8TIofyiVXF3geucx",
+    "source": "Autre\\EtudeDeCas_BTS2023Sjet-&-Coro.pdf",
+    "date": "2026-11-14T15:37:56.019Z"
+  },
+  "fichier:0bf5a3ef2e46644a59ec9d2e8d768d8cc5420264": {
+    "id": "EsUUaygBdKCigcKcP60C",
+    "source": "Autre\\Examen\\Application - algo - sujet.pdf",
+    "date": "2026-11-14T15:37:57.151Z"
+  },
+  "fichier:c35854e4a8a16562c02aba502234246e896064c5": {
+    "id": "e0OsFDJ1gkmp3eBdo9aQ",
+    "source": "Autre\\Examen\\DEVOIR 1 ALGO ID 2A.pdf",
+    "date": "2026-11-14T15:37:58.619Z"
+  },
+  "fichier:e71ee48358b12dad5f6d8068feee418ba4c8f2bd": {
+    "id": "VFE8T2l2n9gq4wwvEwMp",
+    "source": "Autre\\Examen\\ETUDE DE CAS 2 IDA2A.pdf",
+    "date": "2026-11-14T15:38:00.034Z"
+  },
+  "fichier:b6f951dc9208f434d117d6815018325e60a6ea35": {
+    "doublon": true
+  },
+  "fichier:8b462d3c9c4795cb2ad1fb46c0aa1dd7499037c8": {
+    "id": "6fHpqc8O7PcFXstKTG5H",
+    "source": "Autre\\Examen\\Sujet de prepa_2026.pdf",
+    "date": "2026-11-14T15:38:01.462Z"
+  },
+  "fichier:81225a66088f7c808047f04b170fb821f95f7824": {
+    "doublon": true
+  },
+  "fichier:256d8d1f78c455bb79ac9cb5e8f23d5e05639b76": {
+    "id": "MON0M3p8XzcDG7hxwC31",
+    "source": "Autre\\Examen\\sujet_algo.pdf",
+    "date": "2026-11-14T15:38:03.604Z"
+  },
+  "fichier:0df6d4d69d1461d1efce34eeceaa2ae9ac430d5f": {
+    "id": "sQEVfGJqxzqGPDouaLoo",
+    "source": "Autre\\Examen\\sujet_examen.pdf",
+    "date": "2026-11-14T15:38:05.393Z"
+  },
+  "fichier:3092a0998ed3c2abd027c2759873248f5d55b79e": {
+    "id": "Xs9RaDSgoWGr72gBe73V",
+    "source": "Autre\\f76b1767-e0cb-4e93-a37a-74cb00d07d90.pdf",
+    "date": "2026-11-14T15:38:06.940Z"
+  },
+  "fichier:cd4119c7a306bc8626c28719fac55e85b8bedb0e": {
+    "id": "GyHSfJbAsn3toaAueNIr",
+    "source": "Autre\\IDA - EPP Théorie 2018.pdf",
+    "date": "2026-11-14T15:38:09.198Z"
+  },
+  "fichier:72cb5c96f0fa39dd2f098d6bed6dcb737447f7bf": {
+    "id": "etwSLAolBHHJTXiDZshd",
+    "source": "Autre\\Licence 2\\Examen\\EXAMEN TERMINAL SEMESTRE 3 pigier.pdf",
+    "date": "2026-11-14T15:38:10.457Z"
+  },
+  "fichier:265d55b9c81a37e74f435b18cde3ae31d73a695b": {
+    "id": "N8IjmjpXtsvcbQpaDpBk",
+    "source": "Autre\\MaathFin.pdf",
+    "date": "2026-11-14T15:38:14.692Z"
+  },
+  "fichier:f10ac454e73e69da2d4d7b77b96ccdb290b3b953": {
+    "id": "ES3y2hoMQx3ywuw0A3xE",
+    "source": "Autre\\MATH FIN TH Fine PIGIER.pdf",
+    "date": "2026-11-14T15:38:15.892Z"
+  },
+  "fichier:27d2417c189f2dec345abf5d9b0bc8f387f0436e": {
+    "id": "pw2wIWXGnZjnzp6zUNye",
+    "source": "Autre\\Mathproba1.pdf",
+    "date": "2026-11-14T15:38:21.052Z"
+  },
+  "fichier:0f2051f2391df0d7f4487b6c34e325431dedf588": {
+    "id": "ZbKAjEL2hUq8wK73VVfP",
+    "source": "Autre\\MATH_FIN1 PIGIER .pdf",
+    "date": "2026-11-14T15:38:22.794Z"
+  },
+  "fichier:3892bb4c0dcb9cc5cbf80f26f2a5a6e6227c700c": {
+    "id": "wZ9LOfVPN9kXnd3FSjjd",
+    "source": "Autre\\MATH_FIN1-1 PIGIER.pdf",
+    "date": "2026-11-14T15:38:25.019Z"
+  },
+  "fichier:6fcc8420f9d1edd5a2ca2340bcd625ddebcd1939": {
+    "doublon": true
+  },
+  "fichier:45e584b81c58504448ae2ff79c7dc4229015c267": {
+    "id": "NB4MPKFYQhhnAvBOW90p",
+    "source": "Autre\\MfRoBtsFC_IDA2_DASYLVA.pdf",
+    "date": "2026-11-14T15:38:49.445Z"
+  },
+  "fichier:e3f62b21958ba5a7932ce04a1cb442962d60602d": {
+    "id": "wG5tGt5FehUAlRH4mLPZ",
+    "source": "Autre\\poly_RO.pdf",
+    "date": "2026-11-14T15:38:53.525Z"
+  },
+  "fichier:fbb2eeaef00705afc28a2b8636ce4b02eff058b0": {
+    "id": "LvAQJrAPRRJZ26oGY7I6",
+    "source": "Autre\\PREPA BD2026.pdf",
+    "date": "2026-11-14T15:38:57.389Z"
+  },
+  "fichier:e5c4a31c6c96380a25a69f1fbf970a321dc7bd18": {
+    "id": "OISUzDJKGpnQ1KsTLDbt",
+    "source": "Autre\\TD\\TD Math Fin Dr. TIEMELE.pdf",
+    "date": "2026-11-14T15:38:58.876Z"
+  },
+  "fichier:95c4934896d79d8b331ed86f37bc6a1bbc545ffe": {
+    "id": "KJhrrDiAfVm5krL2BtYw",
+    "source": "Autre\\TD\\TD_Proba.pdf",
+    "date": "2026-11-14T15:39:00.133Z"
+  },
+  "fichier:c2a6b883a0d31e09a09f455888dd0a1c8527fd75": {
+    "doublon": true
+  },
+  "fichier:671607aac5b3cfe4e860b495ca49ac51e6127ff3": {
+    "id": "mjNcBBHYqRMf3Q2yLPNE",
+    "source": "Droit\\Droit\\Revision_Droit_Civil.pdf",
+    "date": "2026-11-14T15:39:01.412Z"
+  },
+  "fichier:bb0185decd917953fadee4f162d54dbe752dea2f": {
+    "id": "zpG7NF0MRjv7dSkRZw8k",
+    "source": "Finance-Comptabilité\\BTS 2\\Examen\\Mathématiques financières\\sujet1  BTS IDA math financière et R.O .pdf",
+    "date": "2026-11-14T15:39:04.884Z"
+  },
+  "fichier:2fb4082eca462b336898fa3610dd802ce05ebdf7": {
+    "id": "cZhYahIZvOelckDWQAoi",
+    "source": "Finance-Comptabilité\\BTS 2\\Examen\\Mathématiques financières\\sujet1 BTS IDA math financière , R.O et gestion de stock.pdf",
+    "date": "2026-11-14T15:39:06.339Z"
+  },
+  "fichier:61df1b834ae5ee9be2694bb440ef85cbc7e240eb": {
+    "doublon": true
+  },
+  "fichier:4b102d879c7c6d7412b7b5e129356788892e85c9": {
+    "doublon": true
+  },
+  "fichier:b293bb6be134563c7e7503ab1cfa63ea74a296a5": {
+    "doublon": true
+  },
+  "fichier:c402da845f433f8a93c3ba2012ea6e1e9fa5d610": {
+    "id": "1c0nvxYyfFGaQPhcVQ3M",
+    "source": "Finance-Comptabilité\\Mathématiques financières\\MATHEMATIQUES FINANCIERES 1 Pigier.pdf",
+    "date": "2026-11-14T15:39:07.771Z"
+  },
+  "fichier:e912f2a196de44162ec10a319eb659081e5f6834": {
+    "id": "RCNSKoG97CMgUqLIlTSp",
+    "source": "Gestion\\BTS 2\\Corrigé\\Entrepreneuriat\\corrigé BTS IDA entrepreneuriat.pdf",
+    "date": "2026-11-14T15:39:09.108Z"
+  },
+  "fichier:5f12c17f6227986828e3a9b2d61500dbd382e0d8": {
+    "id": "nrckMVgeUEhdpJFGNHBF",
+    "source": "Gestion\\BTS 2\\Entrepreneuriat\\BTS IDA entrepreneuriat .pdf",
+    "date": "2026-11-14T15:39:11.144Z"
+  },
+  "fichier:e01dadcf143e04458aaf6eabd75da1e424cb3395": {
+    "doublon": true
+  },
+  "fichier:695dab77170c9587330ff0258dd80700791498e8": {
+    "id": "BqkKuFxPGCsiNnIjVkRQ",
+    "source": "Gestion\\BTS 2\\Examen\\Entrepreneuriat\\sujet2 BTS IDA entrepreneuriat.pdf",
+    "date": "2026-11-14T15:39:12.523Z"
+  },
+  "fichier:bfd62b1058a5b82f742175930313e91299793b54": {
+    "doublon": true
+  },
+  "fichier:cd218f0d14f058acf3617d45c9b6a5c9bb09155e": {
+    "doublon": true
+  },
+  "fichier:2a18b3d3c983d587caa0ff0a237e4491bc76d8c1": {
+    "doublon": true
+  },
+  "fichier:298236354ad1cf3b6939a34fb762280dffa4f153": {
+    "doublon": true
+  },
+  "fichier:4bcca9ea32d28b99744f923690489a0681b2d6cc": {
+    "doublon": true
+  },
+  "fichier:f79d8ac8089ac060ac2bf3ec687a4b0a08734106": {
+    "doublon": true
+  },
+  "fichier:7916fa00362320381af243bfbe4bd01c88a76ddf": {
+    "id": "IdR5tmIwePkgboPtVCPm",
+    "source": "Informatique\\BTS 2\\Développement web\\BTS IDA développement web.pdf",
+    "date": "2026-11-14T15:39:15.622Z"
+  },
+  "fichier:fdcef3c15f87b901a92b603149ee5e3c27d0efc1": {
+    "id": "XdPuCDNyRqhJjP8Vdnbk",
+    "source": "Informatique\\BTS 2\\Merise\\BTS IDA merise .pdf",
+    "date": "2026-11-14T15:39:17.119Z"
+  },
+  "fichier:0f19fc579625d68aaf5cad510bced7d9f6800a63": {
+    "doublon": true
+  },
+  "fichier:afd7f872c1c43d24007a67de38f2e9fcdb499944": {
+    "doublon": true
+  },
+  "fichier:15ae3ea3e2af6a24e90d622a20eb5e8ef8bd1765": {
+    "id": "qpqKrLTzqBCkCGaa00oC",
+    "source": "Informatique\\Cours\\Chapitre 3_ Signal analogique et numérique.pdf",
+    "date": "2026-11-14T15:39:20.038Z"
+  },
+  "fichier:3aa589b51665826faae0029b3a06d4a3a5733579": {
+    "id": "pKoAImmCcXkgHGsfslUz",
+    "source": "Informatique\\Cours\\Données\\Chapitre 2 _Les supports de transmissions de données.pdf",
+    "date": "2026-11-14T15:39:26.935Z"
+  },
+  "fichier:83da0363e2804869bcaeb94d57e72bc691b540da": {
+    "id": "RJO3UoS7o29zHH5wBRu2",
+    "source": "Informatique\\Cours\\Réseaux\\Chapitre 3 _Les Notions de base en réseaux.pdf",
+    "date": "2026-11-14T15:39:31.842Z"
+  },
+  "fichier:ae2cad5d0b1602e31e923dce60eca985243cd7fb": {
+    "id": "fFy4c8mmbwwD3HQZvaTT",
+    "source": "Informatique\\Cours\\Réseaux\\Chapitre 4 _Les bases du reseau WLAN.pdf",
+    "date": "2026-11-14T15:39:33.391Z"
+  },
+  "fichier:125721d64c4e3ce81a9c461a239c5746d1f5fe8e": {
+    "doublon": true
+  },
+  "fichier:f5646ed858d7de1615f04dc43ec24fa626eeef2e": {
+    "doublon": true
+  },
+  "fichier:bc72b02c6bbdccc6af8d9990c58366c059d32814": {
+    "doublon": true
+  },
+  "fichier:c807609aaaa9bf225c7dab8e82f549799e3843d2": {
+    "doublon": true
+  },
+  "fichier:5d191e85df8e3301f440d359c7ea1c47f1977bc7": {
+    "id": "QKnr5xThAw8BIgKJ3hyT",
+    "source": "Informatique\\MATHS FINANCIERE FILIERE TERTIAIRE ET INFORMATIQUE (1) (2).pdf",
+    "date": "2026-11-14T15:39:35.876Z"
+  },
+  "fichier:645ca9895ceed1c2ccd597703006b7e2dd7e091e": {
+    "doublon": true
+  },
+  "fichier:3330a397dcc990c7d9daa9a1b417a282f545050a": {
+    "doublon": true
+  },
+  "fichier:8e1a5d97748bd0ad044d93bef07e5d7af70dc6db": {
+    "doublon": true
+  },
+  "fichier:a5494f614f766482b955698214a79d75f6d814d8": {
+    "doublon": true
+  },
+  "fichier:5e2defeafb8c291d1189108bdd6d78afa8661fee": {
+    "id": "rc2FLBfYFmYao88fXkzS",
+    "source": "Langues\\BTS 2\\Examen\\Anglais\\Sujet Anglais BTS IDA.pdf",
+    "date": "2026-11-14T15:39:37.129Z"
+  },
+  "fichier:4d24a1c896eb41bb0aaa5a806ec30907d5e6d7b2": {
+    "id": "102e2OtnDJ039dzLO9ut",
+    "source": "Langues\\Examen\\Anglais\\Sujet ANGLAIS_AFFAIRES1-1.pdf",
+    "date": "2026-11-14T15:39:38.417Z"
+  },
+  "fichier:be72d230166de9a726dca5628a025189b3d37bb9": {
+    "id": "ovfyRUx3w5UUBKp0oNWA",
+    "source": "Langues\\Examen\\Anglais\\Sujet ANGLAIS_AFF_1.pdf",
+    "date": "2026-11-14T15:39:40.450Z"
+  },
+  "fichier:108cdd3c5b487a9c3d2cb52a8a217a22e161fc7b": {
+    "id": "5xITPNVqIQfYmetFl3hL",
+    "source": "Langues\\Examen\\Anglais\\Sujet ANGLAIS_TICS.pdf",
+    "date": "2026-11-14T15:39:41.557Z"
+  },
+  "fichier:7d27dcee10d0e714fe0244970b71526465e2a88f": {
+    "id": "H6uZyi8tXw4vGvtTT7oo",
+    "source": "Mathématiques\\Algèbre\\Algèbre corr_DASYLVA.pdf",
+    "date": "2026-11-14T15:39:44.414Z"
+  },
+  "fichier:12834de1cc7f3405a36a28e1ba01e916706b50c9": {
+    "doublon": true
+  },
+  "fichier:7d580c1575bf1eac970dc60c57ffd9f5e66e14b5": {
+    "id": "vHBtppCgqXxmuiyxIUh3",
+    "source": "Mathématiques\\BTS 2\\BTS IDA MATHS.pdf",
+    "date": "2026-11-14T15:39:46.432Z"
+  },
+  "fichier:455c6dd9dc465e186717e78d4ab60e7e780f4084": {
+    "id": "LZF5zyXzASQ8hko4DSUc",
+    "source": "Mathématiques\\BTS 2\\Examen\\IDA Maths Appli sujet bts_DASYLVA.pdf",
+    "date": "2026-11-14T15:39:52.575Z"
+  },
+  "fichier:1ddd987a3e81e8d941b2e67dbe5488ad452f69dd": {
+    "id": "9FGKZ2G9rV2jzLooNOOd",
+    "source": "Mathématiques\\BTS 2\\Examen\\Sujet Maths BTS 2017.pdf",
+    "date": "2026-11-14T15:39:54.227Z"
+  },
+  "fichier:b5673a293ef6157d8650d612dcebcfdb17d3b10e": {
+    "id": "QiPC1LF2qQKCwRdhU9Vm",
+    "source": "Mathématiques\\BTS 2\\Examen\\Sujet Maths BTS 2018.pdf",
+    "date": "2026-11-14T15:39:56.862Z"
+  },
+  "fichier:58a52684192c2688d5b7965d4a9721350598666e": {
+    "id": "ln0tdllm6ZxEAfth5Avh",
+    "source": "Mathématiques\\BTS 2\\Examen\\Sujet Maths BTS 2019.pdf",
+    "date": "2026-11-14T15:39:58.848Z"
+  },
+  "fichier:b9f9873a7b9ce925e5a120e977b5d0a9d919169b": {
+    "id": "x9D42HvRjG4DfRUYCrCK",
+    "source": "Mathématiques\\BTS 2\\Examen\\sujet1 BTS IDA maths.pdf",
+    "date": "2026-11-14T15:40:01.693Z"
+  },
+  "fichier:8e3ce4e224edde14185592e1a8a30113032d140e": {
+    "doublon": true
+  },
+  "fichier:d8869e11b754e2ccf40a6c8ec3d34d0dc79f3231": {
+    "id": "MNtRETwUCxYslgep38xh",
+    "source": "Mathématiques\\Cours\\Algèbre\\Chapitre 4 - Algèbre de Boole.pdf",
+    "date": "2026-11-14T15:40:03.949Z"
+  },
+  "fichier:3cebeedec287c25ee3380a9eb1be12f1ab473779": {
+    "id": "9nB5OXuReK66NO3bn4rG",
+    "source": "Mathématiques\\Examen\\Algèbre\\Sujet ALGEBRE_LINEAIRE (2).pdf",
+    "date": "2026-11-14T15:40:05.535Z"
+  },
+  "fichier:8bbfe70c8044e142de6f43eb9a9e3c74967d1e37": {
+    "id": "rms3NuAX0pnbQILQuqQe",
+    "source": "Mathématiques\\Examen\\Analyse\\Sujet ANALYSE_MATH-1.pdf",
+    "date": "2026-11-14T15:40:06.820Z"
+  },
+  "fichier:f625c5fdd63657dc8f8ce0381b8b12956d9ea20e": {
+    "id": "Uk1m25a1YIeAyKKOR0a3",
+    "source": "Mathématiques\\Examen\\Analyse\\Sujet ANALYSE_MATH-2.pdf",
+    "date": "2026-11-14T15:40:08.460Z"
+  },
+  "fichier:d665bcbeb9c7df1b0e301e1d304a24f98dbaf2a0": {
+    "doublon": true
+  },
+  "fichier:55933b337d971489956ce5c406f5058178557e24": {
+    "doublon": true
+  },
+  "fichier:6d1f4e4fdecfe887baabc963e3c4d88678d062e3": {
+    "doublon": true
+  },
+  "fichier:c517a874d84109caca60b015a3ffb605a38deb21": {
+    "doublon": true
+  },
+  "fichier:99fc7108cc2dd5370dd403aaef420d0bffa4cb50": {
+    "id": "smDwqADuL6bkupFxtynJ",
+    "source": "Mathématiques\\Probabilités\\Denombrement - Probabilité.pdf",
+    "date": "2026-11-14T15:40:09.981Z"
+  },
+  "fichier:7f1defe0618cd2d35983201eef31f9585c744f6d": {
+    "id": "Ih2nPY9GgLaEmUsM1WKo",
+    "source": "Économie\\BTS 2\\Corrigé\\Économie\\SUJRTS ET CORRIGES BTS ECONOMIE INDUSTRIELLE 2010 A 2024 - Copie.pdf",
+    "date": "2026-11-14T15:40:15.666Z"
+  },
+  "fichier:3b8fa0dc2d93fa42cd4d65346dd21d6d43a43497": {
+    "id": "RzB5C3CWd20ZYtwNho2I",
+    "source": "Économie\\BTS 2\\Économie\\Economie_BTS_2010.pdf",
+    "date": "2026-11-14T15:40:18.421Z"
+  },
+  "fichier:275d67a75f8988923f8987c9a845f189d05610bf": {
+    "id": "FsqEGYMFM4piULmy91gg",
+    "source": "Économie\\BTS 2\\Économie\\Economie_BTS_2012.pdf",
+    "date": "2026-11-14T15:40:20.361Z"
+  },
+  "fichier:d5ed468a6f3bdc766c36f6764b7ef684ab760f80": {
+    "id": "BgZ4arX1d5oY9AuxJLNS",
+    "source": "Économie\\Corrigé\\Économie\\CORRECTION ECONOMIE - PARTIE ECO.pdf",
+    "date": "2026-11-14T15:40:21.559Z"
+  },
+  "fichier:ab346bc1b8d603e7992beaa167aaad74ecc793d3": {
+    "doublon": true
   }
 }

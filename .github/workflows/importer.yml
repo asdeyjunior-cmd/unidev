@@ -9,9 +9,9 @@ on:
         description: "Où chercher"
         type: choice
         default: filiere
-        options: [filiere, tout, hal, wikiversite, wikilivres, zenodo, romans, site]
+        options: [filiere, tout, hal, wikiversite, wikilivres, zenodo, romans, divertissement, site]
       recherche:
-        description: "Thème, titre ou auteur (ex : comptabilité, Zola). Vide = au hasard pour les romans"
+        description: "Thème, titre ou auteur (ex : comptabilité, Zola). Vide = au hasard pour romans et divertissement"
         required: false
         default: ""
       filiere:
@@ -65,6 +65,7 @@ jobs:
           FIL: ${{ inputs.filiere }}
           REMP: ${{ inputs.remplacer }}
           CLOUDINARY_COMPTES: ${{ secrets.CLOUDINARY_COMPTES }}
+          SITES_CONNEXIONS: ${{ secrets.SITES_CONNEXIONS }}
           R2_URL: ${{ secrets.R2_URL }}
           OUTILS_SECRET: ${{ secrets.OUTILS_SECRET }}
           NODE_OPTIONS: --max-old-space-size=5120
@@ -77,6 +78,7 @@ jobs:
             wikilivres)  node importer.js wiki --projet wikilivres --recherche "$RECHERCHE" --max "$MAX" ;;
             site)        node importer.js site --url "$URL" --profondeur "$PROF" --max "$MAX" --remplacer "$REMP" ;;
             romans)      node importer.js romans --recherche "$RECHERCHE" --max "$MAX" ;;
+            divertissement) node importer.js divertissement --recherche "$RECHERCHE" --max "$MAX" ;;
             *)           node importer.js "$SOURCE" --recherche "$RECHERCHE" --max "$MAX" ;;
           esac
           } 2>&1 | tee resultat.txt

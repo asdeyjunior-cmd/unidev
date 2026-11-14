@@ -246,26 +246,45 @@ async function pdfWsExport(titre) {
   return b;
 }
 
-/** Romans de Wikisource. opts : { recherche, max, deja, onEcarte, essai } */
-export async function* romansWikisource({ recherche, max = 20, deja = () => false, onEcarte = () => {}, essai = false }) {
-  const theme = String(recherche || "").trim();
-  const sansTheme = !theme || /^romans?$/i.test(theme);
-  let titres = [];
+/** Livres de divertissement du domaine public (Wikisource) : aventures, policiers, contes, fables, science-fiction… */
+export const CATEGORIES_DIVERTISSEMENT = [
+  "Romans d’aventures", "Romans d'aventures", "Romans policiers", "Romans de science-fiction", "Science-fiction",
+  "Romans fantastiques", "Contes", "Contes de fées", "Fables", "Nouvelles", "Romans historiques", "Romans de cape et d’épée",
+  "Romans d’amour", "Romans pour la jeunesse", "Littérature d’enfance et de jeunesse", "Théâtre", "Comédies", "Récits de voyage",
+];
 
-  // 1. Trouver des romans : la catégorie « Romans », ou une recherche (titre, auteur…) limitée aux romans
+/** Romans de Wikisource. opts : { recherche, max, deja, onEcarte, essai, categories, filiere, genre } */
+export async function* romansWikisource({ recherche, max = 20, deja = () => false, onEcarte = () => {}, essai = false,
+  categories = ["Romans"], filiere = "Littérature", genre = "roman" }) {
+  const theme = String(recherche || "").trim();
+  const sansTheme = !theme || /^(romans?|divertissements?|livres?)$/i.test(theme);
+  let titres = [];
+  const melange = (t) => { for (let i = t.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [t[i], t[j]] = [t[j], t[i]]; } return t; };
+
+  // 1. Trouver des livres : les catégories demandées, ou une recherche (titre, auteur…) limitée à ces catégories
+  // (une catégorie qui n'existe pas sur Wikisource est simplement ignorée)
   if (sansTheme) {
-    let suite = {};
-    while (titres.length < max * 4) {
-      const r = await json(wsApi({ action: "query", list: "categorymembers", cmtitle: "Catégorie:Romans", cmtype: "page", cmnamespace: "0", cmlimit: "200", ...suite }));
-      titres.push(...(r.query?.categorymembers || []).map((m) => m.title));
-      if (!r.continue) break;
-      suite = { cmcontinue: r.continue.cmcontinue };
+    for (const cat of categories) {
+      let suite = {}, lus = 0;
+      try {
+        while (lus < max * 4) {
+          const r = await json(wsApi({ action: "query", list: "categorymembers", cmtitle: `Catégorie:${cat}`, cmtype: "page", cmnamespace: "0", cmlimit: "200", ...suite }));
+          const m = (r.query?.categorymembers || []).map((x) => x.title);
+          titres.push(...m); lus += m.length;
+          if (!r.continue || !m.length) break;
+          suite = { cmcontinue: r.continue.cmcontinue };
+        }
+      } catch { /* catégorie absente ou indisponible */ }
     }
+    if (categories.length > 1) melange(titres);
   } else {
-    for (const q of [`${theme} incategory:Romans`, `${theme} roman`]) {
-      const r = await json(wsApi({ action: "query", list: "search", srsearch: q, srnamespace: "0", srlimit: "100" }));
-      titres = (r.query?.search || []).map((h) => h.title);
-      if (titres.length) break;
+    const requetes = [...categories.map((c) => `${theme} incategory:"${c}"`), `${theme} ${genre}`];
+    for (const q of requetes) {
+      try {
+        const r = await json(wsApi({ action: "query", list: "search", srsearch: q, srnamespace: "0", srlimit: "100" }));
+        titres.push(...(r.query?.search || []).map((h) => h.title));
+      } catch { /* on essaie la suivante */ }
+      if (titres.length >= max * 2) break;
     }
   }
   titres = [...new Set(titres.map((t) => t.split("/")[0]))];
@@ -300,9 +319,9 @@ export async function* romansWikisource({ recherche, max = 20, deja = () => fals
         if (total < 20000) { onEcarte("trop court ou introuvable"); continue; }
         nbChap = chapitres.length;
         buffer = await pdfTexte({
-          titre, sousTitre: `${auteur} · roman`, chapitres,
+          titre, sousTitre: `${auteur} · ${genre}`, chapitres,
           mentions: `Œuvre du domaine public.\nTexte : Wikisource, ${source}\nTranscription : contributeurs de Wikisource, licence CC BY-SA 4.0.\nMis en page par unidev.`,
-          etiquette: "ROMAN",
+          etiquette: genre.toUpperCase(),
         });
       }
     }
@@ -310,8 +329,8 @@ export async function* romansWikisource({ recherche, max = 20, deja = () => fals
     yield {
       cle, titre, nomFichier: `${titre} - ${auteur}.pdf`.replace(/[\\/:*?"<>|]/g, " "), buffer,
       infos: {
-        titre, matiere: auteur, filiere: "Littérature", type: "Roman", niveau: "Autre", annee: "", universite: "Wikisource",
-        description: `Roman de ${auteur}. Œuvre du domaine public${nbChap ? ` (${nbChap} chapitres)` : ""}. Texte de Wikisource (transcription sous licence CC BY-SA 4.0) · Source : ${source}`,
+        titre, matiere: auteur, filiere, type: "Roman", niveau: "Autre", annee: "", universite: "Wikisource",
+        description: `${genre === "roman" ? "Roman" : "Livre de divertissement"} de ${auteur}. Œuvre du domaine public${nbChap ? ` (${nbChap} chapitres)` : ""}. Texte de Wikisource (transcription sous licence CC BY-SA 4.0) · Source : ${source}`,
       },
       licence: "Domaine public", source,
     };
@@ -337,9 +356,39 @@ function genreFichier(b) {
   return "autre";
 }
 
+/* Connexion aux sites partenaires qui demandent un compte (avec leur accord).
+   Secret GitHub SITES_CONNEXIONS (ou ligne du .env), sur une seule ligne :
+   {"fomesoutra.com":"cookie copié depuis le navigateur","autresite.com":"Bearer clé-donnée-par-le-site"}
+   Une valeur qui commence par « Bearer » ou « Basic » est envoyée comme Authorization, sinon comme Cookie. */
+let CONNEXIONS = null;
+function connexionPour(url) {
+  if (CONNEXIONS === null) {
+    try { CONNEXIONS = JSON.parse(process.env.SITES_CONNEXIONS || "{}"); }
+    catch { CONNEXIONS = {}; console.log("SITES_CONNEXIONS illisible : ce doit être du JSON sur une seule ligne."); }
+  }
+  const hote = new URL(url).hostname.replace(/^www\./, "");
+  const cle = Object.keys(CONNEXIONS).find((k) => { const h = k.replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/.*$/, ""); return hote === h || hote.endsWith("." + h); });
+  const v = cle ? String(CONNEXIONS[cle] || "").trim() : "";
+  if (!v) return {};
+  return /^(Bearer|Basic) /i.test(v) ? { Authorization: v } : { Cookie: v.replace(/^cookie:\s*/i, "") };
+}
+// Page de connexion reçue à la place du document : le site demande un compte
+const PAGE_CONNEXION = /\/(login|connexion|signin|sign-in|se-connecter|account\/login|wp-login\.php|user\/login)\b/i;
+const avertis = new Set();
+function signalerConnexion(url) {
+  const h = new URL(url).hostname.replace(/^www\./, "");
+  if (avertis.has(h)) return;
+  avertis.add(h);
+  console.log(`   CONNEXION DEMANDÉE par ${h} : ajoute ce site dans le secret SITES_CONNEXIONS (voir LISEZMOI).`);
+}
+
 async function lirePage(url) {
   return avecRelance(async () => {
-    const r = await fetch(url, { headers: { "User-Agent": NAV, Accept: "text/html,*/*" }, signal: AbortSignal.timeout(60000), redirect: "follow" });
+    const r = await fetch(url, { headers: { "User-Agent": NAV, Accept: "text/html,*/*", ...connexionPour(url) }, signal: AbortSignal.timeout(60000), redirect: "follow" });
+    if ((r.status === 401 || r.status === 403 || PAGE_CONNEXION.test(new URL(r.url).pathname)) && !PAGE_CONNEXION.test(new URL(url).pathname)) {
+      signalerConnexion(url);
+      const e = new Error("connexion demandée"); e.connexion = true; throw e;
+    }
     if (!r.ok) throw new Error(`page ${r.status}${r.status >= 500 || r.status === 429 ? " 503" : ""}`);
     const type = r.headers.get("content-type") || "";
     const buffer = Buffer.from(await r.arrayBuffer());
@@ -374,7 +423,7 @@ export async function* documentsDuSite({ url, profondeur = 3, max = 50, deja = (
     if (pagesVues.has(page)) continue;
     pagesVues.add(page);
     let res;
-    try { res = await lirePage(page); } catch (e) { onEcarte("page illisible"); continue; }
+    try { res = await lirePage(page); } catch (e) { onEcarte(e.connexion ? "compte demandé par le site" : "page illisible"); continue; }
     pagesLues++;
     const html = res.buffer.toString("utf8");
     const titrePage = html2txt((html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || html.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1]).replace(/\s*[-|–]\s*[^-|–]*$/, "");
@@ -427,7 +476,7 @@ export async function* documentsDuSite({ url, profondeur = 3, max = 50, deja = (
       let buffer = Buffer.alloc(0), format = e || "pdf", nomFichier = nomUrl || `${titre}.${format}`;
       if (!essai) {
         let f;
-        try { f = await lirePage(lien); } catch { onEcarte("téléchargement impossible"); continue; }
+        try { f = await lirePage(lien); } catch (err) { onEcarte(err.connexion ? "compte demandé par le site" : "téléchargement impossible"); continue; }
         const genre = genreFichier(f.buffer);
         if (genre === "html") {
           // Page de téléchargement intermédiaire : on la visitera pour trouver le vrai fichier
