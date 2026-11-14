@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { canonFiliere, nomComplet } from "../../js/filieres.js";
 // Fonctions sans connexion réseau (testables) utilisées par importer.js
 
@@ -329,4 +331,44 @@ export function motsPourFiliere(filiere) {
   const mots = [nomComplet(f).replace(/-/g, " "), ...matieres];
   const vus = new Set();
   return mots.filter((m) => { const k = cle(m); if (!k || vus.has(k)) return false; vus.add(k); return true; }).slice(0, 10);
+}
+
+/**
+ * Lit un fichier JSON du dépôt (journal…). S'il contient des marques de conflit Git
+ * (<<<<<<< ======= >>>>>>>), garde les deux versions, les fusionne et répare le fichier.
+ */
+export function lireJsonRepare(chemin, defaut = {}) {
+  if (!fs.existsSync(chemin)) return defaut;
+  const brut = fs.readFileSync(chemin, "utf8");
+  try { return JSON.parse(brut); } catch { /* on tente la réparation */ }
+  const lignes = brut.split(/\r?\n/);
+  const cote = (garder) => {
+    let zone = 0; // 0 commun, 1 notre côté, 2 leur côté
+    return lignes.filter((l) => {
+      if (/^<{7}( |$)/.test(l)) { zone = 1; return false; }
+      if (/^={7}$/.test(l) && zone) { zone = 2; return false; }
+      if (/^>{7}( |$)/.test(l)) { zone = 0; return false; }
+      return zone === 0 || zone === garder;
+    }).join("\n");
+  };
+  const essayer = (t) => {
+    try { return JSON.parse(t); } catch {}
+    // Petites réparations : virgules manquantes ou en trop entre les entrées
+    const r = t.replace(/\}\s*\n(\s*")/g, "},\n$1").replace(/,(\s*[}\]])/g, "$1");
+    try { return JSON.parse(r); } catch { return null; }
+  };
+  const a = essayer(cote(1)), b = essayer(cote(2)), c = a || b ? null : essayer(lignes.filter((l) => !/^(<{7}|={7}|>{7})/.test(l)).join("\n"));
+  let res = a || b ? { ...(b || {}), ...(a || {}) } : null;
+  if (!res && c) res = c;
+  if (!res) {
+    // Dernier recours : récupérer les entrées une par une
+    res = {};
+    const t = lignes.filter((l) => !/^(<{7}|={7}|>{7})/.test(l)).join("\n");
+    for (const m of t.matchAll(/^ {2}("(?:[^"\\]|\\.)*")\s*:\s*(\{[\s\S]*?\n {2}\}|[^\n{][^\n]*?)(?=,?\s*\n)/gm)) {
+      try { res[JSON.parse(m[1])] = JSON.parse(m[2]); } catch {}
+    }
+  }
+  console.log(`(${path.basename(chemin)} contenait un conflit Git : réparé, ${Object.keys(res).length} entrées gardées)`);
+  try { fs.writeFileSync(chemin, JSON.stringify(res, null, 2)); } catch {}
+  return res;
 }

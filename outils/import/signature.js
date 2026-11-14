@@ -18,7 +18,7 @@ import { comptes, choisirCompte, basculer, comptePlein, r2Actif, envoyerR2, MAX_
 import admin from "firebase-admin";
 import cloudinaryPkg from "cloudinary";
 const cloudinary = cloudinaryPkg.v2; // module CommonJS : objet entier puis sa partie v2 (toutes versions de Node)
-import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF, titreAReparer, sansCodeDevant } from "./outils.js";
+import { avecRelance, telecharger, decouper, TAILLE_MORCEAU, MAX_IMAGE_PDF, titreAReparer, sansCodeDevant, lireJsonRepare } from "./outils.js";
 import { remplacerSignature, tamponUnidev, sansModification, annulerAnciennesMarques } from "./marque.js";
 import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
 
@@ -73,7 +73,7 @@ const concernes = snap.docs.filter((s) => {
 // Adresse du fichier ORIGINAL de chaque document (notée par l'import dans import-journal.json)
 const originaux = new Map();
 try {
-  const journal = JSON.parse(fs.readFileSync(path.join(ICI, "import-journal.json"), "utf8"));
+  const journal = lireJsonRepare(path.join(ICI, "import-journal.json"), {});
   for (const [k, v] of Object.entries(journal)) if (k.startsWith("site:") && v?.id) originaux.set(v.id, k.slice(5));
 } catch {}
 

@@ -22,7 +22,7 @@ import { comptes, choisirCompte, basculer, comptePlein, r2Actif, envoyerR2, aper
 import {
   TYPES, NIVEAUX, EXTENSIONS, TAILLE_MORCEAU, MAX_IMAGE_PDF, MAX_FICHIER,
   infosDepuisChemin, lireCsv, normaliserNiveau, normaliserType, licenceAutorisee,
-  filiereDepuisDomaines, couper, decouper, couvertureSvg, avecRelance, telecharger,
+  filiereDepuisDomaines, couper, decouper, couvertureSvg, avecRelance, telecharger, lireJsonRepare,
 } from "./outils.js";
 import { canonFiliere, ajouterFilieres, filiereConnue, nomComplet, toutesLesFilieres } from "../../js/filieres.js";
 import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
@@ -60,7 +60,7 @@ if (!["dossier", "hal", "wiki", "zenodo", "tout", "filiere", "recolte", "romans"
 
 /* ---------- Journal (reprise après coupure) ---------- */
 const JOURNAL = path.resolve("import-journal.json");
-const journal = fs.existsSync(JOURNAL) ? JSON.parse(fs.readFileSync(JOURNAL, "utf8")) : {};
+const journal = lireJsonRepare(JOURNAL, {});
 const noter = (cle, valeur) => { journal[cle] = valeur; fs.writeFileSync(JOURNAL, JSON.stringify(journal, null, 2)); };
 
 /* ---------- Connexions (seulement hors mode essai) ---------- */
