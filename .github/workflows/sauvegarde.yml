@@ -1,5 +1,5 @@
 # Sauvegarde de la base chaque semaine (fichiers gardés 30 jours dans GitHub) + classement des contributeurs.
-# Pour récupérer une sauvegarde : Actions > « Sauvegarde de la base » > la dernière exécution > Artifacts.
+# Pour récupérer une sauvegarde : Actions > « Sauvegarde de la base » > la dernière exécution > Artifacts (fichier .7z chiffré).
 name: Sauvegarde de la base
 
 on:
@@ -29,13 +29,23 @@ jobs:
         run: |
           set -o pipefail
           node sauvegarde.js 2>&1 | tee resultat.txt
-      - name: Garder les fichiers 30 jours
+      # Dépôt public : la sauvegarde est chiffrée avant d'être gardée (mot de passe = secret SAUVEGARDE_MDP).
+      # Pour l'ouvrir : télécharge-la dans Artifacts, puis ouvre le .7z avec 7-Zip et ce mot de passe.
+      - name: Chiffrer la sauvegarde
+        env: { MDP: "${{ secrets.SAUVEGARDE_MDP }}" }
+        run: |
+          if [ -z "$MDP" ]; then echo "Secret SAUVEGARDE_MDP absent : sauvegarde non gardée (le dépôt est public, elle ne doit pas l'être en clair)."; rm -rf sauvegarde; exit 0; fi
+          command -v 7z >/dev/null || sudo apt-get install -y -qq p7zip-full >/dev/null
+          7z a -t7z -mhe=on -p"$MDP" sauvegarde-unidev.7z ./sauvegarde/ > /dev/null
+          rm -rf sauvegarde
+      - name: Garder le fichier chiffré 30 jours
         uses: actions/upload-artifact@v4
         with:
           name: sauvegarde-unidev-${{ github.run_number }}
-          path: outils/import/sauvegarde/
+          path: outils/import/sauvegarde-unidev.7z
+          if-no-files-found: ignore
           retention-days: 30
       - name: Résumé
         if: always()
         run: |
-          { echo "### Sauvegarde"; echo '```'; cat resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+          { echo "### Sauvegarde"; grep -q "Sauvegarde terminée" resultat.txt && echo "Terminée (fichier chiffré dans Artifacts)." || echo "Échec : voir l'étape « Sauvegarde » ci-dessus."; } >> "$GITHUB_STEP_SUMMARY" || true

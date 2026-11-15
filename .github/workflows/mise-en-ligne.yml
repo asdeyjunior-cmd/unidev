@@ -1,10 +1,11 @@
-# Chaque nuit (et à la demande) : pages Google des nouveaux documents, mise en ligne, signalement à Bing.
+# Chaque nuit et à chaque envoi : pages Google des nouveaux documents, mise en ligne, signalement à Bing.
 name: Mettre le site en ligne
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
+    # Les commits du robot (journal d'import) ne relancent pas la mise en ligne
     paths-ignore: ["outils/import/import-journal.json"]
   schedule:
     - cron: "17 2 * * *"   # tous les jours vers 2 h du matin (heure d'Abidjan)

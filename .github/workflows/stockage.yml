@@ -1,4 +1,4 @@
-# Toutes les 6 heures : le site envoie les fichiers des étudiants sur le compte Cloudinary le plus libre.
+# Toutes les 6 heures : le site envoie les fichiers des étudiants sur le compte Cloudinary le plus libre (secours si R2 est indisponible).
 name: Choisir le compte Cloudinary
 
 on:

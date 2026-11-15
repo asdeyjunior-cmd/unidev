@@ -31,4 +31,4 @@ jobs:
       - name: Résumé
         if: always()
         run: |
-          { echo "### Rapport du matin"; echo '```'; cat resultat.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY" || true
+          { echo "### Rapport du matin"; echo "Envoyé sur ton téléphone (le détail n'est pas affiché ici : le dépôt est public)."; } >> "$GITHUB_STEP_SUMMARY" || true
