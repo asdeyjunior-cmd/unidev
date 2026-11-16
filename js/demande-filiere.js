@@ -1,15 +1,10 @@
 // « Ma filière n'est pas là » : l'étudiant indique sa filière, l'admin est prévenu.
-import { demanderFiliere, filieresPretes, auth } from "./firebase.js";
+import { demanderFiliere, filieresPretes } from "./firebase.js";
 import { CATEGORIES } from "./config.js";
 import { canonFiliere, toutesLesFilieres, verifierFiliere } from "./filieres.js";
 import { modal, toast, esc } from "./ui.js";
 
 export function ouvrirDemandeFiliere(texte = "") {
-  // Il faut être connecté pour envoyer une demande (anti-spam) : sinon, on invite à se connecter
-  if (!auth.currentUser) {
-    const page = location.pathname.split("/").pop() || "index.html";
-    return (location.href = `connexion.html?next=${encodeURIComponent(page + location.search)}`);
-  }
   const m = modal(`
     <h3>Ta filière n'est pas sur unidev ?</h3>
     <p class="muted" style="margin:6px 0 14px">Dis-nous laquelle : on cherchera des documents pour elle en priorité.</p>

@@ -87,7 +87,7 @@ async function payer({ idToken, packs, methode }, env) {
   // En parallèle : qui est l'étudiant, jeton Google et magasin Jèko (au lieu de les attendre l'un après l'autre)
   const [user] = await Promise.all([quiEstCe(idToken, env), jetonGoogle(env).catch(() => {}), magasin(env).catch(() => {})]);
   packs = Math.floor(Number(packs));
-  if (!(packs >= 1 && packs <= 10)) throw erreur("Nombre de packs invalide");
+  if (!(packs >= 1 && packs <= 50)) throw erreur("Nombre de packs invalide");
   if (!METHODES.includes(methode)) throw erreur("Moyen de paiement inconnu");
   const prix = Number(env.PRIX_PACK || 100), parPack = Number(env.CREDITS_PACK || 5);
   const montant = packs * prix, credits = packs * parPack;
