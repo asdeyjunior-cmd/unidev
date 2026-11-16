@@ -20,6 +20,7 @@ jobs:
       - name: Installation et clés
         env:
           CLE: ${{ secrets.FIREBASE_CLE_JSON }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: |
           npm install --no-audit --no-fund
           printf '%s' "$CLE" > cle-firebase.json

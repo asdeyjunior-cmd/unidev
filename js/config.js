@@ -49,9 +49,8 @@ export const paymentConfig = {
 export const APP_CHECK_CLE = "";
 // E-mail affiché sur la page À propos (laisser vide pour masquer le bloc Contact)
 export const CONTACT_EMAIL = "asdeyjunior@gmail.com";
-// Notifications de l'admin sur téléphone et PC (appli gratuite ntfy, voir README).
-// Ce nom est secret : ne le partage pas. Laisser vide pour désactiver.
-export const NTFY_TOPIC = "unidev-admin-6368bb96b270a92d";
+// Notifications de l'admin : le serveur s'en charge (secret NTFY_TOPIC dans Cloudflare).
+// Le topic n'est volontairement plus écrit ici, pour qu'il ne soit pas visible dans le code public du site.
 export const CREDITS_BIENVENUE = 2;        // crédits offerts à chaque nouvel inscrit
 export const CREDITS_PAR_PUBLICATION = 1; // crédits gagnés quand un document envoyé est validé
 

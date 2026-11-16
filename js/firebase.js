@@ -10,15 +10,19 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { canonFiliere, ajouterFilieres, filiereConnue } from "./filieres.js";
 import { NOMS_MORCEAUX, parMorceau } from "./morceaux.js";
-import { firebaseConfig, paymentConfig, CREDITS_PAR_PUBLICATION, CREDITS_BIENVENUE, NTFY_TOPIC, APP_CHECK_CLE } from "./config.js";
+import { firebaseConfig, paymentConfig, CREDITS_PAR_PUBLICATION, CREDITS_BIENVENUE, APP_CHECK_CLE } from "./config.js";
 
-/** Prévient l'admin sur son téléphone et son PC (ntfy). Ne bloque jamais, aucune donnée personnelle envoyée. */
-function prevenirAdmin(title, message, page) {
-  if (!NTFY_TOPIC) return;
+/** Prévient l'admin (ntfy) en passant par le serveur, pour ne pas exposer le topic dans le code du site.
+ *  type : "document" | "demande" | "signalement" | "paiement". Ne bloque jamais, aucune donnée personnelle envoyée. */
+function prevenirAdmin(type, info = "") {
   try {
-    fetch("https://ntfy.sh/", {
-      method: "POST", keepalive: true,
-      body: JSON.stringify({ topic: NTFY_TOPIC, title, message, priority: 4, tags: ["bell"], click: `https://unidev-2026.web.app/${page}` }),
+    const u = auth.currentUser;
+    if (!u || !paymentConfig.serveur) return;        // notification seulement si connecté (sinon l'admin voit tout dans son panneau)
+    u.getIdToken().then((idToken) => {
+      fetch(paymentConfig.serveur.replace(/\/$/, "") + "/prevenir", {
+        method: "POST", keepalive: true, headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken, type, info: String(info || "").slice(0, 120) }),
+      }).catch(() => {});
     }).catch(() => {});
   } catch {}
 }
@@ -304,7 +308,7 @@ export async function createDocument(data, fichier) {
   batch.set(ref, { ...data, statut: "en_attente", telechargements: 0, creditAccorde: false, createdAt: serverTimestamp() });
   batch.set(fileRef(ref.id), { ...fichier, auteurId: data.auteurId });
   await batch.commit();
-  prevenirAdmin("Document à valider", "Un nouveau document attend ta validation.", "admin.html");
+  prevenirAdmin("document");
   return ref;
 }
 
@@ -470,7 +474,7 @@ export async function demanderFiliere({ filiere, niveau = "", universite = "", c
     if (!document || e?.code !== "permission-denied") throw e;
     await addDoc(demandesCol, { ...base, contact: `Cherche : ${document}`.slice(0, 120) });
   }
-  prevenirAdmin(document ? "Document demandé" : "Filière demandée", [document, filiere, niveau, universite].filter(Boolean).join(" · "), "admin.html");
+  prevenirAdmin("demande", [document, filiere, niveau, universite].filter(Boolean).join(" · "));
 }
 /* ---------- Opportunités (stages, emplois, bourses, concours…) ----------
    opportunites/{id}                : résumé public (titre, type, organisme, lieu, date limite, aperçu)
@@ -520,7 +524,7 @@ export async function supprimerOpportunite(id) {
 
 /** Signalement d'un document : notification immédiate de l'admin + trace dans la base (si les règles l'autorisent) */
 export async function signalerDocument(d, motif, detail = "") {
-  prevenirAdmin("Document signalé", `${d.titre} : ${motif}${detail ? ` (${detail})` : ""}`, `admin.html`);
+  prevenirAdmin("signalement", `${d.titre} : ${motif}`);
   try {
     await addDoc(collection(db, "signalements"), { docId: d.id, titre: String(d.titre || "").slice(0, 140), motif: String(motif).slice(0, 80), detail: String(detail).slice(0, 150), uid: auth.currentUser?.uid || "", createdAt: serverTimestamp() });
   } catch {}
@@ -626,7 +630,7 @@ export async function createPaiement(user, profile, { packs, operateur, numero, 
     createdAt: serverTimestamp(),
   });
   // Notification : un appui ouvre directement ce paiement dans l'admin, prêt à confirmer
-  prevenirAdmin("Paiement à confirmer", `${packs * paymentConfig.prixPack} FCFA (${packs * paymentConfig.creditsParPack} crédits) via ${operateur}, réf. ${reference}. Appuie pour confirmer.`, `admin.html?paiement=${ref.id}`);
+  prevenirAdmin("paiement", `${packs * paymentConfig.prixPack} FCFA via ${operateur}, réf. ${reference}`);
   return ref;
 }
 /* ---------- Paiement automatique (serveur Jèko, voir serveur/worker.js) ---------- */

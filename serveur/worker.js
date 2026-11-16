@@ -18,7 +18,10 @@
  *   Secrets : JEKO_API_KEY, JEKO_API_KEY_ID, JEKO_STORE_ID, JEKO_WEBHOOK_SECRET, FIREBASE_CLE_JSON
  *   Texte   : SITE (https://unidev-2026.web.app), FIREBASE_API_KEY, PRIX_PACK (100), CREDITS_PACK (5)
  *   Secret  : OUTILS_SECRET (mot de passe des outils GitHub pour /copier et /deposer)
+ *   Secret  : NTFY_TOPIC (nom du salon ntfy de l'admin ; garde-le ici, pas dans le code du site)
  *   Liaison R2 : FICHIERS -> le bucket « unidev-fichiers »
+ *
+ *   POST /prevenir { idToken, type, info }       -> prévient l'admin (ntfy). type : document|demande|signalement|paiement
  */
 const JEKO = "https://api.jeko.africa/partner_api";
 const METHODES = ["wave", "orange", "mtn", "moov", "djamo"];
@@ -63,6 +66,7 @@ export default {
     }
     try {
       if (url.pathname === "/jeko") return await avisJeko(request, env);
+      if (url.pathname === "/prevenir") return json(await prevenir(await request.json().catch(() => ({})), env));
       if (url.pathname === "/envoyer") return json(await envoyerFichier(request, env, url));
       if (url.pathname === "/deposer") return json(await deposerFichier(request, env, url));
       if (url.pathname === "/copier") return json(await copierFichier(request, env));
@@ -83,7 +87,7 @@ async function payer({ idToken, packs, methode }, env) {
   // En parallèle : qui est l'étudiant, jeton Google et magasin Jèko (au lieu de les attendre l'un après l'autre)
   const [user] = await Promise.all([quiEstCe(idToken, env), jetonGoogle(env).catch(() => {}), magasin(env).catch(() => {})]);
   packs = Math.floor(Number(packs));
-  if (!(packs >= 1 && packs <= 50)) throw erreur("Nombre de packs invalide");
+  if (!(packs >= 1 && packs <= 10)) throw erreur("Nombre de packs invalide");
   if (!METHODES.includes(methode)) throw erreur("Moyen de paiement inconnu");
   const prix = Number(env.PRIX_PACK || 100), parPack = Number(env.CREDITS_PACK || 5);
   const montant = packs * prix, credits = packs * parPack;
@@ -162,6 +166,28 @@ async function avisJeko(request, env) {
   return new Response("ok"); // 200 : Jèko n'a pas besoin de renvoyer l'avis
 }
 
+/* ---------- Notifier l'admin (ntfy) : le topic reste côté serveur, jamais dans le code du site ---------- */
+const MODELES_AVIS = {
+  document: ["Document à valider", "Un nouveau document attend ta validation."],
+  demande: ["Filière demandée", "Une filière ou un document a été demandé."],
+  signalement: ["Document signalé", "Un document a été signalé."],
+  paiement: ["Paiement à confirmer", "Un paiement manuel attend ta confirmation."],
+};
+async function prevenir({ idToken, type, info }, env) {
+  if (!env.NTFY_TOPIC) return { ok: false };
+  const m = MODELES_AVIS[type];
+  if (!m) return { ok: false };
+  // Il faut être connecté : empêche n'importe qui d'inonder l'admin de fausses alertes
+  await quiEstCe(idToken, env);
+  const extra = String(info || "").replace(/[\r\n]+/g, " ").replace(/[^\P{Cc}]/gu, "").slice(0, 120).trim();
+  const site = (env.SITE || "https://unidev-2026.web.app").replace(/\/$/, "");
+  await fetch("https://ntfy.sh/", {
+    method: "POST",
+    body: JSON.stringify({ topic: String(env.NTFY_TOPIC || "").trim().replace(/^["']+|["']+$/g, ""), title: m[0], message: extra ? `${m[1]} ${extra}` : m[1], priority: 4, tags: ["bell"], click: `${site}/admin.html` }),
+  }).catch(() => {});
+  return { ok: true };
+}
+
 const PAYE = ["success", "successful", "succeeded", "completed", "paid", "done"];
 const RATE = ["error", "failed", "failure", "canceled", "cancelled", "expired", "rejected"];
 const etatJeko = (j) => String(j?.status ?? j?.data?.status ?? j?.state ?? "").toLowerCase();
@@ -212,6 +238,11 @@ const CORS_FICHIERS = {
   "Access-Control-Expose-Headers": "Content-Length, Content-Range, Content-Type, ETag",
 };
 const MAX_DOC = 100 * 1024 * 1024, MAX_IMAGE = 15 * 1024 * 1024;
+// Types qui peuvent exécuter du code dans le navigateur (vol de session, hameçonnage) : jamais servis tels quels
+const TYPE_DANGEREUX = /^\s*(text\/html|application\/xhtml|image\/svg|text\/xml|application\/xml|text\/javascript|application\/javascript|application\/ecmascript)/i;
+// Images réellement sûres à afficher en ligne (le SVG est volontairement exclu : il peut contenir du script)
+const IMAGE_SURE = /^\s*image\/(jpeg|png|webp|gif|bmp|avif|heic|heif)\b/i;
+const typeSur = (t) => TYPE_DANGEREUX.test(t) ? "application/octet-stream" : String(t || "application/octet-stream").split(";")[0].slice(0, 120);
 const nomPropre = (n) => String(n || "fichier").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").slice(-90) || "fichier";
 const cleValide = (c) => /^(documents|images|opportunites)\/[\w./-]{3,200}$/.test(c) && !c.includes("..");
 const lienFichier = (url, cle) => `${url.origin}/f/${cle.split("/").map(encodeURIComponent).join("/")}`;
@@ -238,6 +269,16 @@ async function lireFichier(request, env, url) {
   if (!obj) return new Response("Introuvable", { status: 404, headers: CORS_FICHIERS });
   const h = new Headers(CORS_FICHIERS);
   obj.writeHttpMetadata(h);
+  // Sécurité : ne jamais laisser un fichier envoyé par un étudiant s'exécuter dans le navigateur.
+  // Le type stocké est forcé à une valeur sûre, le navigateur ne devine plus le type, et tout ce qui
+  // n'est pas une vraie image (documents, SVG, HTML…) est téléchargé au lieu d'être ouvert dans la page.
+  const typeStocke = String(obj.httpMetadata?.contentType || "");
+  h.set("Content-Type", typeSur(typeStocke));
+  h.set("X-Content-Type-Options", "nosniff");
+  if (!IMAGE_SURE.test(typeStocke)) {
+    const nom = cle.split("/").pop() || "fichier";
+    h.set("Content-Disposition", `attachment; filename="${nom.replace(/[^\w.-]+/g, "_")}"`);
+  }
   h.set("ETag", obj.httpEtag);
   h.set("Cache-Control", "public, max-age=31536000, immutable");
   h.set("Accept-Ranges", "bytes");
@@ -272,8 +313,10 @@ async function envoyerFichier(request, env, url) {
   const taille = Number(request.headers.get("Content-Length") || 0);
   if (!taille) throw erreur("Fichier vide");
   if (taille > (genre === "image" ? MAX_IMAGE : MAX_DOC)) throw erreur(genre === "image" ? "Image trop lourde (15 Mo maximum)." : "Fichier trop lourd (100 Mo maximum).", 413);
-  const type = (request.headers.get("Content-Type") || "application/octet-stream").split(";")[0].slice(0, 120);
-  if (genre === "image" && !/^image\//.test(type)) throw erreur("Ce n'est pas une image.");
+  const typeRecu = (request.headers.get("Content-Type") || "application/octet-stream").split(";")[0].slice(0, 120);
+  if (genre === "image" && !IMAGE_SURE.test(typeRecu)) throw erreur("Image non acceptée (formats : JPG, PNG, WebP, GIF).");
+  // On ne stocke jamais un type qui pourrait s'exécuter (HTML, SVG, JS…)
+  const type = genre === "image" ? typeRecu : typeSur(typeRecu);
   const cle = `${genre === "image" ? "images" : "documents"}/${user.uid}/${idAleatoire()}/${nomPropre(url.searchParams.get("nom"))}`;
   const obj = await ranger(env, cle, request.body, taille, type);
   return { url: lienFichier(url, cle), cle, bytes: obj?.size || taille };

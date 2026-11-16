@@ -17,7 +17,8 @@ import "dotenv/config";
 import admin from "firebase-admin";
 import { lireCatalogue } from "./catalogue.js";
 import { canonFiliere } from "../../js/filieres.js";
-import { NTFY_TOPIC } from "../../js/config.js";
+// Topic ntfy : lu depuis le secret GitHub NTFY_TOPIC (plus ecrit dans le code public du site)
+const NTFY_TOPIC = (process.env.NTFY_TOPIC || "").trim().replace(/^["']+|["']+$/g, "");
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const ESSAI = process.argv.includes("--essai");
