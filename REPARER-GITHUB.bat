@@ -29,9 +29,27 @@ echo  1/4 Enregistrement des fichiers de ce PC...
 "%GIT%" add -A
 "%GIT%" diff --cached --quiet || "%GIT%" commit -q -m "Mise a jour du %date%"
 
+rem Le dossier doit etre relie au depot unidev (et pas a un autre, comme unidev-robot)
+"%GIT%" remote set-url origin https://github.com/asdeyjunior-cmd/unidev.git 2>nul || "%GIT%" remote add origin https://github.com/asdeyjunior-cmd/unidev.git
+echo  Dossier relie a : https://github.com/asdeyjunior-cmd/unidev
+
 echo  2/4 Recuperation de la version de GitHub...
 "%GIT%" fetch origin
 if errorlevel 1 ( echo  Impossible de joindre GitHub. Verifie internet et relance. & pause & exit /b )
+
+rem Si les deux versions se raccordent normalement, pas besoin de forcer
+"%GIT%" pull --rebase --autostash origin main >nul 2>nul
+if not errorlevel 1 (
+  "%GIT%" push origin HEAD:main
+  if not errorlevel 1 (
+    "%GIT%" branch --set-upstream-to=origin/main >nul 2>nul
+    echo.
+    echo  Termine : ce PC et GitHub sont a jour, sans rien forcer.
+    echo  Pour les prochaines fois, utilise ENVOYER.bat.
+    pause & exit /b
+  )
+)
+"%GIT%" rebase --abort >nul 2>nul
 
 echo  3/4 Copie de securite de la version de GitHub (branche copie-github)...
 "%GIT%" branch -f copie-github origin/main >nul 2>nul

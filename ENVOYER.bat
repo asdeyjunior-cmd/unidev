@@ -20,6 +20,9 @@ if not defined GIT (
   pause & exit /b
 )
 
+rem Toujours relie au depot unidev
+"%GIT%" remote set-url origin https://github.com/asdeyjunior-cmd/unidev.git >nul 2>nul
+
 set "J=outils\import\import-journal.json"
 set "JL=%TEMP%\unidev-journal-local.json"
 
