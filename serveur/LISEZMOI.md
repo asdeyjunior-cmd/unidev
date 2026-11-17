@@ -68,3 +68,16 @@ téléchargements gratuits et illimités, 10 Go de stockage offerts (au-delà : 
 8. Actions > **Déménager les fichiers vers R2** : d'abord avec « Essai » coché, puis sans. Relance jusqu'à « Tout est copié ».
 
 Les envois du site et des outils vont sur R2 dès que le serveur est prêt ; sinon ils repartent sur Cloudinary (jamais sur iugeyztf).
+
+## Notifications de secours par Telegram
+
+Si « Tester les notifications » répond que ntfy.sh ne répond pas (code 522), ajoute Telegram en secours :
+1. Dans Telegram, ouvre **@BotFather**, envoie `/newbot`, choisis un nom : il te donne un **jeton** (ex. `123456:ABC...`).
+2. Ouvre ton nouveau bot et envoie-lui « bonjour ».
+3. Ouvre dans le navigateur `https://api.telegram.org/bot<TON_JETON>/getUpdates` : repère `"chat":{"id":123456789` ; ce nombre est ton **chat id**.
+4. Cloudflare > Worker unidev-paiement > Settings > Variables and Secrets, ajoute (type Secret) :
+   - `TELEGRAM_TOKEN` = le jeton
+   - `TELEGRAM_CHAT` = le chat id
+5. Deploy, puis reclique sur « Tester les notifications ».
+
+ntfy reste essayé en premier ; Telegram ne sert que si ntfy échoue.

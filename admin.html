@@ -172,7 +172,7 @@
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idToken, type: "test" }),
         });
         const j = await r.json().catch(() => ({}));
-        if (j.ok) toast(`Notification envoyée sur le sujet ${j.sujet}. Si ton téléphone ne sonne pas, vérifie que l'appli ntfy est abonnée à ce même sujet.`);
+        if (j.ok) toast(j.par === "telegram" ? "Notification envoyée sur Telegram." : `Notification envoyée sur le sujet ${j.sujet}. Si ton téléphone ne sonne pas, vérifie que l'appli ntfy est abonnée à ce même sujet.`);
         else toast(j.raison || j.erreur || j.error || `Le serveur a répondu ${r.status}. As-tu recollé le dernier worker.js dans Cloudflare ?`, "err");
       } catch (err) { toast("Serveur injoignable : " + err.message, "err"); }
       e.target.disabled = false;

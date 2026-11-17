@@ -52,7 +52,7 @@ export default {
     // Page d'état (aucun secret affiché) : dit ce qui manque encore
     if (request.method === "GET") {
       const etat = { ok: true, service: "unidev-paiement", jeko: !!env.JEKO_API_KEY, site: !!env.SITE, firebase: !!env.FIREBASE_CLE_JSON, webhook: !!env.JEKO_WEBHOOK_SECRET,
-        stockage: !!env.FICHIERS, outils: !!env.OUTILS_SECRET, notifications: !!env.NTFY_TOPIC,
+        stockage: !!env.FICHIERS, outils: !!env.OUTILS_SECRET, notifications: !!env.NTFY_TOPIC, telegram: !!(env.TELEGRAM_TOKEN && env.TELEGRAM_CHAT),
         // Empreinte du mot de passe des outils (4 caractères, ne révèle rien) : doit être la même que celle affichée par GitHub
         empreinte: env.OUTILS_SECRET ? (await empreinte(env.OUTILS_SECRET)) : "" };
       if (url.pathname === "/etat" && env.FIREBASE_CLE_JSON) {
@@ -178,24 +178,49 @@ const MODELES_AVIS = {
 const ONGLET_AVIS = { document: "documents", demande: "filieres", signalement: "signalements", paiement: "paiements" };
 
 async function prevenir({ idToken, type, info }, env) {
-  if (!env.NTFY_TOPIC) return { ok: false, raison: "NTFY_TOPIC n'est pas réglé dans Cloudflare (Worker > Settings > Variables and Secrets)." };
+  const tg = env.TELEGRAM_TOKEN && env.TELEGRAM_CHAT;
+  if (!env.NTFY_TOPIC && !tg) return { ok: false, raison: "NTFY_TOPIC n'est pas réglé dans Cloudflare (Worker > Settings > Variables and Secrets)." };
   const m = MODELES_AVIS[type];
   if (!m) return { ok: false, raison: "type inconnu" };
   // Il faut être connecté : empêche n'importe qui d'inonder l'admin de fausses alertes
   await quiEstCe(idToken, env);
   const extra = String(info || "").replace(/[\r\n]+/g, " ").replace(/[^\P{Cc}]/gu, "").slice(0, 120).trim();
   const site = (env.SITE || "https://unidev-2026.web.app").replace(/\/$/, "");
-  try {
-    const r = await fetch("https://ntfy.sh/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic: env.NTFY_TOPIC, title: m[0], message: extra ? `${m[1]} ${extra}` : m[1], priority: 4, tags: ["bell"], click: `${site}/admin.html?onglet=${ONGLET_AVIS[type] || "documents"}` }),
-    });
-    if (!r.ok) return { ok: false, raison: `ntfy.sh a refusé l'envoi (code ${r.status}) : ${(await r.text().catch(() => "")).slice(0, 150)}` };
-    return { ok: true, sujet: env.NTFY_TOPIC.slice(0, 3) + "…" + env.NTFY_TOPIC.slice(-2) };
-  } catch (e) {
-    return { ok: false, raison: "ntfy.sh injoignable : " + e.message };
+  const lien = `${site}/admin.html?onglet=${ONGLET_AVIS[type] || "documents"}`;
+  const texte = extra ? `${m[1]} ${extra}` : m[1];
+  const raisons = [];
+
+  if (env.NTFY_TOPIC) {
+    const topic = String(env.NTFY_TOPIC).trim();
+    // 3 essais, par deux chemins différents : ntfy.sh est parfois lent à répondre aux serveurs Cloudflare
+    const essais = [
+      () => fetch("https://ntfy.sh/", { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ topic, title: m[0], message: texte, priority: 4, tags: ["bell"], click: lien }) }),
+      () => fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, { method: "POST",
+        headers: { Title: m[0].normalize("NFD").replace(/[\u0300-\u036f]/g, ""), Priority: "4", Tags: "bell", Click: lien }, body: texte }),
+      () => fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, { method: "POST", body: `${m[0]} : ${texte}` }),
+    ];
+    for (const essai of essais) {
+      try {
+        const r = await essai();
+        if (r.ok) return { ok: true, par: "ntfy", sujet: topic.slice(0, 3) + "…" + topic.slice(-2) };
+        raisons.push(`ntfy code ${r.status}`);
+      } catch (e) { raisons.push("ntfy injoignable"); }
+    }
   }
+
+  // Secours : Telegram (TELEGRAM_TOKEN + TELEGRAM_CHAT dans Cloudflare)
+  if (tg) {
+    try {
+      const r = await fetch(`https://api.telegram.org/bot${String(env.TELEGRAM_TOKEN).trim()}/sendMessage`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: String(env.TELEGRAM_CHAT).trim(), text: `${m[0]}\n${texte}\n${lien}`, disable_web_page_preview: true }),
+      });
+      if (r.ok) return { ok: true, par: "telegram" };
+      raisons.push(`Telegram code ${r.status}`);
+    } catch { raisons.push("Telegram injoignable"); }
+  }
+  return { ok: false, raison: `Échec de l'envoi (${raisons.join(", ")}). ntfy.sh ne répond pas aux serveurs Cloudflare : ajoute Telegram en secours (voir serveur/LISEZMOI.md).` };
 }
 
 const PAYE = ["success", "successful", "succeeded", "completed", "paid", "done"];
