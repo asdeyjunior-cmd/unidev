@@ -37,7 +37,7 @@ export default {
     const propre = (v) => String(v || "").trim().replace(/^["']+|["']+$/g, "");
     env = { ...env, SITE: sites[0] || "", FIREBASE_API_KEY: propre(env.FIREBASE_API_KEY), JEKO_API_KEY: propre(env.JEKO_API_KEY),
       JEKO_API_KEY_ID: propre(env.JEKO_API_KEY_ID), JEKO_STORE_ID: propre(env.JEKO_STORE_ID), JEKO_WEBHOOK_SECRET: propre(env.JEKO_WEBHOOK_SECRET),
-      OUTILS_SECRET: propre(env.OUTILS_SECRET) };
+      OUTILS_SECRET: propre(env.OUTILS_SECRET), NTFY_TOPIC: propre(env.NTFY_TOPIC) };
     const cors = {
       "Access-Control-Allow-Origin": sites.includes(origine) ? origine : sites[0] || "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -52,7 +52,7 @@ export default {
     // Page d'état (aucun secret affiché) : dit ce qui manque encore
     if (request.method === "GET") {
       const etat = { ok: true, service: "unidev-paiement", jeko: !!env.JEKO_API_KEY, site: !!env.SITE, firebase: !!env.FIREBASE_CLE_JSON, webhook: !!env.JEKO_WEBHOOK_SECRET,
-        stockage: !!env.FICHIERS, outils: !!env.OUTILS_SECRET,
+        stockage: !!env.FICHIERS, outils: !!env.OUTILS_SECRET, notifications: !!env.NTFY_TOPIC,
         // Empreinte du mot de passe des outils (4 caractères, ne révèle rien) : doit être la même que celle affichée par GitHub
         empreinte: env.OUTILS_SECRET ? (await empreinte(env.OUTILS_SECRET)) : "" };
       if (url.pathname === "/etat" && env.FIREBASE_CLE_JSON) {
@@ -172,23 +172,30 @@ const MODELES_AVIS = {
   demande: ["Filière demandée", "Une filière ou un document a été demandé."],
   signalement: ["Document signalé", "Un document a été signalé."],
   paiement: ["Paiement à confirmer", "Un paiement manuel attend ta confirmation."],
+  test: ["Test unidev", "Les notifications fonctionnent."],
 };
 // Onglet de la page admin ouvert quand on touche la notification
 const ONGLET_AVIS = { document: "documents", demande: "filieres", signalement: "signalements", paiement: "paiements" };
 
 async function prevenir({ idToken, type, info }, env) {
-  if (!env.NTFY_TOPIC) return { ok: false };
+  if (!env.NTFY_TOPIC) return { ok: false, raison: "NTFY_TOPIC n'est pas réglé dans Cloudflare (Worker > Settings > Variables and Secrets)." };
   const m = MODELES_AVIS[type];
-  if (!m) return { ok: false };
+  if (!m) return { ok: false, raison: "type inconnu" };
   // Il faut être connecté : empêche n'importe qui d'inonder l'admin de fausses alertes
   await quiEstCe(idToken, env);
   const extra = String(info || "").replace(/[\r\n]+/g, " ").replace(/[^\P{Cc}]/gu, "").slice(0, 120).trim();
   const site = (env.SITE || "https://unidev-2026.web.app").replace(/\/$/, "");
-  await fetch("https://ntfy.sh/", {
-    method: "POST",
-    body: JSON.stringify({ topic: String(env.NTFY_TOPIC || "").trim().replace(/^["']+|["']+$/g, ""), title: m[0], message: extra ? `${m[1]} ${extra}` : m[1], priority: 4, tags: ["bell"], click: `${site}/admin.html?onglet=${ONGLET_AVIS[type] || "documents"}` }),
-  }).catch(() => {});
-  return { ok: true };
+  try {
+    const r = await fetch("https://ntfy.sh/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ topic: env.NTFY_TOPIC, title: m[0], message: extra ? `${m[1]} ${extra}` : m[1], priority: 4, tags: ["bell"], click: `${site}/admin.html?onglet=${ONGLET_AVIS[type] || "documents"}` }),
+    });
+    if (!r.ok) return { ok: false, raison: `ntfy.sh a refusé l'envoi (code ${r.status}) : ${(await r.text().catch(() => "")).slice(0, 150)}` };
+    return { ok: true, sujet: env.NTFY_TOPIC.slice(0, 3) + "…" + env.NTFY_TOPIC.slice(-2) };
+  } catch (e) {
+    return { ok: false, raison: "ntfy.sh injoignable : " + e.message };
+  }
 }
 
 const PAYE = ["success", "successful", "succeeded", "completed", "paid", "done"];

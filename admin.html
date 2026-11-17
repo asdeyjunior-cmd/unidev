@@ -54,6 +54,7 @@
       <div id="zone" class="hidden">
         <h1 class="page-title">Modération</h1>
         <div class="stats-admin" id="stats-admin"></div>
+        <p style="margin:10px 0 0"><button class="btn btn-sm btn-ghost-ink" id="test-ntfy" type="button">Tester les notifications</button></p>
         <div class="tabs tabs-wrap" style="margin-top:16px">
           <button class="active" data-s="doc:en_attente">Documents à valider <span id="n-doc"></span></button>
           <button data-s="pay:en_attente">Paiements à confirmer <span id="n-pay"></span></button>
@@ -91,12 +92,12 @@
       listByStatus, setStatus, removeDocument, publishDocument, getFileInfo,
       listPaiements, confirmPaiement, modifierClassement, listOpportunites, creerOpportunite, supprimerOpportunite, rejectPaiement, login, logout, checkAdmin, rebuildIndex, watchEnAttente, harmoniserFilieres, trouverDoublons, supprimerDocuments,
       listDemandes, ajouterFiliereOfficielle, supprimerDemandes, filieresPretes, getSearchIndex,
-      listSignalements, supprimerSignalements, getDocument,
+      listSignalements, supprimerSignalements, getDocument, auth,
     } from "./js/firebase.js";
     import { toutesLesFilieres } from "./js/filieres.js";
     import { uploadFile } from "./js/cloudinary.js";
     import { photoLegere, estImage, ACCEPT_IMAGES } from "./js/photos-pdf.js";
-    import { CATEGORIES } from "./js/config.js";
+    import { CATEGORIES, paymentConfig } from "./js/config.js";
     import { initLayout, docCard, toast, esc, modal, formatDate, fileModal } from "./js/ui.js";
 
     const $ = (id) => document.getElementById(id);
@@ -161,6 +162,21 @@
       if (paiementVise || ongletVise) document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("active", x.dataset.s === current));
       load(); suivre(); statistiques();
     });
+
+    // Envoie une notification de test et dit exactement ce qui bloque
+    $("test-ntfy").onclick = async (e) => {
+      e.target.disabled = true;
+      try {
+        const idToken = await auth.currentUser.getIdToken();
+        const r = await fetch(paymentConfig.serveur.replace(/\/$/, "") + "/prevenir", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ idToken, type: "test" }),
+        });
+        const j = await r.json().catch(() => ({}));
+        if (j.ok) toast(`Notification envoyée sur le sujet ${j.sujet}. Si ton téléphone ne sonne pas, vérifie que l'appli ntfy est abonnée à ce même sujet.`);
+        else toast(j.raison || j.erreur || j.error || `Le serveur a répondu ${r.status}. As-tu recollé le dernier worker.js dans Cloudflare ?`, "err");
+      } catch (err) { toast("Serveur injoignable : " + err.message, "err"); }
+      e.target.disabled = false;
+    };
 
     /* ---------- Notifications : suivi en direct de ce qui attend ---------- */
     let vus = null; // identifiants déjà connus (null = premier chargement)
