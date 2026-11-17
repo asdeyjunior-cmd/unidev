@@ -60,6 +60,7 @@
           <button data-s="doc:publie">Publiés</button>
           <button data-s="doc:rejete">Refusés</button>
           <button data-s="pay:confirme">Paiements confirmés</button>
+          <button data-s="sig:liste">Signalements <span id="n-sig"></span></button>
           <button data-s="fil:demandes">Filières demandées <span id="n-fil"></span></button>
           <button data-s="opp:liste">Opportunités</button>
         </div>
@@ -90,6 +91,7 @@
       listByStatus, setStatus, removeDocument, publishDocument, getFileInfo,
       listPaiements, confirmPaiement, modifierClassement, listOpportunites, creerOpportunite, supprimerOpportunite, rejectPaiement, login, logout, checkAdmin, rebuildIndex, watchEnAttente, harmoniserFilieres, trouverDoublons, supprimerDocuments,
       listDemandes, ajouterFiliereOfficielle, supprimerDemandes, filieresPretes, getSearchIndex,
+      listSignalements, supprimerSignalements, getDocument,
     } from "./js/firebase.js";
     import { toutesLesFilieres } from "./js/filieres.js";
     import { uploadFile } from "./js/cloudinary.js";
@@ -102,6 +104,9 @@
     // Ouvert depuis la notification d'un paiement : onglet Paiements, ce paiement en premier
     const paiementVise = new URLSearchParams(location.search).get("paiement");
     if (paiementVise) current = "pay:en_attente";
+    // Ouvert depuis une notification : le bon onglet directement
+    const ongletVise = { signalements: "sig:liste", filieres: "fil:demandes", documents: "doc:en_attente", paiements: "pay:en_attente" }[new URLSearchParams(location.search).get("onglet")];
+    if (ongletVise) current = ongletVise;
     let items = [];
 
     // Seul le compte admin (UID dans parametres/admin) voit la modération.
@@ -153,7 +158,7 @@
       if (!res.ok) return showDiagnostic(user, res);
       $("login-zone").classList.add("hidden");
       $("zone").classList.remove("hidden");
-      if (paiementVise) document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("active", x.dataset.s === current));
+      if (paiementVise || ongletVise) document.querySelectorAll(".tabs button").forEach((x) => x.classList.toggle("active", x.dataset.s === current));
       load(); suivre(); statistiques();
     });
 
@@ -290,6 +295,23 @@
 
     /* ---------- Filières demandées ---------- */
     let groupes = [];
+    let signales = [];
+    function sigCard(g, i) {
+      const lignes = g.signalements.map((s) => `<li><b>${esc(s.motif || "?")}</b>${s.detail ? ` : ${esc(s.detail)}` : ""} <span class="muted">· ${esc(formatDate(s.createdAt))}</span></li>`).join("");
+      return `<article class="card">
+        <div class="card-body">
+          <h3>${esc(g.titre || "Document")}</h3>
+          <p class="muted">${g.signalements.length} signalement(s)</p>
+          <ul style="margin:6px 0 0;padding-left:18px">${lignes}</ul>
+          <div class="card-actions">
+            <button class="btn btn-sm btn-ghost" data-act="sig-voir" data-id="${i}">Voir le document</button>
+            <button class="btn btn-sm btn-danger" data-act="sig-retirer" data-id="${i}">Retirer du site</button>
+            <button class="btn btn-sm btn-ghost-ink" data-act="sig-ignorer" data-id="${i}">Ignorer</button>
+          </div>
+        </div>
+      </article>`;
+    }
+
     function filCard(g, i) {
       const connue = toutesLesFilieres().includes(g.filiere);
       const n = g.demandes.length;
@@ -394,6 +416,16 @@
       const [kind, statut] = current.split(":");
       $("list").innerHTML = `<div class="loader"></div>`;
       if (kind === "opp") { $("reclasser").hidden = true; return chargerOpportunites(); }
+      if (kind === "sig") {
+        $("reclasser").hidden = true;
+        try {
+          signales = await listSignalements();
+          const n = signales.reduce((a, g) => a + g.signalements.length, 0);
+          $("n-sig").textContent = n ? `(${n})` : "";
+          $("list").innerHTML = signales.length ? signales.map(sigCard).join("") : `<div class="empty">Aucun signalement pour le moment.</div>`;
+        } catch (e) { toast(e.message, "err"); }
+        return;
+      }
       if (kind === "fil") {
         try {
           await filieresPretes.catch(() => {});
@@ -498,6 +530,33 @@
     $("list").addEventListener("click", async (e) => {
       const { act, id } = e.target.dataset;
       if (!act) return;
+      if (act.startsWith("sig-")) {
+        const g = signales[Number(id)];
+        if (!g) return;
+        const ids = g.signalements.map((s) => s.id);
+        e.target.disabled = true;
+        try {
+          if (act === "sig-voir") {
+            const d = await getDocument(g.docId);
+            if (!d) { toast("Ce document n'existe plus.", "err"); e.target.disabled = false; return; }
+            const info = await getFileInfo(g.docId);
+            fileModal(d, info, { texte: `${esc(d.filiere || "")} · ${esc(d.type || "")} · ${esc(d.niveau || "")}`, bouton: "Ouvrir le fichier" });
+            e.target.disabled = false;
+            return;
+          }
+          if (act === "sig-retirer") {
+            if (!confirm(`Retirer « ${g.titre} » du site ? Il passe dans « Refusés » (tu pourras le republier).`)) { e.target.disabled = false; return; }
+            await setStatus(g.docId, "rejete");
+            await supprimerSignalements(ids);
+            toast("Document retiré du site.");
+          } else {
+            await supprimerSignalements(ids);
+            toast("Signalement ignoré.");
+          }
+          load(); counts();
+        } catch (err) { toast(err.message, "err"); e.target.disabled = false; }
+        return;
+      }
       if (act.startsWith("fil-")) {
         const g = groupes[Number(id)];
         if (!g) return;

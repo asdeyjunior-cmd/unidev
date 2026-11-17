@@ -295,7 +295,16 @@ export async function listPublishedPage(sort = "recent", cursor = null, size = 8
   };
 }
 export async function listByStatus(statut) {
-  return mapSnap(await getDocs(query(docsCol, where("statut", "==", statut), limit(statut === "publie" ? 60 : 150))));
+  const date = (d) => d.createdAt?.seconds || 0;
+  // Publiés et refusés : les plus récents en premier (index statut + createdAt déjà en place)
+  if (statut !== "en_attente") {
+    try {
+      return mapSnap(await getDocs(query(docsCol, where("statut", "==", statut), orderBy("createdAt", "desc"), limit(statut === "publie" ? 60 : 150))));
+    } catch { /* index pas encore prêt : tri sur place ci-dessous */ }
+    return mapSnap(await getDocs(query(docsCol, where("statut", "==", statut), limit(statut === "publie" ? 60 : 150)))).sort((a, b) => date(b) - date(a));
+  }
+  // À valider : les plus anciens en premier (premier arrivé, premier servi)
+  return mapSnap(await getDocs(query(docsCol, where("statut", "==", statut), limit(150)))).sort((a, b) => date(a) - date(b));
 }
 export async function listMine(uid) {
   return mapSnap(await getDocs(query(docsCol, where("auteurId", "==", uid), limit(200))));
@@ -567,6 +576,25 @@ export async function listDemandes() {
 export async function ajouterFiliereOfficielle(f) {
   await setDoc(filieresRef, { liste: arrayUnion(f) }, { merge: true });
   ajouterFilieres([f]);
+}
+/** Admin : signalements regroupés par document (le plus signalé en premier) */
+export async function listSignalements() {
+  const snap = await getDocs(query(collection(db, "signalements"), orderBy("createdAt", "desc"), limit(200)));
+  const groupes = new Map();
+  snap.docs.forEach((s) => {
+    const x = { id: s.id, ...s.data() };
+    const g = groupes.get(x.docId) || { docId: x.docId, titre: x.titre, signalements: [], dernier: x.createdAt?.seconds || 0 };
+    g.signalements.push(x);
+    groupes.set(x.docId, g);
+  });
+  return [...groupes.values()].sort((a, b) => b.signalements.length - a.signalements.length || b.dernier - a.dernier);
+}
+export async function supprimerSignalements(ids) {
+  for (let i = 0; i < ids.length; i += 400) {
+    const batch = writeBatch(db);
+    ids.slice(i, i + 400).forEach((id) => batch.delete(doc(db, "signalements", id)));
+    await batch.commit();
+  }
 }
 export async function supprimerDemandes(ids) {
   for (let i = 0; i < ids.length; i += 400) {

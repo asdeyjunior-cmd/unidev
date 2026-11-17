@@ -173,6 +173,9 @@ const MODELES_AVIS = {
   signalement: ["Document signalé", "Un document a été signalé."],
   paiement: ["Paiement à confirmer", "Un paiement manuel attend ta confirmation."],
 };
+// Onglet de la page admin ouvert quand on touche la notification
+const ONGLET_AVIS = { document: "documents", demande: "filieres", signalement: "signalements", paiement: "paiements" };
+
 async function prevenir({ idToken, type, info }, env) {
   if (!env.NTFY_TOPIC) return { ok: false };
   const m = MODELES_AVIS[type];
@@ -183,7 +186,7 @@ async function prevenir({ idToken, type, info }, env) {
   const site = (env.SITE || "https://unidev-2026.web.app").replace(/\/$/, "");
   await fetch("https://ntfy.sh/", {
     method: "POST",
-    body: JSON.stringify({ topic: String(env.NTFY_TOPIC || "").trim().replace(/^["']+|["']+$/g, ""), title: m[0], message: extra ? `${m[1]} ${extra}` : m[1], priority: 4, tags: ["bell"], click: `${site}/admin.html` }),
+    body: JSON.stringify({ topic: String(env.NTFY_TOPIC || "").trim().replace(/^["']+|["']+$/g, ""), title: m[0], message: extra ? `${m[1]} ${extra}` : m[1], priority: 4, tags: ["bell"], click: `${site}/admin.html?onglet=${ONGLET_AVIS[type] || "documents"}` }),
   }).catch(() => {});
   return { ok: true };
 }
