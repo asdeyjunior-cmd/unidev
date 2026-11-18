@@ -25491,5 +25491,593 @@
     "source": "https://www.aidexam.com/annales/BTS%20Economie%20sociale%20et%20familiale%20[BTS%20ESF]/all/all/51/all",
     "licence": "autorisation de www.aidexam.com",
     "date": "2026-11-17T19:54:36.156Z"
+  },
+  "wiki:fr.wikibooks.org:Veille technologique en Génie Civil": {
+    "id": "fN0iWiam4D8VHf4K2JTA",
+    "source": "https://fr.wikibooks.org/wiki/Veille_technologique_en_G%C3%A9nie_Civil",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-18T21:11:45.651Z"
+  },
+  "wiki:fr.wikibooks.org:Armée ou défense civile non-violente ?": {
+    "id": "gAB9D4gbqNJlZv5Mp7GD",
+    "source": "https://fr.wikibooks.org/wiki/Arm%C3%A9e_ou_d%C3%A9fense_civile_non-violente_%3F",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-18T21:11:54.064Z"
+  },
+  "zenodo:23621246": {
+    "id": "MK8QooBAW46MdeYoExKe",
+    "source": "https://doi.org/10.5281/zenodo.23621246",
+    "licence": "CC BY",
+    "date": "2026-11-18T21:12:41.140Z"
+  },
+  "zenodo:18011816": {
+    "id": "T2UACP2SfJX2o9S1J3F9",
+    "source": "https://doi.org/10.5281/zenodo.18011816",
+    "licence": "CC BY",
+    "date": "2026-11-18T21:12:46.112Z"
+  },
+  "zenodo:17762224": {
+    "id": "x8CAhPD4poewYkGK1ok9",
+    "source": "https://doi.org/10.5281/zenodo.17762224",
+    "licence": "CC BY",
+    "date": "2026-11-18T21:12:51.735Z"
+  },
+  "zenodo:23869158": {
+    "id": "Ttyrd6EUa2YfVGgl0WBH",
+    "source": "https://doi.org/10.5281/zenodo.23869158",
+    "licence": "CC BY",
+    "date": "2026-11-18T21:12:57.664Z"
+  },
+  "zenodo:22802870": {
+    "id": "ShLui1t1pQj61pnznKQN",
+    "source": "https://doi.org/10.5281/zenodo.22802870",
+    "licence": "CC BY",
+    "date": "2026-11-18T21:13:03.892Z"
+  },
+  "zenodo:15064352": {
+    "id": "Bu5QSy4diTyf1AthyFnP",
+    "source": "https://doi.org/10.5281/zenodo.15064352",
+    "licence": "CC BY",
+    "date": "2026-11-18T21:13:18.604Z"
+  },
+  "site:https://www.aidexam.com/file/8831/download?token=fnGfjy_z": {
+    "id": "WhcGSLdroLgmwma4q05i",
+    "source": "https://www.aidexam.com/annales/bac-sti-genie-optique/all/all/1139/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T21:27:33.570Z"
+  },
+  "site:https://www.fomesoutra.com/docs-par-nos-ambassadeurs/7698-svt-td-l10-la-reproduction-chez-les-spermaphytes/file": {
+    "id": "EZcSeaFWcYhP70MQiMxv",
+    "source": "https://www.fomesoutra.com/docs-par-nos-ambassadeurs?limit=50&limitstart=950",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T21:29:25.492Z"
+  },
+  "site:https://www.fomesoutra.com/docs-par-nos-ambassadeurs/8194-biogeographie-tropicale-l3/file": {
+    "id": "5M4hxdHfAcqJyrAU11XI",
+    "source": "https://www.fomesoutra.com/docs-par-nos-ambassadeurs?limit=50&limitstart=850",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T21:29:33.466Z"
+  },
+  "zenodo:18639332": {
+    "id": "ahtsh2XF6xjvByFkyMmq",
+    "source": "https://doi.org/10.5281/zenodo.18639332",
+    "licence": "CC BY",
+    "date": "2026-11-18T21:51:02.368Z"
+  },
+  "site:https://www.fomesoutra.com/docs-par-nos-ambassadeurs/8191-agroclimatologie-tropicale/file": {
+    "id": "wZka1HO5hhj3XFulUVil",
+    "source": "https://www.fomesoutra.com/docs-par-nos-ambassadeurs?limit=50&limitstart=850",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:07:51.592Z"
+  },
+  "site:https://www.fomesoutra.com/docs-par-nos-ambassadeurs/22582-nutrition-vegetale-l2-agri-iga-upgc-by-sn/file": {
+    "id": "mxXUQVDp810joqHZ6Q84",
+    "source": "https://www.fomesoutra.com/docs-par-nos-ambassadeurs?limit=50&limitstart=50",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:08:26.862Z"
+  },
+  "site:https://www.fomesoutra.com/espace-prof/18847-progression-de-comptabilite-analytique-premiere-g2-2024-2025-by-tehua/file": {
+    "doublon": true
+  },
+  "site:https://www.fomesoutra.com/espace-prof/18748-progression-1-bt-comptabilite-commerce-2024-2025-by-tehua/file": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/9285/download?token=yb8qdtXS": {
+    "id": "MjesEqvONrweuiCAOIPS",
+    "source": "https://www.aidexam.com/annales/tag/Comptabilit%C3%A9/3057",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T22:40:31.063Z"
+  },
+  "wiki:fr.wikiversity.org:Notions de base en finance": {
+    "id": "HoRcACnrIECJdirei7nB",
+    "source": "https://fr.wikiversity.org/wiki/Notions_de_base_en_finance",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-18T22:40:45.772Z"
+  },
+  "wiki:fr.wikiversity.org:Contrôle de gestion dans les administrations publiques": {
+    "id": "pWEsHfqsKmrT6zzERS4C",
+    "source": "https://fr.wikiversity.org/wiki/Contr%C3%B4le_de_gestion_dans_les_administrations_publiques",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-18T22:40:53.493Z"
+  },
+  "wiki:fr.wikiversity.org:Branches de la finance": {
+    "id": "H22qce05l4AaejFv6qyN",
+    "source": "https://fr.wikiversity.org/wiki/Branches_de_la_finance",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-18T22:41:10.815Z"
+  },
+  "wiki:fr.wikiversity.org:Consolidation comptable": {
+    "id": "OmrSaAzkJUHFI8o3d0nS",
+    "source": "https://fr.wikiversity.org/wiki/Consolidation_comptable",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-18T22:41:14.274Z"
+  },
+  "wiki:fr.wikiversity.org:Cadres généraux des finances publiques": {
+    "id": "xpFRGA0BEDdwHzppXTHh",
+    "source": "https://fr.wikiversity.org/wiki/Cadres_g%C3%A9n%C3%A9raux_des_finances_publiques",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-18T22:41:28.184Z"
+  },
+  "wiki:fr.wikibooks.org:Finances locales": {
+    "id": "12kzjDsrCKtLayqVTx6X",
+    "source": "https://fr.wikibooks.org/wiki/Finances_locales",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-18T22:41:42.196Z"
+  },
+  "wiki:fr.wikibooks.org:La science de la finance": {
+    "id": "UPedSxhBP4vZxGtApdsT",
+    "source": "https://fr.wikibooks.org/wiki/La_science_de_la_finance",
+    "licence": "CC BY-SA 4.0",
+    "date": "2026-11-18T22:41:50.561Z"
+  },
+  "zenodo:3782758": {
+    "id": "dVEpTrc91sIsRcjjqwTe",
+    "source": "https://doi.org/10.5281/zenodo.3782758",
+    "licence": "CC BY",
+    "date": "2026-11-18T22:42:07.328Z"
+  },
+  "zenodo:18463523": {
+    "id": "TxN3xzD6aZs7qHt1ta11",
+    "source": "https://doi.org/10.5281/zenodo.18463523",
+    "licence": "CC BY",
+    "date": "2026-11-18T22:42:13.276Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/26998-doc-oral-bac-bepc-by-tehua/file": {
+    "id": "VQcUyB9Kf0i4NsDRZIr1",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:48:39.879Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/26429-fasicule-danglais-3ieme-projet-worksheets-by-tehua/file": {
+    "id": "gw9rr78nHco839lEXSon",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:48:51.795Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/26038-document-danglais-tle-my-apc-workbook-by-tehua/file": {
+    "id": "QWmP146qSl5x0VMBToL7",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:48:58.336Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/26037-document-danglais-2nde-my-apc-workbook-by-tehua/file": {
+    "id": "a40HxLR67t3GKa6fYy3D",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:49:05.037Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/24811-my-worksheet-english-6ieme-by-tehua/file": {
+    "id": "3oNsXE5bBe7DWujTdQYv",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:49:12.334Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/24810-my-worksheet-english-5ieme-by-tehua/file": {
+    "id": "EgYj9J9aWhXnAIo0OX9M",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:49:19.997Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/24809-my-worksheet-english-4ieme-by-tehua/file": {
+    "id": "FdcBWD7SSbId9JmKe8vJ",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:49:25.839Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/24808-my-worksheet-english-3ieme-by-tehua/file": {
+    "id": "Hxga7afxq2B9mbClxaOb",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:49:31.681Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/24807-my-workbook-english-6eme-by-tehua/file": {
+    "id": "vK9QdhDi5dfhnaoAIJkf",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:49:37.624Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/24806-cours-danglais-niveau-3ieme-by-tehua/file": {
+    "id": "hncb7go0EqxDwGueqUIB",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:49:49.253Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/23925-habilete-workbook-fh3-tle-by-tehua/file": {
+    "id": "5zs7ZpIl9i4AgqLCB1X8",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:49:56.030Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/23924-habilete-workbook-fh2-1iere-by-tehua/file": {
+    "id": "UWcGu9tvPZfvLE5MyWSz",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:50:01.798Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/23317-cours-danglais-1iere-g2-et-bt-by-tehua/file": {
+    "id": "kyK26j7B3IgMPxAmJdiu",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:50:09.641Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/22818-cours-complet-danglais-tle-2025-2026/file": {
+    "id": "eM1n3eNUrf7BQy5Kr0bD",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:50:18.912Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-danglais/22817-cours-complet-danglais-6ieme-2025-2026/file": {
+    "id": "6oKcWmsh4aCMnUYG2Ffr",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-danglais",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T22:50:26.372Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-de-physique-chimie/19247-livre-arex-pc-sujets-corriges-tle-c-d-by-tehua/file": {
+    "id": "zgKwC6H2ZEqrVoQQEhHa",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-de-physique-chimie?limit=50&limitstart=50",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T23:00:12.467Z"
+  },
+  "site:https://www.fomesoutra.com/sujets/espace-prof/prof-de-physique-chimie/19219-fascicule-corriges-terminale-dexercices-pc-tle-d-c2005-2006-by-tehua/file": {
+    "id": "uGjanD5mezlvvzBaFQjP",
+    "source": "https://www.fomesoutra.com/sujets/espace-prof/prof-de-physique-chimie?limit=50&limitstart=50",
+    "licence": "autorisation de www.fomesoutra.com",
+    "date": "2026-11-18T23:00:16.729Z"
+  },
+  "site:https://www.aidexam.com/file/8731/download?token=q-Idny-U": {
+    "id": "OGxRcFQUpY2Eycl7zmgg",
+    "source": "https://www.aidexam.com/annales/tag/Professionnels/2343",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:20:36.799Z"
+  },
+  "site:https://www.aidexam.com/file/3364/download?token=Q_ZDJqMe": {
+    "id": "K33fEaE2mIoU6eUkBH7h",
+    "source": "https://www.aidexam.com/annales/tag/Professionnels/2343",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:20:42.942Z"
+  },
+  "site:https://www.aidexam.com/file/9283/download?token=XGCuC-Dp": {
+    "id": "ZhluSgfFi5GxmmQFUdB2",
+    "source": "https://www.aidexam.com/annales/tag/Professionnels/2343",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:20:49.749Z"
+  },
+  "site:https://www.aidexam.com/file/11146/download?token=snbo_tDS": {
+    "id": "ZkosuUNLVu9MKzd5Qaa8",
+    "source": "https://www.aidexam.com/annales/tag/Sciences%20physiques/1379",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:22:43.565Z"
+  },
+  "site:https://www.aidexam.com/file/2592/download?token=JEzK3Y4Y": {
+    "id": "pQC4OnGmlDx2w1BgLFEo",
+    "source": "https://www.aidexam.com/annales/tag/Sciences%20physiques/1379",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:22:49.442Z"
+  },
+  "site:https://www.aidexam.com/file/2582/download?token=BtbFAedQ": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/4933/download?token=vEo8VmEQ": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/5000/download?token=L0vx30rQ": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/11152/download?token=yG0ntoYe": {
+    "id": "kZG9wpDU0gjLpYJFlA4b",
+    "source": "https://www.aidexam.com/annales/tag/Transport/5197",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:26:02.417Z"
+  },
+  "site:https://www.aidexam.com/file/9464/download?token=svqCA9ps": {
+    "id": "tiCqDkUG45v2kdvkNNUT",
+    "source": "https://www.aidexam.com/annales/tag/Transport/5197",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:26:06.793Z"
+  },
+  "site:https://www.aidexam.com/file/6099/download?token=QpQ-jO_s": {
+    "id": "OreYwEG75e2NLyUfjN2S",
+    "source": "https://www.aidexam.com/annales/tag/Transport/5197",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:26:11.205Z"
+  },
+  "site:https://www.aidexam.com/file/8143/download?token=dXhy5iNQ": {
+    "id": "Edlj7NLRabGMl82rlKUZ",
+    "source": "https://www.aidexam.com/annales/tag/Physique/5252",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:27:39.734Z"
+  },
+  "site:https://www.aidexam.com/file/6216/download?token=VdAm8B_w": {
+    "id": "MqkLhDKin5onMVUNqTr6",
+    "source": "https://www.aidexam.com/annales/tag/Physique/5252",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:27:45.360Z"
+  },
+  "site:https://www.aidexam.com/file/7481/download?token=W5dhbhEw": {
+    "id": "3vhJUDgWo7vsUMuShvuq",
+    "source": "https://www.aidexam.com/annales/tag/Physique/5252",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:27:51.915Z"
+  },
+  "site:https://www.aidexam.com/file/10640/download?token=PU4EWRQJ": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/11219/download?token=BwV8xrOI": {
+    "id": "jv6oq7TRcQL6lRuJKZf4",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:37:43.918Z"
+  },
+  "site:https://www.aidexam.com/file/10950/download?token=bdoE83N2": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/10949/download?token=ikBPMyIl": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/11221/download?token=zpI8SsKe": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/10943/download?token=llriS4wz": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/9838/download?token=qKH7Vkxt": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/9836/download?token=Kbs554Yo": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/8289/download?token=CBz0yD7v": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/8287/download?token=gw5bwCB9": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/8286/download?token=zz5wOU8L": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/8284/download?token=M8SyUjEZ": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/8282/download?token=kHFZO17M": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/8280/download?token=_QtbxANB": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/8278/download?token=IIwZE0eR": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/11220/download?token=8do6C8x6": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/8296/download?token=DfDim9nc": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/8294/download?token=zQt-lXyA": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/8292/download?token=2TyqKFdI": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/8290/download?token=cdUkwN5p": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/11223/download?token=HlavEbAL": {
+    "id": "pkNwp64eyEk3skzc9vJL",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:38:18.696Z"
+  },
+  "site:https://www.aidexam.com/file/11226/download?token=zA93pQA6": {
+    "id": "gFXvN0tQazUeyyxc5gny",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:38:25.169Z"
+  },
+  "site:https://www.aidexam.com/file/11224/download?token=wyDmTVkn": {
+    "id": "keHAUCep2OAClzBXzfRh",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:38:31.795Z"
+  },
+  "site:https://www.aidexam.com/file/10946/download?token=AFV20Gyu": {
+    "id": "gxWj7RzLfTv1Ah8xnkCv",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:38:37.984Z"
+  },
+  "site:https://www.aidexam.com/file/10948/download?token=zkmom9xn": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/10945/download?token=C50-w3k-": {
+    "id": "ykv8ur8S2NDKULCvFJTE",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:38:44.681Z"
+  },
+  "site:https://www.aidexam.com/file/10947/download?token=B8MavxnA": {
+    "doublon": true
+  },
+  "site:https://www.aidexam.com/file/8319/download?token=CLbcUaQD": {
+    "id": "s7rGdh01Kjsz9o5Jj2IG",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:38:53.397Z"
+  },
+  "site:https://www.aidexam.com/file/8318/download?token=IVz7f1YF": {
+    "id": "7JdpGPsiuWxQSPdvIGKw",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:38:59.843Z"
+  },
+  "site:https://www.aidexam.com/file/8317/download?token=us_u2cNw": {
+    "id": "e0q3liZQcVUsQ6n1aUTb",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:39:05.902Z"
+  },
+  "site:https://www.aidexam.com/file/8316/download?token=vjDFZvV-": {
+    "id": "7Bd2mkz3HB8Re8NuL5TH",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:39:12.192Z"
+  },
+  "site:https://www.aidexam.com/file/8315/download?token=LbHH1oLF": {
+    "id": "QbFZZe2nq6Z85oMBzJqy",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:39:18.194Z"
+  },
+  "site:https://www.aidexam.com/file/8314/download?token=fzNRbQU6": {
+    "id": "by0r8oz4lfRu0uqdQuD6",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:39:25.770Z"
+  },
+  "site:https://www.aidexam.com/file/8312/download?token=X9kukiFy": {
+    "id": "gtSM9wdDasVZ4XqeF9dD",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:39:32.582Z"
+  },
+  "site:https://www.aidexam.com/file/8311/download?token=EXR4SQH5": {
+    "id": "alEVJRaawItGbRkBr24V",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:39:38.113Z"
+  },
+  "site:https://www.aidexam.com/file/9834/download?token=kc7Ugjp8": {
+    "id": "qhharMSjm77cZimncTrg",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:39:43.237Z"
+  },
+  "site:https://www.aidexam.com/file/9833/download?token=Oe59hLBn": {
+    "id": "h47bmpCbbeFUZ6hY1k7t",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:39:50.463Z"
+  },
+  "site:https://www.aidexam.com/file/8309/download?token=3goiY82_": {
+    "id": "ekPh1edgL2rxr0NSaeZ8",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:39:56.402Z"
+  },
+  "site:https://www.aidexam.com/file/8308/download?token=WIqIx6Fm": {
+    "id": "GwAzg193o2GlXEN1eFWf",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:40:03.623Z"
+  },
+  "site:https://www.aidexam.com/file/8307/download?token=PceHi_Zu": {
+    "id": "myE40u3WGYxjiCj3RHPG",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:40:10.120Z"
+  },
+  "site:https://www.aidexam.com/file/8306/download?token=UEEcKzkb": {
+    "id": "girGIQP2AOdoDN4gK6Hv",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:40:16.620Z"
+  },
+  "site:https://www.aidexam.com/file/8304/download?token=2BRmeUnO": {
+    "id": "xbYzXsQV0GfUtHYrrUMJ",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:40:25.068Z"
+  },
+  "site:https://www.aidexam.com/file/8302/download?token=7N93ncjK": {
+    "id": "7N28cnOjzi8WOAXvfUgy",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:40:32.203Z"
+  },
+  "site:https://www.aidexam.com/file/8300/download?token=M59yf1Tr": {
+    "id": "fCd5DL1vB7q0dKLiBw89",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:40:38.529Z"
+  },
+  "site:https://www.aidexam.com/file/8298/download?token=FweJ7ObA": {
+    "id": "bUVNQzskg3WubarqOu32",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:40:45.992Z"
+  },
+  "site:https://www.aidexam.com/file/8277/download?token=EWAOKppp": {
+    "id": "fMCok0UsnqKl7GXGjJZk",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:40:52.111Z"
+  },
+  "site:https://www.aidexam.com/file/8276/download?token=b56T3SAS": {
+    "id": "MgE2iUCqJPK988Vz9HON",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:40:58.718Z"
+  },
+  "site:https://www.aidexam.com/file/8275/download?token=z-FXPtqq": {
+    "id": "cm98u2EsBOXWlguhUVH2",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:41:05.619Z"
+  },
+  "site:https://www.aidexam.com/file/10745/download?token=fYC8Kq30": {
+    "id": "IoUs2hDUIG6HoHAHNngt",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:41:12.915Z"
+  },
+  "site:https://www.aidexam.com/file/3323/download?token=gf9gyI2_": {
+    "id": "PDhpLhwOD4s4tcukCSfM",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:41:18.741Z"
+  },
+  "site:https://www.aidexam.com/file/3322/download?token=JM4Dmod0": {
+    "id": "qddxkSpWdHQwgiDpjsus",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:41:24.686Z"
+  },
+  "site:https://www.aidexam.com/file/3321/download?token=NeWYj0NX": {
+    "id": "db6YCtsYxtDKNpqK1daE",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:41:31.598Z"
+  },
+  "site:https://www.aidexam.com/file/3320/download?token=HRvZl-uA": {
+    "id": "2pU1Rd7bnQzInmCppXJX",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:41:38.383Z"
+  },
+  "site:https://www.aidexam.com/file/3319/download?token=_S2HHcvO": {
+    "id": "yrizd47DbdnYULYpSp6J",
+    "source": "https://www.aidexam.com/annales/bts-services-informatiques-aux-organisations-sio/all/all/1067/all",
+    "licence": "autorisation de www.aidexam.com",
+    "date": "2026-11-18T23:41:44.540Z"
   }
 }
