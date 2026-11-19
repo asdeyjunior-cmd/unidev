@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
 import { niveauDe, typeDe, deviner } from "./outils.js";
-import { canonFiliere, ajouterFilieres, FILIERES_AJOUTEES, toutesLesFilieres } from "../../js/filieres.js";
+import { canonFiliere, ajouterFilieres, FILIERES_AJOUTEES, toutesLesFilieres, appliquerRenommages } from "../../js/filieres.js";
 import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect, repartirCatalogue } from "./catalogue.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
@@ -27,8 +27,10 @@ const db = admin.firestore();
 
 // Filières en double (« Marketing digital » / « Marketing digitale »…) : la liste partagée est nettoyée,
 // et chaque document reprend le nom unique de sa filière
-const listeAvant = (await db.doc("index/filieres").get()).data()?.liste || [];
+const reglesFil = (await db.doc("index/filieres").get()).data() || {};
+const listeAvant = reglesFil.liste || [];
 ajouterFilieres(listeAvant);
+appliquerRenommages(reglesFil.renommages || []); // renommages, fusions et suppressions faits par l'admin
 const doublonsFilieres = listeAvant.length - FILIERES_AJOUTEES.length;
 // Le catalogue est réparti en 4 morceaux (limite de 1 Mo par document Firestore) : on finit de déplacer les anciennes entrées
 if (!ESSAI) { const n = await repartirCatalogue(db); if (n) console.log(`Catalogue : ${n} entrée(s) déplacée(s) dans leurs morceaux.`); }
@@ -65,7 +67,8 @@ if (suspects.length) {
 }
 if (ESSAI) { console.log("\n(mode essai : rien n'a été modifié)"); process.exit(0); }
 
-if (doublonsFilieres > 0) await db.doc("index/filieres").set({ liste: FILIERES_AJOUTEES });
+// merge : garde les renommages de l'admin
+if (doublonsFilieres > 0) await db.doc("index/filieres").set({ liste: FILIERES_AJOUTEES }, { merge: true });
 for (let i = 0; i < changements.length; i += 200) {
   const lot = changements.slice(i, i + 200);
   const entree = (c) => { const e = [...c.entree]; if (c.filiere) e[2] = c.filiere; if (c.type) e[3] = c.type; if (c.niveau) e[4] = c.niveau; return e; };

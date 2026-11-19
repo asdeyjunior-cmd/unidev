@@ -75,6 +75,8 @@ export function cleFiliere(s) {
 }
 
 const TABLE = new Map();
+// Filières hors liste déjà vues : la 1re orthographe rencontrée devient la référence
+const vues = new Map();
 for (const f of FILIERES) TABLE.set(cleFiliere(f), f);
 for (const [f, alias] of Object.entries(ALIAS)) for (const a of alias) TABLE.set(cleFiliere(a), f);
 
@@ -167,13 +169,35 @@ export function ajouterFilieres(liste = []) {
     FILIERES_AJOUTEES.push(f);
   }
 }
-/** Toutes les filières connues (officielles + ajoutées), triées */
-export const toutesLesFilieres = () => [...new Set([...FILIERES, ...FILIERES_AJOUTEES])].sort((a, b) => a.localeCompare(b, "fr"));
+/**
+ * Renommages, fusions et suppressions décidés par l'admin : [{ de, vers }].
+ * Fusionner A dans B = renommer A en B. Supprimer A = renommer A en « Autre ».
+ * Appliqués dans l'ordre : tout ce qui menait à « de » mène désormais à « vers ».
+ */
+export function appliquerRenommages(liste = []) {
+  for (const r of liste) {
+    const de = String(r?.de || "").replace(/\s+/g, " ").trim();
+    let vers = String(r?.vers || "").replace(/\s+/g, " ").trim();
+    if (!de || !vers || de === vers) continue;
+    const cleDe = cleFiliere(de), cleVers = cleFiliere(vers);
+    // Le nouveau nom correspond déjà à une autre filière : c'est une fusion avec elle
+    if (cleVers !== cleDe && TABLE.has(cleVers) && TABLE.get(cleVers) !== de) vers = TABLE.get(cleVers);
+    TABLE.set(cleVers, vers);
+    for (const [k, f] of TABLE) if (f === de) TABLE.set(k, vers);
+    TABLE.set(cleDe, vers);
+    for (const [k, f] of vues) if (f === de) vues.set(k, vers);
+    const i = FILIERES_AJOUTEES.indexOf(de);
+    if (i >= 0) FILIERES_AJOUTEES.splice(i, 1);
+    if (!FILIERES.includes(vers) && !FILIERES_AJOUTEES.includes(vers)) FILIERES_AJOUTEES.push(vers);
+  }
+}
+/** Toutes les filières connues (officielles + ajoutées, sans celles renommées ou supprimées), triées */
+export const toutesLesFilieres = () => [...new Set([...FILIERES, ...FILIERES_AJOUTEES])]
+  .filter((f) => TABLE.get(cleFiliere(f)) === f)
+  .sort((a, b) => a.localeCompare(b, "fr"));
 /** Vrai si la filière fait déjà partie de la liste */
 export const filiereConnue = (f) => TABLE.has(cleFiliere(f)) && TABLE.get(cleFiliere(f)) === f;
 
-// Filières hors liste déjà vues : la 1re orthographe rencontrée devient la référence
-const vues = new Map();
 
 /** Renvoie l'orthographe officielle d'une filière. */
 export function canonFiliere(v) {

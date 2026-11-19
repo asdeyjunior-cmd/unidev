@@ -24,7 +24,7 @@ import {
   infosDepuisChemin, lireCsv, normaliserNiveau, normaliserType, licenceAutorisee,
   filiereDepuisDomaines, couper, decouper, couvertureSvg, avecRelance, telecharger, lireJsonRepare,
 } from "./outils.js";
-import { canonFiliere, ajouterFilieres, filiereConnue, nomComplet, toutesLesFilieres } from "../../js/filieres.js";
+import { canonFiliere, ajouterFilieres, filiereConnue, nomComplet, toutesLesFilieres, appliquerRenommages } from "../../js/filieres.js";
 import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
 
 /* ---------- Arguments ---------- */
@@ -87,7 +87,9 @@ async function connecter() {
   FieldValue = admin.firestore.FieldValue;
   ADMIN_UID = (await db.doc("parametres/admin").get()).data()?.uid;
   if (!ADMIN_UID) throw new Error("Document parametres/admin introuvable dans Firestore (voir README).");
-  ajouterFilieres((await db.doc("index/filieres").get()).data()?.liste || []);
+  const reglesFil = (await db.doc("index/filieres").get()).data() || {};
+  ajouterFilieres(reglesFil.liste || []);
+  appliquerRenommages(reglesFil.renommages || []); // renommages, fusions et suppressions faits par l'admin
   // Documents déjà sur unidev : pour ne jamais publier deux fois le même
   // Économie de lectures Firestore : les documents publiés viennent de l'index (1 seule lecture),
   // plus ceux qui attendent la validation (peu nombreux)

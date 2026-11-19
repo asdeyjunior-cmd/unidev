@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
 import { lireCatalogue } from "./catalogue.js";
-import { canonFiliere } from "../../js/filieres.js";
+import { canonFiliere, ajouterFilieres, appliquerRenommages } from "../../js/filieres.js";
 // Topic ntfy : lu depuis le secret GitHub NTFY_TOPIC (plus ecrit dans le code public du site)
 const NTFY_TOPIC = (process.env.NTFY_TOPIC || "").trim().replace(/^["']+|["']+$/g, "");
 
@@ -27,6 +27,8 @@ const cle = path.resolve(ICI, process.env.FIREBASE_CLE || "./cle-firebase.json")
 if (!fs.existsSync(cle)) { console.error(`Clé Firebase introuvable : ${cle}`); process.exit(1); }
 admin.initializeApp({ credential: admin.credential.cert(JSON.parse(fs.readFileSync(cle, "utf8"))) });
 const db = admin.firestore();
+// Filières ajoutées et renommages / fusions / suppressions décidés par l'admin
+{ const r = (await db.doc("index/filieres").get().catch(() => null))?.data() || {}; ajouterFilieres(r.liste || []); appliquerRenommages(r.renommages || []); }
 const compter = async (q) => { try { return (await q.count().get()).data().count; } catch { return null; } };
 const hier = new Date(Date.now() - 24 * 3600 * 1000);
 

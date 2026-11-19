@@ -19,7 +19,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import admin from "firebase-admin";
-import { canonFiliere } from "../../js/filieres.js";
+import { canonFiliere, ajouterFilieres, appliquerRenommages } from "../../js/filieres.js";
 
 const ICI = path.dirname(fileURLToPath(import.meta.url));
 const args = process.argv.slice(2);
@@ -33,6 +33,8 @@ const cle = path.resolve(ICI, process.env.FIREBASE_CLE || "./cle-firebase.json")
 if (!fs.existsSync(cle)) { console.error(`Clé Firebase introuvable : ${cle}`); process.exit(1); }
 admin.initializeApp({ credential: admin.credential.cert(JSON.parse(fs.readFileSync(cle, "utf8"))) });
 const db = admin.firestore();
+// Filières ajoutées et renommages / fusions / suppressions décidés par l'admin
+{ const r = (await db.doc("index/filieres").get().catch(() => null))?.data() || {}; ajouterFilieres(r.liste || []); appliquerRenommages(r.renommages || []); }
 
 // Filières demandées, la plus demandée d'abord
 const snap = await db.collection("demandes").orderBy("createdAt", "desc").limit(300).get();

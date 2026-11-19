@@ -63,6 +63,7 @@
           <button data-s="pay:confirme">Paiements confirmés</button>
           <button data-s="sig:liste">Signalements <span id="n-sig"></span></button>
           <button data-s="fil:demandes">Filières demandées <span id="n-fil"></span></button>
+          <button data-s="gfil:liste">Gérer les filières</button>
           <button data-s="opp:liste">Opportunités</button>
         </div>
         <p style="margin:-6px 0 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center"><button class="btn btn-sm btn-ghost-ink" id="notif-btn">Activer les notifications</button><button class="btn btn-sm btn-ghost-ink" id="rebuild">Mettre à jour l'index de recherche</button><button class="btn btn-sm btn-ghost-ink" id="harmo">Corriger les filières</button><button class="btn btn-sm btn-ghost-ink" id="doublons">Supprimer les doublons</button>
@@ -92,7 +93,7 @@
       listByStatus, setStatus, removeDocument, publishDocument, getFileInfo,
       listPaiements, confirmPaiement, modifierClassement, listOpportunites, creerOpportunite, supprimerOpportunite, rejectPaiement, login, logout, checkAdmin, rebuildIndex, watchEnAttente, harmoniserFilieres, trouverDoublons, supprimerDocuments,
       listDemandes, ajouterFiliereOfficielle, supprimerDemandes, filieresPretes, getSearchIndex,
-      listSignalements, supprimerSignalements, getDocument, auth,
+      listSignalements, supprimerSignalements, getDocument, auth, compterFilieres, modifierFiliere,
     } from "./js/firebase.js";
     import { toutesLesFilieres } from "./js/filieres.js";
     import { uploadFile } from "./js/cloudinary.js";
@@ -311,6 +312,76 @@
 
     /* ---------- Filières demandées ---------- */
     let groupes = [];
+    /* ---------- Gérer les filières : renommer, fusionner, supprimer ---------- */
+    let nbParFiliere = {};
+    let filtreFil = "";
+    function afficherFilieres() {
+      const sans = (t) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const toutes = toutesLesFilieres();
+      const liste = toutes.filter((f) => !filtreFil || sans(f).includes(sans(filtreFil)));
+      $("list").innerHTML = `
+        <div class="card" style="grid-column:1/-1"><div class="card-body">
+          <p class="muted" style="margin:0 0 10px">${toutes.length} filières. <b>Renommer</b> change le nom partout. <b>Fusionner</b> déplace tous les documents dans une autre filière. <b>Supprimer</b> les range dans « Autre ». Les futurs envois et imports avec l'ancien nom iront automatiquement au bon endroit.</p>
+          <input id="gfil-q" type="search" placeholder="Chercher une filière…" value="${esc(filtreFil)}" style="width:100%" />
+        </div></div>
+        ${liste.map((f) => `
+          <article class="card"><div class="card-body" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="flex:1;min-width:180px"><h3 style="margin:0">${esc(f)}</h3><p class="muted" style="margin:2px 0 0">${nbParFiliere[f] || 0} document(s) publié(s)</p></div>
+            ${f === "Autre" ? `<span class="muted">Filière par défaut</span>` : `
+            <div class="card-actions" style="margin:0">
+              <button class="btn btn-sm btn-ghost" data-gfil="renommer" data-f="${esc(f)}">Renommer</button>
+              <button class="btn btn-sm btn-ghost" data-gfil="fusionner" data-f="${esc(f)}">Fusionner</button>
+              <button class="btn btn-sm btn-danger" data-gfil="supprimer" data-f="${esc(f)}">Supprimer</button>
+            </div>`}
+          </div></article>`).join("") || `<div class="empty">Aucune filière ne correspond.</div>`}`;
+      const q = $("gfil-q");
+      q.oninput = () => { filtreFil = q.value; const pos = q.selectionStart; afficherFilieres(); const n = $("gfil-q"); n.focus(); n.setSelectionRange(pos, pos); };
+    }
+    async function appliquerFiliere(de, vers, bouton) {
+      if (bouton) bouton.disabled = true;
+      try {
+        const { deplaces, final } = await modifierFiliere(de, vers);
+        catalogueAdmin = null;
+        toast(final === "Autre" ? `« ${de} » supprimée : ${deplaces} document(s) rangé(s) dans « Autre ».`
+          : `« ${de} » → « ${final} » : ${deplaces} document(s) déplacé(s).`);
+        nbParFiliere[final] = (nbParFiliere[final] || 0) + (nbParFiliere[de] || 0);
+        delete nbParFiliere[de];
+        afficherFilieres();
+        return true;
+      } catch (err) { toast(err.message, "err"); if (bouton) bouton.disabled = false; return false; }
+    }
+    document.addEventListener("click", async (e) => {
+      const b = e.target.closest("[data-gfil]");
+      if (!b) return;
+      const act = b.dataset.gfil, f = b.dataset.f, n = nbParFiliere[f] || 0;
+      if (act === "supprimer") {
+        if (confirm(`Supprimer la filière « ${f} » ?\n${n} document(s) seront rangés dans « Autre ».`)) appliquerFiliere(f, "Autre", b);
+        return;
+      }
+      const fusion = act === "fusionner";
+      const autres = toutesLesFilieres().filter((x) => x !== f);
+      const m = modal(`
+        <h3>${fusion ? "Fusionner" : "Renommer"} « ${esc(f)} »</h3>
+        <p class="muted" style="margin:6px 0 14px">${fusion
+          ? `Les ${n} document(s) de « ${esc(f)} » iront dans la filière choisie, et « ${esc(f)} » disparaîtra de la liste.`
+          : `Le nouveau nom remplacera l'ancien sur les ${n} document(s). S'il existe déjà, les deux filières seront fusionnées.`}</p>
+        <form id="gfil-form" autocomplete="off">
+          <div class="field"><label for="gfil-v">${fusion ? "Fusionner dans" : "Nouveau nom"}</label>
+            <input id="gfil-v" required minlength="2" maxlength="80" list="gfil-l" value="${fusion ? "" : esc(f)}" placeholder="${fusion ? "Choisis une filière" : ""}" />
+            <datalist id="gfil-l">${autres.map((x) => `<option value="${esc(x)}">`).join("")}</datalist></div>
+          <div class="modal-actions"><button type="button" class="btn btn-ghost" data-close>Annuler</button><button class="btn btn-ok">${fusion ? "Fusionner" : "Renommer"}</button></div>
+        </form>`);
+      const champ = m.querySelector("#gfil-v");
+      champ.focus(); if (!fusion) champ.select();
+      m.querySelector("#gfil-form").onsubmit = async (ev) => {
+        ev.preventDefault();
+        const v = champ.value.replace(/\s+/g, " ").trim();
+        if (fusion && !autres.includes(v)) return toast("Choisis une filière de la liste.", "err");
+        if (!fusion && v.length >= 2 && v.length <= 8 && v === v.toUpperCase() && !/\s/.test(v)) return toast("Écris le nom complet, pas un sigle.", "err");
+        if (await appliquerFiliere(f, v, ev.submitter)) m.remove();
+      };
+    });
+
     let signales = [];
     function sigCard(g, i) {
       const lignes = g.signalements.map((s) => `<li><b>${esc(s.motif || "?")}</b>${s.detail ? ` : ${esc(s.detail)}` : ""} <span class="muted">· ${esc(formatDate(s.createdAt))}</span></li>`).join("");
@@ -439,6 +510,16 @@
           const n = signales.reduce((a, g) => a + g.signalements.length, 0);
           $("n-sig").textContent = n ? `(${n})` : "";
           $("list").innerHTML = signales.length ? signales.map(sigCard).join("") : `<div class="empty">Aucun signalement pour le moment.</div>`;
+        } catch (e) { toast(e.message, "err"); }
+        return;
+      }
+      if (kind === "gfil") {
+        $("reclasser").hidden = true;
+        $("list").innerHTML = `<div class="empty">Chargement des filières…</div>`;
+        try {
+          await filieresPretes.catch(() => {});
+          nbParFiliere = await compterFilieres();
+          afficherFilieres();
         } catch (e) { toast(e.message, "err"); }
         return;
       }

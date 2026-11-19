@@ -19,7 +19,7 @@ import admin from "firebase-admin";
 import pdfLib from "pdf-lib";
 const { PDFDocument } = pdfLib;
 import { telecharger } from "./outils.js";
-import { toutesLesFilieres, canonFiliere } from "../../js/filieres.js";
+import { toutesLesFilieres, canonFiliere, ajouterFilieres, appliquerRenommages } from "../../js/filieres.js";
 import { CATEGORIES } from "../../js/config.js";
 import { lireCatalogue, ecrireCatalogue, ecrireCatalogueDirect } from "./catalogue.js";
 
@@ -38,6 +38,8 @@ const cle = path.resolve(ICI, process.env.FIREBASE_CLE || "./cle-firebase.json")
 if (!fs.existsSync(cle)) { console.error(`Clé Firebase introuvable : ${cle}`); process.exit(1); }
 admin.initializeApp({ credential: admin.credential.cert(JSON.parse(fs.readFileSync(cle, "utf8"))) });
 const db = admin.firestore();
+// Filières ajoutées et renommages / fusions / suppressions décidés par l'admin
+{ const r = (await db.doc("index/filieres").get().catch(() => null))?.data() || {}; ajouterFilieres(r.liste || []); appliquerRenommages(r.renommages || []); }
 
 const FILIERES = toutesLesFilieres();
 const { types: TYPES, niveaux: NIVEAUX } = CATEGORIES;

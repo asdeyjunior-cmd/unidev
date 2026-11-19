@@ -6,9 +6,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, collection, doc, getDoc, getDocs, setDoc, addDoc, updateDoc,
-  query, where, limit, orderBy, startAfter, serverTimestamp, increment, writeBatch, deleteField, onSnapshot, arrayUnion,
+  query, where, limit, orderBy, startAfter, serverTimestamp, increment, writeBatch, deleteField, onSnapshot, arrayUnion, arrayRemove,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { canonFiliere, ajouterFilieres, filiereConnue } from "./filieres.js";
+import { canonFiliere, ajouterFilieres, filiereConnue, appliquerRenommages } from "./filieres.js";
 import { NOMS_MORCEAUX, parMorceau } from "./morceaux.js";
 import { firebaseConfig, paymentConfig, CREDITS_PAR_PUBLICATION, CREDITS_BIENVENUE, APP_CHECK_CLE } from "./config.js";
 
@@ -256,10 +256,14 @@ const byDate = (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 
 const filieresRef = doc(db, "index", "filieres");
 const FIL_KEY = "unidev-filieres";
 try { ajouterFilieres(JSON.parse(localStorage.getItem(FIL_KEY) || "[]")); } catch {}
+const REN_KEY = "unidev-filieres-renommees";
+try { appliquerRenommages(JSON.parse(localStorage.getItem(REN_KEY) || "[]")); } catch {}
 export const filieresPretes = getDoc(filieresRef).then((s) => {
   const liste = s.data()?.liste || [];
+  const renommages = s.data()?.renommages || [];
   ajouterFilieres(liste);
-  try { localStorage.setItem(FIL_KEY, JSON.stringify(liste)); } catch {}
+  appliquerRenommages(renommages);
+  try { localStorage.setItem(FIL_KEY, JSON.stringify(liste)); localStorage.setItem(REN_KEY, JSON.stringify(renommages)); } catch {}
   return liste;
 }).catch(() => []);
 /** Ajoute une nouvelle filière à la liste partagée (dans un lot d'écriture admin) */
@@ -573,6 +577,50 @@ export async function listDemandes() {
   return [...groupes.values()].sort((a, b) => b.demandes.length - a.demandes.length);
 }
 /** Admin : ajoute la filière à la liste officielle (proposée partout sur le site) */
+/** Admin : nombre de documents publiés par filière (4 lectures : le catalogue) */
+export async function compterFilieres() {
+  const n = {};
+  for (const d of await getSearchIndex()) if (d.filiere) n[d.filiere] = (n[d.filiere] || 0) + 1;
+  return n;
+}
+/**
+ * Admin : renomme une filière (ou la fusionne dans une autre, ou la supprime avec vers = « Autre »).
+ * Les documents publiés sont déplacés, le catalogue mis à jour, et la règle est gardée
+ * pour que les futurs envois et imports avec l'ancien nom arrivent au bon endroit.
+ * Renvoie le nombre de documents déplacés.
+ */
+export async function modifierFiliere(de, vers) {
+  de = String(de || "").trim(); vers = String(vers || "").replace(/\s+/g, " ").trim();
+  if (!de || !vers) throw new Error("Nom de filière manquant.");
+  if (de === "Autre") throw new Error("La filière « Autre » ne peut pas être modifiée.");
+  if (de === vers) throw new Error("Le nouveau nom est identique.");
+  // Documents publiés de cette filière, trouvés dans le catalogue (sans relire toute la base)
+  const snaps = await Promise.all(NOMS_MORCEAUX.map((n) => getDoc(doc(db, "index", n))));
+  const entrees = {};
+  for (const s of snaps) Object.assign(entrees, s.data()?.docs || {});
+  const ids = Object.keys(entrees).filter((id) => Array.isArray(entrees[id]) && canonFiliere(entrees[id][2]) === de);
+  // La règle s'applique d'abord ici, pour connaître le nom final (fusion si le nom existe déjà)
+  appliquerRenommages([{ de, vers }]);
+  const final = canonFiliere(vers);
+  for (let i = 0; i < ids.length; i += 300) {
+    const batch = writeBatch(db);
+    const lot = {};
+    for (const id of ids.slice(i, i + 300)) {
+      batch.update(doc(db, "documents", id), { filiere: final });
+      const e = [...entrees[id]]; e[2] = final; lot[id] = e;
+    }
+    ecrireIndex(batch, lot);
+    await batch.commit();
+  }
+  const maj = { renommages: arrayUnion({ de, vers: final }), liste: arrayRemove(de) };
+  await setDoc(filieresRef, maj, { merge: true });
+  if (final !== "Autre") await setDoc(filieresRef, { liste: arrayUnion(final) }, { merge: true });
+  try {
+    const r = JSON.parse(localStorage.getItem(REN_KEY) || "[]"); r.push({ de, vers: final });
+    localStorage.setItem(REN_KEY, JSON.stringify(r));
+  } catch {}
+  return { deplaces: ids.length, final };
+}
 export async function ajouterFiliereOfficielle(f) {
   await setDoc(filieresRef, { liste: arrayUnion(f) }, { merge: true });
   ajouterFilieres([f]);
