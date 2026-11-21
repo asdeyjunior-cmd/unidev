@@ -1,0 +1,127 @@
+# Dépose un gros fichier (formation vidéo, .rar, .zip… jusqu'à plusieurs Go) dans le stockage R2,
+# en le récupérant depuis un lien (Google Drive, Mega, Dropbox, lien direct). Rien ne passe par ta connexion.
+# Actions > « Déposer un gros fichier » > Run workflow.
+# Le lien final t'est envoyé sur ntfy (et Telegram si réglé) : il n'est PAS affiché ici, car ce dépôt est public.
+name: Déposer un gros fichier
+
+on:
+  workflow_dispatch:
+    inputs:
+      lien:
+        description: "Lien du fichier (message Telegram, Google Drive partagé, Mega, Dropbox ou lien direct)"
+        required: true
+      nom:
+        description: "Nom court, sans espaces (ex : formation-trading). Des caractères au hasard sont ajoutés."
+        required: true
+        default: "formation"
+
+jobs:
+  deposer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      # Réglages nécessaires pour que l'outil d'Amazon fonctionne avec R2
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+      TELEGRAM_CHAT: ${{ secrets.TELEGRAM_CHAT }}
+      TG_API_ID: ${{ secrets.TG_API_ID }}
+      TG_API_HASH: ${{ secrets.TG_API_HASH }}
+      LIEN: ${{ inputs.lien }}
+      NOM: ${{ inputs.nom }}
+    steps:
+      - name: Vérifications
+        run: |
+          echo "::add-mask::$LIEN"
+          manque=""
+          [ -n "$AWS_ACCESS_KEY_ID" ] || manque="$manque R2_ACCESS_KEY_ID"
+          [ -n "$AWS_SECRET_ACCESS_KEY" ] || manque="$manque R2_SECRET_ACCESS_KEY"
+          [ -n "$R2_ENDPOINT" ] || manque="$manque R2_ENDPOINT"
+          [ -n "$NTFY_TOPIC$TELEGRAM_TOKEN" ] || manque="$manque NTFY_TOPIC"
+          if [ -n "$manque" ]; then echo "Secrets GitHub manquants :$manque"; exit 1; fi
+
+      - name: Téléchargement depuis le lien
+        run: |
+          echo "::add-mask::$LIEN"
+          mkdir -p /tmp/f && cd /tmp/f
+          case "$LIEN" in
+            *t.me/*|*telegram.me/*)
+              # Message d'un groupe ou canal Telegram : le bot unidev (membre du groupe) récupère le fichier
+              [ -n "$TELEGRAM_TOKEN" ] && [ -n "$TG_API_ID" ] && [ -n "$TG_API_HASH" ] || { echo "Pour Telegram il faut les secrets TELEGRAM_TOKEN, TG_API_ID et TG_API_HASH."; exit 1; }
+              pip install -q telethon cryptg
+              python3 - <<'PY'
+          import os, re, sys, asyncio
+          from telethon import TelegramClient, types
+          from telethon.sessions import StringSession
+          lien = os.environ["LIEN"]
+          m = re.search(r"(?:t|telegram)\.me/(?:c/(\d+)|([A-Za-z0-9_]{4,}))/(?:\d+/)?(\d+)", lien)
+          if not m:
+              sys.exit("Lien Telegram non reconnu : utilise « Copier le lien du message » dans Telegram.")
+          chat = types.PeerChannel(int(m.group(1))) if m.group(1) else m.group(2)
+          async def main():
+              c = TelegramClient(StringSession(), int(os.environ["TG_API_ID"]), os.environ["TG_API_HASH"])
+              await c.start(bot_token=os.environ["TELEGRAM_TOKEN"].strip())
+              try:
+                  msg = await c.get_messages(chat, ids=int(m.group(3)))
+              except Exception as e:
+                  sys.exit(f"Message inaccessible ({e.__class__.__name__}) : ajoute le bot unidev au groupe, puis relance.")
+              if not msg or not msg.media:
+                  sys.exit("Ce message ne contient pas de fichier.")
+              chemin = await c.download_media(msg, file="/tmp/f/")
+              print("Récupéré depuis Telegram :", os.path.basename(chemin))
+              await c.disconnect()
+          asyncio.run(main())
+          PY
+              ;;
+            *drive.google.com*|*docs.google.com*)
+              pip install -q gdown && gdown --fuzzy -q "$LIEN" ;;
+            *mega.nz*|*mega.co.nz*)
+              sudo apt-get install -y -qq megatools >/dev/null && megatools dl --no-ask-password "$LIEN" ;;
+            *dropbox.com*)
+              u="${LIEN/dl=0/dl=1}"
+              case "$u" in *dl=1*) ;; *\?*) u="$u&dl=1" ;; *) u="$u?dl=1" ;; esac
+              curl -fsSL -J -O "$u" ;;
+            *)
+              curl -fsSL -J -O "$LIEN" || curl -fsSL -o fichier "$LIEN" ;;
+          esac
+          f="$(ls -S | head -n 1)"
+          [ -n "$f" ] && [ -s "$f" ] || { echo "Aucun fichier récupéré : vérifie que le lien est bien partagé (« Toute personne disposant du lien »)."; exit 1; }
+          # Une page web au lieu du fichier = lien non partagé ou page de confirmation
+          if file "$f" | grep -qi "html"; then echo "Le lien renvoie une page web, pas un fichier : vérifie le partage du lien."; exit 1; fi
+          echo "FICHIER=/tmp/f/$f" >> "$GITHUB_ENV"
+          echo "Récupéré : $(du -h "$f" | cut -f1)"
+
+      - name: Envoi dans le stockage R2
+        run: |
+          ext="${FICHIER##*.}"; [ "$ext" = "$FICHIER" ] && ext="bin"
+          ext="$(echo "$ext" | tr -cd 'A-Za-z0-9' | cut -c1-8)"
+          base="$(echo "$NOM" | iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null | tr 'A-Z' 'a-z' | tr -cs 'a-z0-9' '-' | sed 's/^-*//; s/-*$//' | cut -c1-40)"
+          [ -n "$base" ] || base="fichier"
+          cle="opportunites/${base}-$(tr -dc 'a-z0-9' < /dev/urandom | head -c 10).${ext}"
+          aws s3 cp "$FICHIER" "s3://unidev-fichiers/$cle" --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          echo "CLE=$cle" >> "$GITHUB_ENV"
+          echo "TAILLE=$(du -h "$FICHIER" | cut -f1)" >> "$GITHUB_ENV"
+
+      - name: Envoi du lien sur ton téléphone
+        run: |
+          url="https://unidev-paiement.asdeyjunior40.workers.dev/f/$CLE"
+          msg="Fichier déposé ($TAILLE). Lien à coller dans l'opportunité : $url"
+          ok=0
+          if [ -n "$NTFY_TOPIC" ]; then
+            curl -fsS -H "Title: unidev - fichier depose" -H "Tags: package" -d "$msg" "https://ntfy.sh/$(echo "$NTFY_TOPIC" | tr -d ' \"')" >/dev/null && ok=1
+          fi
+          if [ -n "$TELEGRAM_TOKEN" ] && [ -n "$TELEGRAM_CHAT" ]; then
+            curl -fsS "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMessage" --data-urlencode "chat_id=$TELEGRAM_CHAT" --data-urlencode "text=$msg" >/dev/null && ok=1
+          fi
+          if [ "$ok" = 1 ]; then
+            echo "### Fichier déposé ($TAILLE)" >> "$GITHUB_STEP_SUMMARY"
+            echo "Le lien a été envoyé sur ton téléphone (il n'est pas affiché ici : le dépôt est public)." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Fichier déposé, mais le lien n'a pas pu être envoyé. Retrouve-le dans Cloudflare > R2 > unidev-fichiers > opportunites."
+            exit 1
+          fi

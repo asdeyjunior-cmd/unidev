@@ -89,6 +89,8 @@ function libelleLien(u) {
   if (/^(t\.me|telegram\.me|telegram\.org)$/.test(h)) return ["Rejoindre sur Telegram", "opp-l-telegram"];
   if (/(^|\.)whatsapp\.com$|^wa\.me$/.test(h)) return ["Rejoindre sur WhatsApp", "opp-l-whatsapp"];
   if (/^(drive|docs)\.google\.com$/.test(h)) return ["Ouvrir sur Google Drive", "opp-l-autre"];
+  // Fichier rangé dans le stockage unidev (R2) : téléchargement direct
+  if (/\.workers\.dev$/.test(h) && /\/f\/opportunites\//.test(u)) return ["Télécharger le fichier", "opp-l-autre"];
   return [`Ouvrir ${h}`, "opp-l-autre"];
 }
 function blocLiens(liens = []) {
